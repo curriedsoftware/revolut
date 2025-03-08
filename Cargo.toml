@@ -1,0 +1,11 @@
+[package]
+name = "revolut"
+version = "0.1.0"
+authors = ["Rafael Fernández López <ereslibre@curried.software>"]
+edition = "2021"
+license = "MIT"
+description = "A library to communicate with the Revolut API"
+repository = "https://github.com/curriedsoftware/revolut"
+
+
+[dependencies]
