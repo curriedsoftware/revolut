@@ -7,5 +7,19 @@ license = "MIT"
 description = "A library to communicate with the Revolut API"
 repository = "https://github.com/curriedsoftware/revolut"
 
+[features]
+default = ["sandbox"]
+
+# Sandbox enables certain API capabilities that are only available in the sandbox environment. For example:
+# - https://developer.revolut.com/docs/guides/manage-accounts/api-usage-and-testing/test-flows-with-simulations
+sandbox = []
+
+[dev-dependencies]
+clap = { version = "4.5.38", features = ["derive"] }
+tokio = { version = "1.44", features = ["full"] }
 
 [dependencies]
+chrono = "0.4.41"
+reqwest = { version = "0.12.15", features = ["json", "rustls-tls", "rustls-tls-webpki-roots"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
