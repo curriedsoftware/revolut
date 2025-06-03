@@ -270,30 +270,35 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         };
 
         match method {
-            reqwest::Method::GET => Ok(self
-                .client
-                .get(Into::<&str>::into(uri))
-                .header("Authorization", format!("Bearer {}", access_token))
-                .send()
-                .await
-                .map_err(|err| {
-                    errors::Error::ClientError(errors::ClientError::RequestError(format!(
-                        "{:?}",
-                        err
-                    )))
-                })?
-                .bytes()
-                .await
-                .map_err(|err| {
-                    errors::Error::ClientError(errors::ClientError::RequestError(format!(
-                        "{:?}",
-                        err
-                    )))
-                })?
-                .to_vec()),
-            reqwest::Method::POST => unimplemented!(),
-            reqwest::Method::PATCH => unimplemented!(),
-            reqwest::Method::DELETE => unimplemented!(),
+            reqwest::Method::GET => {
+                let request = if method == reqwest::Method::GET {
+                    self.client.get(Into::<&str>::into(uri))
+                } else {
+                    self.client.delete(Into::<&str>::into(uri))
+                };
+                Ok(request
+                    .header("Authorization", format!("Bearer {}", access_token))
+                    .send()
+                    .await
+                    .map_err(|err| {
+                        errors::Error::ClientError(errors::ClientError::RequestError(format!(
+                            "{:?}",
+                            err
+                        )))
+                    })?
+                    .bytes()
+                    .await
+                    .map_err(|err| {
+                        errors::Error::ClientError(errors::ClientError::RequestError(format!(
+                            "{:?}",
+                            err
+                        )))
+                    })?
+                    .to_vec())
+            }
+            reqwest::Method::POST | reqwest::Method::PATCH | reqwest::Method::PUT => {
+                unimplemented!()
+            }
             _ => Err(errors::Error::ClientError(
                 errors::ClientError::RequestError("Unsupported HTTP method".to_string()),
             )),
