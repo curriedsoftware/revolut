@@ -2,9 +2,10 @@
 
 Revolut API integration for Rust.
 
-**This crate has no relationship with Revolut Ltd,** as such, it is an
-unofficial implementation that uses the documented public API
-endpoints.
+> [!NOTE]
+> **This crate has no relationship with Revolut Ltd,** as such, it is
+> an unofficial implementation that uses the documented public API
+> endpoints.
 
 > [!CAUTION]
 > This crate is in its very early stages and is expected to be
