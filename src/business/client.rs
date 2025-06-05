@@ -28,8 +28,8 @@ use std::{cell::RefCell, string::ToString};
 
 pub use crate::{
     client::{
-        self, Client, ClientBuilder, Environment, MissingClientAuthentication, MissingEnvironment,
-        ProductionEnvironment, RevolutEndpoint, SandboxEnvironment,
+        self, Client, ClientBuilder, Environment, HttpMethod, MissingClientAuthentication,
+        MissingEnvironment, ProductionEnvironment, RevolutEndpoint, SandboxEnvironment,
     },
     errors::{self, ClientBuilderError, Error, Result},
     BusinessClient, MerchantClient, OpenBankingClient,
@@ -256,9 +256,9 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         self.login().await
     }
 
-    pub(crate) async fn request_raw(
+    pub(crate) async fn request_raw<'a>(
         &self,
-        method: reqwest::Method,
+        method: HttpMethod<'a>,
         uri: &RevolutEndpoint,
     ) -> Result<Vec<u8>> {
         self.ensure_logged_in().await?;
@@ -269,45 +269,44 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             ));
         };
 
-        match method {
-            reqwest::Method::GET => {
-                let request = if method == reqwest::Method::GET {
+        let request = match method {
+            HttpMethod::Get | HttpMethod::Delete => {
+                if method == HttpMethod::Get {
                     self.client.get(Into::<&str>::into(uri))
                 } else {
                     self.client.delete(Into::<&str>::into(uri))
-                };
-                Ok(request
-                    .header("Authorization", format!("Bearer {}", access_token))
-                    .send()
-                    .await
-                    .map_err(|err| {
-                        errors::Error::ClientError(errors::ClientError::RequestError(format!(
-                            "{:?}",
-                            err
-                        )))
-                    })?
-                    .bytes()
-                    .await
-                    .map_err(|err| {
-                        errors::Error::ClientError(errors::ClientError::RequestError(format!(
-                            "{:?}",
-                            err
-                        )))
-                    })?
-                    .to_vec())
+                }
             }
-            reqwest::Method::POST | reqwest::Method::PATCH | reqwest::Method::PUT => {
-                unimplemented!()
+            HttpMethod::Post { body } | HttpMethod::Patch { body } | HttpMethod::Put { body } => {
+                if method == (HttpMethod::Post { body }) {
+                    self.client.post(Into::<&str>::into(uri))
+                } else if method == (HttpMethod::Patch { body }) {
+                    self.client.patch(Into::<&str>::into(uri))
+                } else {
+                    self.client.put(Into::<&str>::into(uri))
+                }
+                .body(body.to_string())
             }
-            _ => Err(errors::Error::ClientError(
-                errors::ClientError::RequestError("Unsupported HTTP method".to_string()),
-            )),
-        }
+        };
+
+        Ok(request
+            .header("Authorization", format!("Bearer {}", access_token))
+            .send()
+            .await
+            .map_err(|err| {
+                errors::Error::ClientError(errors::ClientError::RequestError(format!("{:?}", err)))
+            })?
+            .bytes()
+            .await
+            .map_err(|err| {
+                errors::Error::ClientError(errors::ClientError::RequestError(format!("{:?}", err)))
+            })?
+            .to_vec())
     }
 
-    pub(crate) async fn request<R: DeserializeOwned + Debug>(
+    pub(crate) async fn request<'a, R: DeserializeOwned + Debug>(
         &self,
-        method: reqwest::Method,
+        method: HttpMethod<'a>,
         uri: &RevolutEndpoint,
     ) -> Result<R> {
         self.ensure_logged_in().await?;
@@ -318,41 +317,42 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             ));
         };
 
-        match method {
-            reqwest::Method::GET | reqwest::Method::DELETE => {
-                let request = if method == reqwest::Method::GET {
+        let request = match method {
+            HttpMethod::Get | HttpMethod::Delete => {
+                if method == HttpMethod::Get {
                     self.client.get(Into::<&str>::into(uri))
                 } else {
                     self.client.delete(Into::<&str>::into(uri))
-                };
-
-                let response = request
-                    .header("Authorization", format!("Bearer {}", access_token))
-                    .send()
-                    .await
-                    .map_err(|err| {
-                        errors::Error::ClientError(errors::ClientError::RequestError(format!(
-                            "{:?}",
-                            err
-                        )))
-                    })?;
-
-                let response_ = format!("{:?}", response);
-
-                response.json().await.map_err(|err| {
-                    errors::Error::ClientError(errors::ClientError::RequestError(format!(
-                        "{:?}: {}",
-                        err, response_,
-                    )))
-                })
+                }
             }
-            reqwest::Method::POST | reqwest::Method::PATCH | reqwest::Method::PUT => {
-                unimplemented!()
+            HttpMethod::Post { body } | HttpMethod::Patch { body } | HttpMethod::Put { body } => {
+                if method == (HttpMethod::Post { body }) {
+                    self.client.post(Into::<&str>::into(uri))
+                } else if method == (HttpMethod::Patch { body }) {
+                    self.client.patch(Into::<&str>::into(uri))
+                } else {
+                    self.client.put(Into::<&str>::into(uri))
+                }
+                .body(body.to_string())
             }
-            _ => Err(errors::Error::ClientError(
-                errors::ClientError::RequestError("Unsupported HTTP method".to_string()),
-            )),
-        }
+        };
+
+        let response = request
+            .header("Authorization", format!("Bearer {}", access_token))
+            .send()
+            .await
+            .map_err(|err| {
+                errors::Error::ClientError(errors::ClientError::RequestError(format!("{:?}", err)))
+            })?;
+
+        let response_ = format!("{:?}", response);
+
+        response.json().await.map_err(|err| {
+            errors::Error::ClientError(errors::ClientError::RequestError(format!(
+                "{:?}: {}",
+                err, response_,
+            )))
+        })
     }
 
     pub async fn login_with_authorization_code(
