@@ -25,7 +25,7 @@
 //! [Business accounts API](https://developer.revolut.com/docs/business/accounts).
 
 use crate::{
-    business::client::{BusinessAuthentication, Environment},
+    business::client::{BusinessAuthentication, Environment, HttpMethod},
     client::Client,
     errors::{self, Result},
 };
@@ -83,10 +83,7 @@ pub async fn list<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
 ) -> Result<Vec<v10::Account>> {
     client
-        .request(
-            reqwest::Method::GET,
-            &client.environment.uri("1.0", "/accounts"),
-        )
+        .request(HttpMethod::Get, &client.environment.uri("1.0", "/accounts"))
         .await
 }
 
@@ -96,7 +93,7 @@ pub async fn account<E: Environment>(
 ) -> Result<v10::Account> {
     client
         .request(
-            reqwest::Method::GET,
+            HttpMethod::Get,
             &client
                 .environment
                 .uri("1.0", &format!("/accounts/{account_id}")),
@@ -110,7 +107,7 @@ pub async fn bank_details<E: Environment>(
 ) -> Result<v10::BankDetails> {
     Ok(client
         .request::<Vec<v10::BankDetails>>(
-            reqwest::Method::GET,
+            HttpMethod::Get,
             &client
                 .environment
                 .uri("1.0", &format!("/accounts/{account_id}/bank-details")),

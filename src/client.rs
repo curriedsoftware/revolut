@@ -46,6 +46,15 @@ pub struct Client<E, T> {
 pub struct MissingEnvironment;
 pub struct MissingClientAuthentication;
 
+#[derive(PartialEq)]
+pub enum HttpMethod<'a> {
+    Get,
+    Delete,
+    Post { body: &'a str },
+    Patch { body: &'a str },
+    Put { body: &'a str },
+}
+
 #[derive(Debug)]
 pub struct SandboxEnvironment;
 #[derive(Debug)]
@@ -65,9 +74,9 @@ impl<'a: 'b, 'b> From<&'a RevolutEndpoint> for &'b str {
 }
 
 pub struct ClientBuilder<E, A, C> {
-    pub environment: E,
-    pub authentication: A,
-    pub client_type: PhantomData<C>,
+    pub(crate) environment: E,
+    pub(crate) authentication: A,
+    pub(crate) client_type: PhantomData<C>,
 }
 
 impl<A, C> ClientBuilder<MissingEnvironment, A, C> {

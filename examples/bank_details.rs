@@ -50,7 +50,14 @@ async fn main() -> Result<()> {
         )
         .build()?;
 
-    println!("{:?}", client.bank_details(&args.account_id).await?);
+    println!(
+        "{}",
+        serde_json::to_string(&client.bank_details(&args.account_id).await?).map_err(|err| {
+            revolut::errors::Error::ClientError(revolut::errors::ClientError::RequestError(
+                format!("{:?}", err),
+            ))
+        })?
+    );
 
     Ok(())
 }

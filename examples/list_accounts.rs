@@ -39,7 +39,14 @@ async fn main() -> Result<()> {
         )
         .build()?;
 
-    println!("{:?}", client.accounts().await?);
+    println!(
+        "{}",
+        serde_json::to_string(&client.accounts().await?).map_err(|err| {
+            revolut::errors::Error::ClientError(revolut::errors::ClientError::RequestError(
+                format!("{:?}", err),
+            ))
+        })?
+    );
 
     Ok(())
 }
