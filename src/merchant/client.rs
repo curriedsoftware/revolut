@@ -22,21 +22,90 @@
  * SOFTWARE.
  ***/
 
-use std::{cell::RefCell, marker::PhantomData};
+use serde::{Serialize, de::DeserializeOwned};
+use std::{cell::RefCell, clone::Clone, cmp::PartialEq, fmt::Debug, marker::PhantomData};
 
-use crate::{
+pub use crate::{
     client::{
-        Client, ClientBuilder, MerchantClient, MissingClientAuthentication, MissingEnvironment,
+        self, Body, Client, ClientBuilder, Environment, HttpMethod, MerchantClient,
+        MissingClientAuthentication, MissingEnvironment, ProductionEnvironment, RevolutEndpoint,
+        SandboxEnvironment,
     },
-    errors::{self, Result},
+    errors::{self, ApiResult, ClientBuilderError, Error},
 };
 
-pub fn merchant_client(
-) -> ClientBuilder<MissingEnvironment, MissingClientAuthentication, MerchantClient> {
+pub fn merchant_client()
+-> ClientBuilder<MissingEnvironment, MissingClientAuthentication, MerchantClient> {
     ClientBuilder {
         environment: MissingEnvironment,
         authentication: MissingClientAuthentication,
         client_type: PhantomData,
+    }
+}
+
+impl Environment for SandboxEnvironment<MerchantClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        self.unversioned_uri(&format!("/{version}{path}"))
+    }
+
+    fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!(
+            "{}{}",
+            "https://sandbox-merchant.revolut.com/api", path
+        ))
+    }
+}
+
+impl Environment for ProductionEnvironment<MerchantClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        self.unversioned_uri(&format!("{version}{path}"))
+    }
+
+    fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!("{}{}", "https://merchant.revolut.com/api/", path))
+    }
+}
+
+pub struct MissingSecretKey;
+
+pub trait MissingSecretKeyT {}
+impl MissingSecretKeyT for MissingSecretKey {}
+
+pub struct MerchantAuthenticationBuilder<S> {
+    secret_key: S,
+}
+
+impl Default for MerchantAuthenticationBuilder<MissingSecretKey> {
+    fn default() -> Self {
+        MerchantAuthenticationBuilder {
+            secret_key: MissingSecretKey,
+        }
+    }
+}
+
+impl MerchantAuthenticationBuilder<MissingSecretKey> {
+    pub fn with_environment_inherited_secret_key(
+        self,
+        secret_key_environment_variable: &str,
+    ) -> Result<MerchantAuthenticationBuilder<String>, ClientBuilderError> {
+        let secret_key = std::env::var(secret_key_environment_variable).map_err(|_| {
+            ClientBuilderError::MissingEnvironmentVariable(secret_key_environment_variable.into())
+        })?;
+        Ok(MerchantAuthenticationBuilder { secret_key })
+    }
+
+    pub fn with_secret_key(self, secret_key: &str) -> MerchantAuthenticationBuilder<String> {
+        MerchantAuthenticationBuilder {
+            secret_key: secret_key.to_string(),
+        }
+    }
+}
+
+impl MerchantAuthenticationBuilder<String> {
+    pub fn build(self) -> MerchantAuthentication {
+        MerchantAuthentication {
+            secret_key: self.secret_key,
+        }
     }
 }
 
@@ -58,19 +127,91 @@ impl<E> ClientBuilder<E, MissingClientAuthentication, MerchantClient> {
     }
 }
 
-impl<E, C> ClientBuilder<E, MerchantAuthentication, C> {
-    pub fn build(self) -> Result<Client<E, MerchantAuthentication>> {
+impl<E: Environment, C> ClientBuilder<E, MerchantAuthentication, C> {
+    pub fn build(self) -> Result<Client<E, MerchantAuthentication>, ClientBuilderError> {
         let client_builder = reqwest::ClientBuilder::new();
+        let secret_key = self.authentication.secret_key.clone();
         Ok(Client {
             environment: self.environment,
             client: client_builder.build().map_err(|err| {
-                errors::Error::ClientBuilderError(
-                    errors::ClientBuilderError::CannotInstantiateClient(format!("{:?}", err)),
-                )
+                errors::ClientBuilderError::CannotInstantiateClient(format!("{err:?}"))
             })?,
             authentication: self.authentication,
             access_token: RefCell::new(None),
             access_token_expires_at: RefCell::new(None),
+            secret_key: Some(secret_key),
         })
+    }
+}
+
+impl<E: Environment> Client<E, MerchantAuthentication> {
+    pub(crate) async fn request<
+        'a,
+        R: DeserializeOwned + Debug,
+        T: Clone + Debug + PartialEq + Serialize,
+    >(
+        &self,
+        method: HttpMethod<'a, T>,
+        uri: &RevolutEndpoint,
+    ) -> ApiResult<R> {
+        let Some(ref secret_key) = self.secret_key else {
+            return Err(errors::Error::ClientError(
+                errors::ClientError::CannotLogIn("could not retrieve secret key".to_string()),
+            ));
+        };
+
+        let request = match method {
+            HttpMethod::Get | HttpMethod::Delete => {
+                if method == HttpMethod::Get {
+                    self.client.get(Into::<&str>::into(uri))
+                } else {
+                    self.client.delete(Into::<&str>::into(uri))
+                }
+            }
+            HttpMethod::Post { ref body }
+            | HttpMethod::Patch { ref body }
+            | HttpMethod::Put { ref body } => {
+                let client = self
+                    .client
+                    .request((&method).into(), Into::<&str>::into(uri));
+                match body {
+                    Some(Body::Json(body)) => client.json(body),
+                    Some(Body::Raw(body)) => client.body(body.to_vec()),
+                    Some(Body::Multipart(parts)) => {
+                        let mut multipart_form = reqwest::multipart::Form::new();
+                        for part in parts.iter() {
+                            let multipart_part =
+                                reqwest::multipart::Part::bytes(Vec::from(part.contents))
+                                    .mime_str(&part.mime_str);
+                            multipart_form =
+                                multipart_form.part(part.file_name.to_string(), multipart_part?);
+                        }
+                        client.multipart(multipart_form)
+                    }
+                    None => client.header("Content-Length", 0),
+                }
+            }
+        };
+
+        let response = request
+            .header("Authorization", format!("Bearer {secret_key}"))
+            .header("Accept", "application/json")
+            .header("Revolut-Api-Version", "2024-09-01")
+            .send()
+            .await
+            .map_err(|err| {
+                errors::Error::ClientError(errors::ClientError::RequestError(format!("{err:?}")))
+            })?;
+
+        if response.status().is_success() {
+            let response_ = format!("{response:?}");
+            Ok(response.json().await.map_err(|err| {
+                errors::Error::ClientError(errors::ClientError::RequestError(format!(
+                    "{err:?}: {response_}",
+                )))
+            })?)
+        } else {
+            Err(Error::BackendError(response.json().await?))
+        }
     }
 }

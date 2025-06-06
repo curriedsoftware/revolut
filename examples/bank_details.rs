@@ -25,19 +25,20 @@
 use clap::Parser;
 
 use revolut::{
-    business::client::{business_client, BusinessAuthenticationBuilder},
-    errors::Result,
+    business::client::{BusinessAuthenticationBuilder, business_client},
+    errors::ApiResult,
 };
 
 #[derive(Parser, Debug)]
 #[command(about, long_about = None)]
 struct Args {
-    #[arg(short, long)]
+    /// Account ID
+    #[arg(long)]
     account_id: String,
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> ApiResult<()> {
     let args = Args::parse();
 
     let client = business_client()
@@ -52,11 +53,7 @@ async fn main() -> Result<()> {
 
     println!(
         "{}",
-        serde_json::to_string(&client.bank_details(&args.account_id).await?).map_err(|err| {
-            revolut::errors::Error::ClientError(revolut::errors::ClientError::RequestError(
-                format!("{:?}", err),
-            ))
-        })?
+        serde_json::to_string(&client.bank_details(&args.account_id).await?)?
     );
 
     Ok(())

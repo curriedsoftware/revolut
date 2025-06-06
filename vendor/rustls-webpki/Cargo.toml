@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "rustls-webpki"
-version = "0.103.2"
+version = "0.103.3"
 build = false
 include = [
     "Cargo.toml",
@@ -24,6 +24,7 @@ include = [
     "src/cert.rs",
     "src/crl/mod.rs",
     "src/crl/types.rs",
+    "src/data/",
     "src/der.rs",
     "src/end_entity.rs",
     "src/error.rs",
