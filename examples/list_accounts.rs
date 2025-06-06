@@ -24,7 +24,7 @@
 
 use revolut::{
     business::client::{business_client, BusinessAuthenticationBuilder},
-    errors::Result,
+    errors::Result::{self, Ok},
 };
 
 #[tokio::main]
@@ -43,7 +43,7 @@ async fn main() -> Result<()> {
         "{}",
         serde_json::to_string(&client.accounts().await?).map_err(|err| {
             revolut::errors::Error::ClientError(revolut::errors::ClientError::RequestError(
-                format!("{:?}", err),
+                format!("{}", err),
             ))
         })?
     );

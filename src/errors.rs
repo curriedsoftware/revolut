@@ -23,11 +23,18 @@
  ***/
 
 use serde::Deserialize;
+use std::{
+    convert::{self},
+    fmt::Debug,
+    ops::{ControlFlow, FromResidual, Try},
+    process::{ExitCode, Termination},
+};
 
 #[derive(Debug, Deserialize)]
 pub enum Error {
     ClientBuilderError(ClientBuilderError),
     ClientError(ClientError),
+    BackendError(BackendError),
 }
 
 #[derive(Debug, Deserialize)]
@@ -40,6 +47,66 @@ pub enum ClientBuilderError {
 pub enum ClientError {
     CannotLogIn(String),
     RequestError(String),
+    GenericError(String),
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+#[derive(Debug, Deserialize)]
+pub struct BackendError {
+    code: Option<String>,
+    message: Option<String>,
+    timestamp: Option<u64>,
+}
+
+#[derive(Debug)]
+pub enum Result<T> {
+    Ok(T),
+    Err(Error),
+}
+
+impl<T> Try for Result<T> {
+    type Output = T;
+    type Residual = Result<convert::Infallible>;
+
+    #[inline]
+    fn from_output(output: Self::Output) -> Self {
+        Result::Ok(output)
+    }
+
+    #[inline]
+    fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
+        match self {
+            Result::Ok(v) => ControlFlow::Continue(v),
+            Result::Err(e) => ControlFlow::Break(Result::Err(e)),
+        }
+    }
+}
+
+impl<T, E: Debug> FromResidual<std::result::Result<convert::Infallible, E>> for Result<T> {
+    fn from_residual(residual: std::result::Result<convert::Infallible, E>) -> Result<T> {
+        match residual {
+            Err(e) => Result::Err(Error::ClientError(ClientError::GenericError(format!(
+                "{e:?}"
+            )))),
+        }
+    }
+}
+
+impl<T> FromResidual<Result<convert::Infallible>> for Result<T> {
+    fn from_residual(residual: Result<convert::Infallible>) -> Result<T> {
+        match residual {
+            Result::Err(e) => Result::Err(e),
+        }
+    }
+}
+
+impl<T: Termination> Termination for Result<T> {
+    fn report(self) -> ExitCode {
+        match self {
+            Result::Ok(val) => val.report(),
+            Result::Err(err) => {
+                eprintln!("Error: {err:?}");
+                ExitCode::FAILURE
+            }
+        }
+    }
+}

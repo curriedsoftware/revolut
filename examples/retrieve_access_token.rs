@@ -24,7 +24,10 @@
 
 use revolut::{
     business::client::{business_client, BusinessAuthentication, BusinessAuthenticationBuilder},
-    errors::{Error, Result},
+    errors::{
+        Error,
+        Result::{self, Ok},
+    },
 };
 
 #[tokio::main]

@@ -22,4 +22,47 @@
  * SOFTWARE.
  ***/
 
-mod client;
+use clap::Parser;
+
+use revolut::{
+    errors::Result::{self, Ok},
+    merchant::client::{merchant_client, MerchantAuthenticationBuilder},
+};
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// Order ID
+    #[arg(long)]
+    order_id: String,
+    /// Amount
+    #[arg(long)]
+    amount: u64,
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let args = Args::parse();
+
+    let client = merchant_client()
+        .with_sandbox_environment()
+        .with_authentication(
+            MerchantAuthenticationBuilder::default()
+                .with_environment_inherited_secret_key("REVOLUT_SECRET_KEY")?
+                .build(),
+        )
+        .build()?;
+
+    println!(
+        "{}",
+        serde_json::to_string(&client.capture_order(&args.order_id, args.amount).await?).map_err(
+            |err| {
+                revolut::errors::Error::ClientError(revolut::errors::ClientError::RequestError(
+                    format!("{}", err),
+                ))
+            }
+        )?
+    );
+
+    Ok(())
+}
