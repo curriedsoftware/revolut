@@ -23,23 +23,22 @@
  ***/
 
 use revolut::{
-    business::client::{BusinessAuthentication, BusinessAuthenticationBuilder, business_client},
     errors::ApiResult,
+    merchant::client::{MerchantAuthenticationBuilder, merchant_client},
 };
 
 #[tokio::main]
 async fn main() -> ApiResult<()> {
-    let client = business_client()
+    let client = merchant_client()
         .with_sandbox_environment()
         .with_authentication(
-            BusinessAuthenticationBuilder::default()
-                .with_environment_inherited_client_assertion("REVOLUT_CLIENT_ASSERTION")?
-                .with_environment_inherited_refresh_token("REVOLUT_REFRESH_TOKEN")?
+            MerchantAuthenticationBuilder::default()
+                .with_environment_inherited_secret_key("REVOLUT_SECRET_KEY")?
                 .build(),
         )
         .build()?;
 
-    println!("{}", client.login_with_refresh_token().await?.access_token);
+    println!("{}", serde_json::to_string(&client.orders().await?)?);
 
     Ok(())
 }
