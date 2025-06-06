@@ -21,3 +21,16 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  ***/
+
+use crate::{
+    client::Environment,
+    errors::Result,
+    merchant::{client, orders, Client},
+};
+
+/// Orders API. Available in sandbox and production environments.
+impl<E: Environment> Client<E, client::MerchantAuthentication> {
+    pub async fn orders(&self) -> Result<Vec<super::orders::v10::Order>> {
+        orders::list(self).await
+    }
+}

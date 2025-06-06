@@ -21,3 +21,26 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  ***/
+
+use crate::{
+    client::{Client, Environment, HttpMethod},
+    errors::{self, Result},
+    merchant::client::MerchantAuthentication,
+};
+
+pub mod v10 {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct Order {
+        id: String,
+    }
+}
+
+pub async fn list<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+) -> Result<Vec<v10::Order>> {
+    client
+        .request(HttpMethod::Get, &client.environment.uri("1.0", "/orders"))
+        .await
+}

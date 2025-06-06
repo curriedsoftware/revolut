@@ -22,13 +22,6 @@
  * SOFTWARE.
  ***/
 
-use crate::client::{Client, OpenBankingAuthentication};
+use crate::client::{Client, Environment, OpenBankingAuthentication};
 
 mod client;
-
-#[derive(Debug)]
-pub struct OpenBanking<'a, T> {
-    pub(crate) client: &'a Client<T, OpenBankingAuthentication>,
-}
-
-impl<T> OpenBanking<'_, T> {}

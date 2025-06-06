@@ -30,6 +30,12 @@ retrieve-access-token: (run-example "retrieve_access_token")
 
 refresh-access-token: (run-example "refresh_access_token")
 
+# --- Business API
+
 list-accounts: (run-example "list_accounts")
 
 bank-details account_id: (run-example "bank_details" "--account-id" account_id)
+
+# --- Merchant API
+
+list-orders: (run-example "list_orders")
