@@ -22,11 +22,14 @@
  * SOFTWARE.
  ***/
 
-use std::{cell::RefCell, marker::PhantomData};
+use serde::de::DeserializeOwned;
+use std::{cell::RefCell, fmt::Debug, marker::PhantomData};
 
 use crate::{
     client::{
-        Client, ClientBuilder, MerchantClient, MissingClientAuthentication, MissingEnvironment,
+        self, Client, ClientBuilder, Environment, HttpMethod, MerchantClient,
+        MissingClientAuthentication, MissingEnvironment, ProductionEnvironment, RevolutEndpoint,
+        SandboxEnvironment,
     },
     errors::{self, Result},
 };
@@ -37,6 +40,40 @@ pub fn merchant_client(
         environment: MissingEnvironment,
         authentication: MissingClientAuthentication,
         client_type: PhantomData,
+    }
+}
+
+impl Environment for SandboxEnvironment<MerchantClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!(
+            "{}{}{}",
+            "https://sandbox-merchant.revolut.com/api/", version, path
+        ))
+    }
+}
+
+impl Environment for ProductionEnvironment<MerchantClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!(
+            "{}{}{}",
+            "https://merchant.revolut.com/api/", version, path
+        ))
+    }
+}
+
+pub struct MerchantAuthenticationBuilder {}
+
+impl Default for MerchantAuthenticationBuilder {
+    fn default() -> MerchantAuthenticationBuilder {
+        MerchantAuthenticationBuilder {}
+    }
+}
+
+impl MerchantAuthenticationBuilder {
+    pub fn build(self) -> MerchantAuthentication {
+        MerchantAuthentication {
+            secret_key: String::new(),
+        }
     }
 }
 
@@ -58,7 +95,7 @@ impl<E> ClientBuilder<E, MissingClientAuthentication, MerchantClient> {
     }
 }
 
-impl<E, C> ClientBuilder<E, MerchantAuthentication, C> {
+impl<E: Environment, C> ClientBuilder<E, MerchantAuthentication, C> {
     pub fn build(self) -> Result<Client<E, MerchantAuthentication>> {
         let client_builder = reqwest::ClientBuilder::new();
         Ok(Client {
@@ -72,5 +109,15 @@ impl<E, C> ClientBuilder<E, MerchantAuthentication, C> {
             access_token: RefCell::new(None),
             access_token_expires_at: RefCell::new(None),
         })
+    }
+}
+
+impl<E: Environment> Client<E, MerchantAuthentication> {
+    pub(crate) async fn request<'a, R: DeserializeOwned + Debug>(
+        &self,
+        method: HttpMethod<'a>,
+        uri: &RevolutEndpoint,
+    ) -> Result<R> {
+        unimplemented!()
     }
 }

@@ -29,7 +29,9 @@
 //! will result in an error at compile time.
 
 use crate::{
-    business::client::{BusinessAuthentication, Environment, HttpMethod, ProductionEnvironment},
+    business::client::{
+        self, BusinessAuthentication, Environment, HttpMethod, ProductionEnvironment,
+    },
     client::Client,
     errors::Result,
 };
@@ -92,7 +94,7 @@ pub mod v10 {
 }
 
 pub async fn list(
-    client: &Client<ProductionEnvironment, BusinessAuthentication>,
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
 ) -> Result<Vec<v10::Expense>> {
     client
         .request(HttpMethod::Get, &client.environment.uri("1.0", "/expenses"))
@@ -100,7 +102,7 @@ pub async fn list(
 }
 
 pub async fn expense(
-    client: &Client<ProductionEnvironment, BusinessAuthentication>,
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
     expense_id: &str,
 ) -> Result<v10::Expense> {
     client
@@ -114,7 +116,7 @@ pub async fn expense(
 }
 
 pub async fn expense_receipt(
-    client: &Client<ProductionEnvironment, BusinessAuthentication>,
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
     expense_id: &str,
     receipt_id: &str,
 ) -> Result<Vec<u8>> {

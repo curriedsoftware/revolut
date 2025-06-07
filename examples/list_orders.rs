@@ -22,10 +22,26 @@
  * SOFTWARE.
  ***/
 
-use crate::{client::Client, merchant::client::MerchantAuthentication};
+use revolut::{
+    errors::Result,
+    merchant::client::{merchant_client, MerchantAuthenticationBuilder},
+};
 
-pub mod client;
-pub mod orders;
-pub mod v2024_09_01;
+#[tokio::main]
+async fn main() -> Result<()> {
+    let client = merchant_client()
+        .with_sandbox_environment()
+        .with_authentication(MerchantAuthenticationBuilder::default().build())
+        .build()?;
 
-pub use v2024_09_01 as latest;
+    println!(
+        "{}",
+        serde_json::to_string(&client.orders().await?).map_err(|err| {
+            revolut::errors::Error::ClientError(revolut::errors::ClientError::RequestError(
+                format!("{:?}", err),
+            ))
+        })?
+    );
+
+    Ok(())
+}

@@ -48,6 +48,24 @@ pub fn business_client(
     }
 }
 
+impl Environment for SandboxEnvironment<BusinessClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!(
+            "{}{}{}",
+            "https://sandbox-b2b.revolut.com/api/", version, path
+        ))
+    }
+}
+
+impl Environment for ProductionEnvironment<BusinessClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!(
+            "{}{}{}",
+            "https://b2b.revolut.com/api/", version, path
+        ))
+    }
+}
+
 pub mod v10 {
     use serde::Deserialize;
 
@@ -416,7 +434,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
     }
 }
 
-impl<E, C> ClientBuilder<E, BusinessAuthentication, C> {
+impl<E: Environment, C> ClientBuilder<E, BusinessAuthentication, C> {
     pub fn build(self) -> Result<Client<E, BusinessAuthentication>> {
         let client_builder = reqwest::ClientBuilder::new();
         Ok(Client {

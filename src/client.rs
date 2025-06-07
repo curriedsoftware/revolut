@@ -22,7 +22,7 @@
  * SOFTWARE.
  ***/
 
-use std::cell::RefCell;
+use std::{cell::RefCell, os::unix::fs::OpenOptionsExt};
 
 pub use crate::{
     errors::{self, ClientBuilderError, Error, Result},
@@ -35,7 +35,7 @@ use std::{fmt::Debug, marker::PhantomData};
 pub struct OpenBankingAuthentication {}
 
 #[derive(Debug)]
-pub struct Client<E, T> {
+pub struct Client<E: Environment, T> {
     pub environment: E,
     pub client: reqwest::Client,
     pub authentication: T,
@@ -56,9 +56,13 @@ pub enum HttpMethod<'a> {
 }
 
 #[derive(Debug)]
-pub struct SandboxEnvironment;
+pub struct SandboxEnvironment<C> {
+    pub(crate) client_type: PhantomData<C>,
+}
 #[derive(Debug)]
-pub struct ProductionEnvironment;
+pub struct ProductionEnvironment<C> {
+    pub(crate) client_type: PhantomData<C>,
+}
 
 pub trait Environment {
     fn uri(&self, version: &str, path: &str) -> RevolutEndpoint;
@@ -80,37 +84,23 @@ pub struct ClientBuilder<E, A, C> {
 }
 
 impl<A, C> ClientBuilder<MissingEnvironment, A, C> {
-    pub fn with_sandbox_environment(self) -> ClientBuilder<SandboxEnvironment, A, C> {
+    pub fn with_sandbox_environment(self) -> ClientBuilder<SandboxEnvironment<C>, A, C> {
         ClientBuilder {
-            environment: SandboxEnvironment,
+            environment: SandboxEnvironment {
+                client_type: PhantomData,
+            },
             authentication: self.authentication,
             client_type: self.client_type,
         }
     }
 
-    pub fn with_production_environment(self) -> ClientBuilder<ProductionEnvironment, A, C> {
+    pub fn with_production_environment(self) -> ClientBuilder<ProductionEnvironment<C>, A, C> {
         ClientBuilder {
-            environment: ProductionEnvironment,
+            environment: ProductionEnvironment {
+                client_type: PhantomData,
+            },
             authentication: self.authentication,
             client_type: self.client_type,
         }
-    }
-}
-
-impl Environment for SandboxEnvironment {
-    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
-        RevolutEndpoint(format!(
-            "{}{}{}",
-            "https://sandbox-b2b.revolut.com/api/", version, path
-        ))
-    }
-}
-
-impl Environment for ProductionEnvironment {
-    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
-        RevolutEndpoint(format!(
-            "{}{}{}",
-            "https://b2b.revolut.com/api/", version, path
-        ))
     }
 }

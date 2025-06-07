@@ -25,8 +25,9 @@
 use std::marker::PhantomData;
 
 pub use crate::client::{
-    ClientBuilder, MissingClientAuthentication, MissingEnvironment, OpenBankingAuthentication,
-    OpenBankingClient,
+    ClientBuilder, Environment, MissingClientAuthentication, MissingEnvironment,
+    OpenBankingAuthentication, OpenBankingClient, ProductionEnvironment, RevolutEndpoint,
+    SandboxEnvironment,
 };
 
 pub fn openbanking_client(
@@ -35,6 +36,24 @@ pub fn openbanking_client(
         environment: MissingEnvironment,
         authentication: MissingClientAuthentication,
         client_type: PhantomData,
+    }
+}
+
+impl Environment for SandboxEnvironment<OpenBankingClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!(
+            "{}{}{}",
+            "https://sandbox-oba-auth.revolut.com/api/", version, path
+        ))
+    }
+}
+
+impl Environment for ProductionEnvironment<OpenBankingClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!(
+            "{}{}{}",
+            "https://oba-auth.revolut.com/", version, path
+        ))
     }
 }
 
