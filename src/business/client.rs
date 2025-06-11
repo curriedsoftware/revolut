@@ -23,12 +23,12 @@
  ***/
 
 use chrono::{Duration, Utc};
-use serde::de::DeserializeOwned;
-use std::{cell::RefCell, string::ToString};
+use serde::{de::DeserializeOwned, Serialize};
+use std::{cell::RefCell, clone::Clone, cmp::PartialEq, string::ToString};
 
 pub use crate::{
     client::{
-        self, Client, ClientBuilder, Environment, HttpMethod, MissingClientAuthentication,
+        self, Body, Client, ClientBuilder, Environment, HttpMethod, MissingClientAuthentication,
         MissingEnvironment, ProductionEnvironment, RevolutEndpoint, SandboxEnvironment,
     },
     errors::{self, ClientBuilderError, Error, Result},
@@ -45,6 +45,34 @@ pub fn business_client(
         environment: MissingEnvironment,
         authentication: MissingClientAuthentication,
         client_type: PhantomData,
+    }
+}
+
+impl Environment for SandboxEnvironment<BusinessClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!(
+            "{}{}{}",
+            "https://sandbox-b2b.revolut.com/api/", version, path
+        ))
+    }
+
+    fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
+        // The Business API is always versioned.
+        unreachable!()
+    }
+}
+
+impl Environment for ProductionEnvironment<BusinessClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!(
+            "{}{}{}",
+            "https://b2b.revolut.com/api/", version, path
+        ))
+    }
+
+    fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
+        // The Business API is always versioned.
+        unreachable!()
     }
 }
 
@@ -256,9 +284,9 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         self.login().await
     }
 
-    pub(crate) async fn request_raw<'a>(
+    pub(crate) async fn request_raw<'a, T: Serialize + Clone + PartialEq>(
         &self,
-        method: HttpMethod<'a>,
+        method: HttpMethod<'a, T>,
         uri: &RevolutEndpoint,
     ) -> Result<Vec<u8>> {
         self.ensure_logged_in().await?;
@@ -277,20 +305,23 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
                     self.client.delete(Into::<&str>::into(uri))
                 }
             }
-            HttpMethod::Post { body } | HttpMethod::Patch { body } | HttpMethod::Put { body } => {
-                if method == (HttpMethod::Post { body }) {
-                    self.client.post(Into::<&str>::into(uri))
-                } else if method == (HttpMethod::Patch { body }) {
-                    self.client.patch(Into::<&str>::into(uri))
-                } else {
-                    self.client.put(Into::<&str>::into(uri))
+            HttpMethod::Post { ref body }
+            | HttpMethod::Patch { ref body }
+            | HttpMethod::Put { ref body } => {
+                let client = self
+                    .client
+                    .request((&method).into(), Into::<&str>::into(uri));
+                match body {
+                    Some(Body::Json(body)) => client.json(body),
+                    Some(Body::Raw(body)) => client.body(body.to_vec()),
+                    None => client.header("Content-Length", 0),
                 }
-                .body(body.to_string())
             }
         };
 
         Ok(request
             .header("Authorization", format!("Bearer {}", access_token))
+            .header("Accept", "application/json")
             .send()
             .await
             .map_err(|err| {
@@ -304,9 +335,13 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .to_vec())
     }
 
-    pub(crate) async fn request<'a, R: DeserializeOwned + Debug>(
+    pub(crate) async fn request<
+        'a,
+        R: DeserializeOwned + Debug,
+        T: Serialize + Clone + PartialEq,
+    >(
         &self,
-        method: HttpMethod<'a>,
+        method: HttpMethod<'a, T>,
         uri: &RevolutEndpoint,
     ) -> Result<R> {
         self.ensure_logged_in().await?;
@@ -325,34 +360,47 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
                     self.client.delete(Into::<&str>::into(uri))
                 }
             }
-            HttpMethod::Post { body } | HttpMethod::Patch { body } | HttpMethod::Put { body } => {
-                if method == (HttpMethod::Post { body }) {
-                    self.client.post(Into::<&str>::into(uri))
-                } else if method == (HttpMethod::Patch { body }) {
-                    self.client.patch(Into::<&str>::into(uri))
-                } else {
-                    self.client.put(Into::<&str>::into(uri))
+            HttpMethod::Post { ref body }
+            | HttpMethod::Patch { ref body }
+            | HttpMethod::Put { ref body } => {
+                let client = self
+                    .client
+                    .request((&method).into(), Into::<&str>::into(uri));
+                match body {
+                    Some(Body::Json(body)) => client.json(body),
+                    Some(Body::Raw(body)) => client.body(body.to_vec()),
+                    None => client.header("Content-Length", 0),
                 }
-                .body(body.to_string())
             }
         };
 
         let response = request
             .header("Authorization", format!("Bearer {}", access_token))
+            .header("Accept", "application/json")
             .send()
             .await
             .map_err(|err| {
                 errors::Error::ClientError(errors::ClientError::RequestError(format!("{:?}", err)))
             })?;
 
-        let response_ = format!("{:?}", response);
-
-        response.json().await.map_err(|err| {
-            errors::Error::ClientError(errors::ClientError::RequestError(format!(
-                "{:?}: {}",
-                err, response_,
-            )))
-        })
+        if response.status().is_success() {
+            let response_ = format!("{:?}", response);
+            response.json().await.map_err(|err| {
+                errors::Error::ClientError(errors::ClientError::RequestError(format!(
+                    "{:?}: {}",
+                    err, response_,
+                )))
+            })
+        } else {
+            Err(errors::Error::ClientError(
+                errors::ClientError::RequestError(
+                    format!(
+                        "{}",
+                        String::from_utf8_lossy(&response.bytes().await.unwrap())
+                    ), // FIXME
+                ),
+            ))
+        }
     }
 
     pub async fn login_with_authorization_code(
@@ -416,7 +464,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
     }
 }
 
-impl<E, C> ClientBuilder<E, BusinessAuthentication, C> {
+impl<E: Environment, C> ClientBuilder<E, BusinessAuthentication, C> {
     pub fn build(self) -> Result<Client<E, BusinessAuthentication>> {
         let client_builder = reqwest::ClientBuilder::new();
         Ok(Client {
@@ -429,6 +477,7 @@ impl<E, C> ClientBuilder<E, BusinessAuthentication, C> {
             authentication: self.authentication,
             access_token: RefCell::new(None),
             access_token_expires_at: RefCell::new(None),
+            secret_key: None,
         })
     }
 }

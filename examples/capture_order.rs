@@ -22,30 +22,46 @@
  * SOFTWARE.
  ***/
 
+use clap::Parser;
+
 use revolut::{
-    business::client::{business_client, BusinessAuthenticationBuilder},
     errors::Result,
+    merchant::client::{merchant_client, MerchantAuthenticationBuilder},
 };
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// Order ID
+    #[arg(long)]
+    order_id: String,
+    /// Amount
+    #[arg(long)]
+    amount: u64,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = business_client()
+    let args = Args::parse();
+
+    let client = merchant_client()
         .with_sandbox_environment()
         .with_authentication(
-            BusinessAuthenticationBuilder::default()
-                .with_environment_inherited_client_assertion("REVOLUT_CLIENT_ASSERTION")?
-                .with_environment_inherited_refresh_token("REVOLUT_REFRESH_TOKEN")?
+            MerchantAuthenticationBuilder::default()
+                .with_environment_inherited_secret_key("REVOLUT_SECRET_KEY")?
                 .build(),
         )
         .build()?;
 
     println!(
         "{}",
-        serde_json::to_string(&client.accounts().await?).map_err(|err| {
-            revolut::errors::Error::ClientError(revolut::errors::ClientError::RequestError(
-                format!("{}", err),
-            ))
-        })?
+        serde_json::to_string(&client.capture_order(&args.order_id, args.amount).await?).map_err(
+            |err| {
+                revolut::errors::Error::ClientError(revolut::errors::ClientError::RequestError(
+                    format!("{}", err),
+                ))
+            }
+        )?
     );
 
     Ok(())

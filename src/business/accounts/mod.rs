@@ -83,7 +83,10 @@ pub async fn list<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
 ) -> Result<Vec<v10::Account>> {
     client
-        .request(HttpMethod::Get, &client.environment.uri("1.0", "/accounts"))
+        .request(
+            HttpMethod::<()>::Get,
+            &client.environment.uri("1.0", "/accounts"),
+        )
         .await
 }
 
@@ -93,7 +96,7 @@ pub async fn account<E: Environment>(
 ) -> Result<v10::Account> {
     client
         .request(
-            HttpMethod::Get,
+            HttpMethod::<()>::Get,
             &client
                 .environment
                 .uri("1.0", &format!("/accounts/{account_id}")),
@@ -106,8 +109,8 @@ pub async fn bank_details<E: Environment>(
     account_id: &str,
 ) -> Result<v10::BankDetails> {
     Ok(client
-        .request::<Vec<v10::BankDetails>>(
-            HttpMethod::Get,
+        .request::<Vec<v10::BankDetails>, ()>(
+            HttpMethod::<()>::Get,
             &client
                 .environment
                 .uri("1.0", &format!("/accounts/{account_id}/bank-details")),
