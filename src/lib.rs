@@ -22,6 +22,8 @@
  * SOFTWARE.
  ***/
 
+#![feature(try_trait_v2, try_trait_v2_residual)]
+
 pub mod business;
 pub mod client;
 pub mod errors;
