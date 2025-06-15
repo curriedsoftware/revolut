@@ -29,9 +29,11 @@
 //! will result in an error at compile time.
 
 use crate::{
-    business::client::{BusinessAuthentication, Environment, HttpMethod, ProductionEnvironment},
+    business::client::{
+        self, BusinessAuthentication, Environment, HttpMethod, ProductionEnvironment,
+    },
     client::Client,
-    errors::{self, Result},
+    errors::Result,
 };
 
 pub mod v10 {
@@ -91,9 +93,12 @@ pub mod v10 {
 }
 
 pub async fn list(
-    client: &Client<ProductionEnvironment, BusinessAuthentication>,
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
 ) -> Result<Vec<v10::Card>> {
     client
-        .request(HttpMethod::Get, &client.environment.uri("1.0", "/cards"))
+        .request(
+            HttpMethod::<()>::Get,
+            &client.environment.uri("1.0", "/cards"),
+        )
         .await
 }
