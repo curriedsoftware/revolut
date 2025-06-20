@@ -7,7 +7,10 @@
 }: {
   languages = {
     c.enable = true;
-    rust.enable = true;
+    rust = {
+      enable = true;
+      channel = "nightly";
+    };
   };
 
   packages = with pkgs; [alejandra cargo-audit cargo-deny just jq openssl pkg-config];

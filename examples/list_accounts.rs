@@ -23,12 +23,12 @@
  ***/
 
 use revolut::{
-    business::client::{business_client, BusinessAuthenticationBuilder},
-    errors::Result,
+    business::client::{BusinessAuthenticationBuilder, business_client},
+    errors::ApiResult,
 };
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> ApiResult<()> {
     let client = business_client()
         .with_sandbox_environment()
         .with_authentication(
@@ -39,14 +39,7 @@ async fn main() -> Result<()> {
         )
         .build()?;
 
-    println!(
-        "{}",
-        serde_json::to_string(&client.accounts().await?).map_err(|err| {
-            revolut::errors::Error::ClientError(revolut::errors::ClientError::RequestError(
-                format!("{:?}", err),
-            ))
-        })?
-    );
+    println!("{}", serde_json::to_string(&client.accounts().await?)?);
 
     Ok(())
 }

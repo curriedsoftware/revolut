@@ -23,12 +23,12 @@
  ***/
 
 use revolut::{
-    business::client::{business_client, BusinessAuthentication, BusinessAuthenticationBuilder},
-    errors::{Error, Result},
+    business::client::{BusinessAuthentication, BusinessAuthenticationBuilder, business_client},
+    errors::ApiResult,
 };
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> ApiResult<()> {
     let client = business_client()
         .with_sandbox_environment()
         .with_authentication(

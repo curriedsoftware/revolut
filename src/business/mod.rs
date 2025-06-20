@@ -24,7 +24,7 @@
 
 use client::{Environment, ProductionEnvironment, SandboxEnvironment};
 
-use crate::{client::Client, errors::Result};
+use crate::{client::Client, errors::ApiResult};
 
 pub mod accounts;
 pub mod cards;
@@ -42,15 +42,15 @@ pub mod webhooks;
 
 /// Accounts API. Available in sandbox and production environments.
 impl<E: Environment> Client<E, client::BusinessAuthentication> {
-    pub async fn accounts(&self) -> Result<Vec<accounts::v10::Account>> {
+    pub async fn accounts(&self) -> ApiResult<Vec<accounts::v10::Account>> {
         accounts::list(self).await
     }
 
-    pub async fn account(&self, account_id: &str) -> Result<accounts::v10::Account> {
+    pub async fn account(&self, account_id: &str) -> ApiResult<accounts::v10::Account> {
         accounts::account(self, account_id).await
     }
 
-    pub async fn bank_details(&self, account_id: &str) -> Result<accounts::v10::BankDetails> {
+    pub async fn bank_details(&self, account_id: &str) -> ApiResult<accounts::v10::BankDetails> {
         accounts::bank_details(self, account_id).await
     }
 }
@@ -59,39 +59,39 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {
 ///
 /// Trying to access these endpoints from the sandbox environment will
 /// result in a compile error.
-impl Client<ProductionEnvironment, client::BusinessAuthentication> {
-    pub async fn cards(&self) -> Result<Vec<cards::v10::Card>> {
+impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
+    pub async fn cards(&self) -> ApiResult<Vec<cards::v10::Card>> {
         cards::list(self).await
     }
 
-    pub async fn create_card(&self, card: &cards::v10::Card) -> Result<cards::v10::Card> {
+    pub async fn create_card(&self, card: &cards::v10::Card) -> ApiResult<cards::v10::Card> {
         unimplemented!()
     }
 
-    pub async fn card(&self, card_id: &str) -> Result<cards::v10::Card> {
+    pub async fn card(&self, card_id: &str) -> ApiResult<cards::v10::Card> {
         unimplemented!()
     }
 
-    pub async fn update_card(&self, card: &cards::v10::Card) -> Result<cards::v10::Card> {
+    pub async fn update_card(&self, card: &cards::v10::Card) -> ApiResult<cards::v10::Card> {
         unimplemented!()
     }
 
-    pub async fn terminate_card(&self, card_id: &str) -> Result<()> {
+    pub async fn terminate_card(&self, card_id: &str) -> ApiResult<()> {
         unimplemented!()
     }
 
-    pub async fn freeze_card(&self, card_id: &str) -> Result<()> {
+    pub async fn freeze_card(&self, card_id: &str) -> ApiResult<()> {
         unimplemented!()
     }
 
-    pub async fn unfreeze_card(&self, card_id: &str) -> Result<()> {
+    pub async fn unfreeze_card(&self, card_id: &str) -> ApiResult<()> {
         unimplemented!()
     }
 
     pub async fn card_sensitive_details(
         &self,
         card_id: &str,
-    ) -> Result<cards::v10::CardSensitiveDetails> {
+    ) -> ApiResult<cards::v10::CardSensitiveDetails> {
         unimplemented!()
     }
 }
@@ -104,16 +104,16 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {}
 ///
 /// Trying to access these endpoints from the sandbox environment will
 /// result in a compile error.
-impl Client<ProductionEnvironment, client::BusinessAuthentication> {
-    pub async fn expenses(&self) -> Result<Vec<expenses::v10::Expense>> {
+impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
+    pub async fn expenses(&self) -> ApiResult<Vec<expenses::v10::Expense>> {
         expenses::list(self).await
     }
 
-    pub async fn expense(&self, expense_id: &str) -> Result<expenses::v10::Expense> {
+    pub async fn expense(&self, expense_id: &str) -> ApiResult<expenses::v10::Expense> {
         expenses::expense(self, expense_id).await
     }
 
-    pub async fn expense_receipt(&self, expense_id: &str, receipt_id: &str) -> Result<Vec<u8>> {
+    pub async fn expense_receipt(&self, expense_id: &str, receipt_id: &str) -> ApiResult<Vec<u8>> {
         expenses::expense_receipt(self, expense_id, receipt_id).await
     }
 }
@@ -134,7 +134,7 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {}
 ///
 /// Trying to access these endpoints from the production environment
 /// will result in a compile error.
-impl Client<SandboxEnvironment, client::BusinessAuthentication> {
+impl Client<SandboxEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
     pub async fn simulate_transfer_state_update() {
         unimplemented!()
     }
@@ -148,7 +148,7 @@ impl Client<SandboxEnvironment, client::BusinessAuthentication> {
 ///
 /// Trying to access these endpoints from the sandbox environment will
 /// result in a compile error.
-impl Client<ProductionEnvironment, client::BusinessAuthentication> {
+impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
     pub async fn team_members() {
         unimplemented!()
     }

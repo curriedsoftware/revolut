@@ -2,7 +2,7 @@
 name = "revolut"
 version = "0.1.1"
 authors = ["Rafael Fernández López <ereslibre@curried.software>"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 description = "A library to communicate with the Revolut API"
 repository = "https://github.com/curriedsoftware/revolut"
