@@ -29,10 +29,7 @@ use crate::{
 };
 
 pub mod v10 {
-    use {
-        serde::{Deserialize, Serialize},
-        std::collections::HashMap,
-    };
+    use serde::{Deserialize, Serialize};
 
     #[derive(Debug, Deserialize, PartialEq, Serialize)]
     pub struct CustomerRequest {

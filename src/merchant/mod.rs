@@ -27,6 +27,8 @@ use crate::client::Client;
 pub mod client;
 pub mod customers;
 pub mod orders;
+pub mod payments;
+
 pub mod v2024_09_01;
 
 pub use v2024_09_01 as latest;

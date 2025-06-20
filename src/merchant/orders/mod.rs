@@ -66,6 +66,26 @@ pub mod v10 {
         pub name: String,
         pub r#type: LineItemType,
         pub quantity: Quantity,
+        pub unit_price_amount: u64,
+        pub total_amount: u64,
+        pub external_id: Option<String>,
+        pub discounts: Option<Vec<Discount>>,
+        pub taxes: Option<Vec<Tax>>,
+        pub image_urls: Option<Vec<String>>,
+        pub description: Option<String>,
+        pub url: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    pub struct Discount {
+        pub name: String,
+        pub amount: u64,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    pub struct Tax {
+        pub name: String,
+        pub amount: u64,
     }
 
     #[derive(Debug, Deserialize, PartialEq, Serialize)]
