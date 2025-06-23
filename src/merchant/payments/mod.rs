@@ -135,8 +135,19 @@ pub mod unversioned {
     #[derive(Debug, Deserialize, Serialize)]
     pub struct ThreeDs {
         pub eci: Option<String>,
-        pub state: Option<String>,
+        pub state: Option<ThreeDsState>,
         pub version: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum ThreeDsState {
+        #[serde(alias = "VERIFIED")]
+        Verified,
+        #[serde(alias = "FAILED")]
+        Failed,
+        #[serde(alias = "CHALLENGE")]
+        Challenge,
     }
 
     #[derive(Debug, Deserialize, Serialize)]

@@ -111,11 +111,24 @@ pub mod v10 {
     #[derive(Debug, Deserialize, PartialEq, Serialize)]
     pub struct Transaction {
         pub id: String,
-        pub status: String,
+        pub status: TransactionStatus,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub recipient_wallet_id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub recipient_user_id: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum TransactionStatus {
+        #[serde(alias = "PENDING")]
+        Pending,
+        #[serde(alias = "FAILED")]
+        Failed,
+        #[serde(alias = "CANCELLED")]
+        Cancelled,
+        #[serde(alias = "COMPLETED")]
+        Completed,
     }
 
     #[derive(Debug, Deserialize, PartialEq, Serialize)]
@@ -413,8 +426,19 @@ pub mod v10 {
     #[derive(Debug, Deserialize, Serialize)]
     pub struct ThreeDs {
         pub eci: Option<String>,
-        pub state: Option<String>,
+        pub state: Option<ThreeDsState>,
         pub version: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum ThreeDsState {
+        #[serde(alias = "VERIFIED")]
+        Verified,
+        #[serde(alias = "FAILED")]
+        Failed,
+        #[serde(alias = "CHALLENGE")]
+        Challenge,
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -574,8 +598,53 @@ pub mod v10 {
         pub id: String,
         pub order_id: String,
         pub payment_method: OrderPaymentMethod,
-        pub state: Option<String>,
+        pub state: Option<OrderPaymentState>,
         pub authentication_challenge: Option<OrderAuthenticationChallenge>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum OrderPaymentState {
+        #[serde(alias = "PENDING")]
+        Pending,
+        #[serde(alias = "AUTHENTICATION_CHALLENGE")]
+        AuthenticationChallenge,
+        #[serde(alias = "AUTHENTICATION_VERIFIED")]
+        AuthenticationVerified,
+        #[serde(alias = "AUTHORISATION_STARTED")]
+        AuthorisationStarted,
+        #[serde(alias = "AUTHORISATION_PASSED")]
+        AuthorisationPassed,
+        #[serde(alias = "AUTHORISED")]
+        Authorised,
+        #[serde(alias = "CAPTURE_STARTED")]
+        CaptureStarted,
+        #[serde(alias = "CAPTURED")]
+        Captured,
+        #[serde(alias = "REFUND_VALIDATED")]
+        RefundValidated,
+        #[serde(alias = "REFUND_STARTED")]
+        RefundStarted,
+        #[serde(alias = "CANCELLATION_STARTED")]
+        CancellationStarted,
+        #[serde(alias = "DECLINING")]
+        Declining,
+        #[serde(alias = "COMPLETING")]
+        Completing,
+        #[serde(alias = "CANCELLING")]
+        Cancelling,
+        #[serde(alias = "FAILING")]
+        Failing,
+        #[serde(alias = "COMPLETED")]
+        Completed,
+        #[serde(alias = "DECLINED")]
+        Declined,
+        #[serde(alias = "SOFT_DECLINED")]
+        SoftDeclined,
+        #[serde(alias = "CANCELLED")]
+        Cancelled,
+        #[serde(alias = "FAILED")]
+        Failed,
     }
 
     #[derive(Debug, Deserialize, Serialize)]

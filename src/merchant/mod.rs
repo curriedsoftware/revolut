@@ -30,6 +30,7 @@ pub mod disputes;
 pub mod orders;
 pub mod payments;
 pub mod payouts;
+pub mod report_runs;
 
 pub mod v2024_09_01;
 
