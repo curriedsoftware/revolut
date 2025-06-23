@@ -31,7 +31,7 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
     pub struct CustomerRequest {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub full_name: Option<String>,

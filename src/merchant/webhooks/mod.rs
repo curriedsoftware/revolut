@@ -31,7 +31,7 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
     pub struct WebhookRequest {
         pub url: String,
         pub events: Vec<WebhookEvent>,
@@ -76,7 +76,7 @@ pub mod v10 {
         pub signing_secret: String,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
     pub struct RotateWebhookSigningSecretRequest {
         pub expiration_period: Option<String>,
     }
