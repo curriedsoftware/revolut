@@ -21,3 +21,83 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  ***/
+
+use crate::{
+    client::{Body, Client, Environment, HttpMethod},
+    errors::ApiResult,
+    merchant::client::MerchantAuthentication,
+};
+
+pub mod v10 {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    pub struct WebhookRequest {
+        pub url: String,
+        pub events: Vec<WebhookEvent>,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    pub enum WebhookEvent {
+        #[serde(alias = "order_completed")]
+        OrderCompleted,
+        #[serde(alias = "order_authorised")]
+        OrderAuthorised,
+        #[serde(alias = "order_cancelled")]
+        OrderCancelled,
+        #[serde(alias = "order_payment_authenticated")]
+        OrderPaymentAuthenticated,
+        #[serde(alias = "order_payment_declined")]
+        OrderPaymentDeclined,
+        #[serde(alias = "order_payment_failed")]
+        OrderPaymentFailed,
+        #[serde(alias = "payout_initiated")]
+        PayoutInitiated,
+        #[serde(alias = "payout_completed")]
+        PayoutCompleted,
+        #[serde(alias = "payout_failed")]
+        PayoutFailed,
+        #[serde(alias = "dispute_action_required")]
+        DisputeActionRequired,
+        #[serde(alias = "dispute_under_review")]
+        DisputeUnderReview,
+        #[serde(alias = "dispute_won")]
+        DisputeWon,
+        #[serde(alias = "dispute_lost")]
+        DisputeLost,
+    }
+
+    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    pub struct Webhook {
+        pub id: String,
+        pub url: Option<String>,
+        pub events: Option<Vec<WebhookEvent>>,
+        pub signing_secret: String,
+    }
+}
+
+pub async fn create<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+    webhook: &v10::WebhookRequest,
+) -> ApiResult<v10::Webhook> {
+    client
+        .request(
+            HttpMethod::Post {
+                body: Some(Body::Json(&webhook)),
+            },
+            &client.environment.uri("1.0", "/webhooks"),
+        )
+        .await
+}
+
+pub async fn list<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+) -> ApiResult<Vec<v10::Webhook>> {
+    client
+        .request(
+            HttpMethod::Get::<()>,
+            &client.environment.uri("1.0", "/webhooks"),
+        )
+        .await
+}
