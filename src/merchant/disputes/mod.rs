@@ -139,6 +139,13 @@ pub mod unversioned {
         PNG(&'a [u8]),
         JPEG(&'a [u8]),
     }
+
+    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    pub struct ChallengeDisputeRequest {
+        pub reason: String,
+        pub comment: Option<String>,
+        pub evidences: Vec<String>,
+    }
 }
 
 pub async fn list(
@@ -201,6 +208,23 @@ pub async fn upload_evidence<'a>(
             &client
                 .environment
                 .unversioned_uri(&format!("/disputes/{dispute_id}/evidences")),
+        )
+        .await
+}
+
+pub async fn challenge(
+    client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
+    dispute_id: &str,
+    challenge_dispute: &unversioned::ChallengeDisputeRequest,
+) -> ApiResult<()> {
+    client
+        .request(
+            HttpMethod::Post {
+                body: Some(Body::Json(&challenge_dispute)),
+            },
+            &client
+                .environment
+                .unversioned_uri(&format!("/disputes/{dispute_id}/challenge")),
         )
         .await
 }
