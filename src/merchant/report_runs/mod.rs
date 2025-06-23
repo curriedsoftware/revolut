@@ -155,3 +155,17 @@ pub async fn retrieve<E: Environment>(
         )
         .await
 }
+
+pub async fn download<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+    report_run_id: &str,
+) -> ApiResult<Vec<u8>> {
+    client
+        .request(
+            HttpMethod::Get::<()>,
+            &client
+                .environment
+                .unversioned_uri(&format!("/report-runs/{report_run_id}/file")),
+        )
+        .await
+}
