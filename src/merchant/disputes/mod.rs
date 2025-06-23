@@ -128,6 +128,17 @@ pub mod unversioned {
         #[serde(alias = "REVOLUT_PAY_CARD")]
         RevolutPayCard,
     }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct Evidence {
+        pub id: String,
+    }
+
+    pub enum EvidenceType<'a> {
+        PDF(&'a [u8]),
+        PNG(&'a [u8]),
+        JPEG(&'a [u8]),
+    }
 }
 
 pub async fn list(
@@ -151,6 +162,45 @@ pub async fn retrieve(
             &client
                 .environment
                 .unversioned_uri(&format!("/disputes/{dispute_id}")),
+        )
+        .await
+}
+
+pub async fn accept(
+    client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
+    dispute_id: &str,
+) -> ApiResult<()> {
+    client
+        .request(
+            HttpMethod::Post::<()> { body: None },
+            &client
+                .environment
+                .unversioned_uri(&format!("/disputes/{dispute_id}/accept")),
+        )
+        .await
+}
+
+pub async fn upload_evidence<'a>(
+    client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
+    dispute_id: &str,
+    evidence: unversioned::EvidenceType<'a>,
+) -> ApiResult<unversioned::Evidence> {
+    let (evidence, evidence_content_type) = match evidence {
+        unversioned::EvidenceType::JPEG(evidence) => (evidence, "image/jpeg"),
+        unversioned::EvidenceType::PDF(evidence) => (evidence, "application/pdf"),
+        unversioned::EvidenceType::PNG(evidence) => (evidence, "image/png"),
+    };
+
+    // FIXME(ereslibre): properly implement multipart uploads
+
+    client
+        .request(
+            HttpMethod::Post::<()> {
+                body: Some(Body::Raw(evidence)),
+            },
+            &client
+                .environment
+                .unversioned_uri(&format!("/disputes/{dispute_id}/evidences")),
         )
         .await
 }
