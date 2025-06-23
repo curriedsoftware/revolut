@@ -77,7 +77,7 @@ pub mod v10 {
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Expense {
         id: String,
-        state: String,
+        state: ExpenseState,
         transaction_type: String,
         description: Option<String>,
         submitted_at: Option<String>,
@@ -90,6 +90,27 @@ pub mod v10 {
         splits: Vec<ExpenseSplit>,
         receipt_ids: Vec<String>,
         spent_amount: ExpenseSpentAmount,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum ExpenseState {
+        #[serde(alias = "MISSING_INFO")]
+        MissingInfo,
+        #[serde(alias = "AWAITING_REVIEW")]
+        AwaitingReview,
+        #[serde(alias = "REJECTED")]
+        Rejected,
+        #[serde(alias = "PENDING_REIMBURSEMENT")]
+        PendingReimbursement,
+        #[serde(alias = "REFUND_REQUESTED")]
+        RefundRequested,
+        #[serde(alias = "REFUNDED")]
+        Refunded,
+        #[serde(alias = "APPROVED")]
+        Approved,
+        #[serde(alias = "REVERTED")]
+        Reverted,
     }
 }
 

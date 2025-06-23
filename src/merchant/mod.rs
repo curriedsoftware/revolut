@@ -26,8 +26,10 @@ use crate::client::Client;
 
 pub mod client;
 pub mod customers;
+pub mod disputes;
 pub mod orders;
 pub mod payments;
+pub mod payouts;
 
 pub mod v2024_09_01;
 

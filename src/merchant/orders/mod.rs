@@ -51,7 +51,9 @@ pub mod v10 {
     #[derive(Debug, Deserialize, PartialEq, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum LineItemType {
+        #[serde(alias = "PHYSICAL")]
         Physical,
+        #[serde(alias = "SERVICE")]
         Service,
     }
 
@@ -218,6 +220,7 @@ pub mod v10 {
     #[derive(Debug, Deserialize, PartialEq, Serialize)]
     #[serde(tag = "type", rename_all = "snake_case")]
     pub enum IndustryData {
+        #[serde(alias = "AIRLINE")]
         Airline {
             booking_id: String,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -238,6 +241,7 @@ pub mod v10 {
             #[serde(skip_serializing_if = "Option::is_none")]
             booking_url: Option<String>,
         },
+        #[serde(alias = "CRYPTO")]
         Crypto {
             transactions: Vec<Transaction>,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -245,11 +249,13 @@ pub mod v10 {
             #[serde(skip_serializing_if = "Option::is_none")]
             subseller_url: Option<String>,
         },
+        #[serde(alias = "EVENT")]
         Event {
             booking_id: String,
             #[serde(skip_serializing_if = "Option::is_none")]
             events: Option<Vec<Event>>,
         },
+        #[serde(alias = "LODGING")]
         Lodging {
             booking_id: String,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -269,9 +275,8 @@ pub mod v10 {
             #[serde(skip_serializing_if = "Option::is_none")]
             guests: Option<Vec<Guest>>,
         },
-        Marketplace {
-            subseller: Subseller,
-        },
+        #[serde(alias = "MARKETPLACE")]
+        Marketplace { subseller: Subseller },
     }
 
     #[derive(Debug, Deserialize, PartialEq, Serialize)]
@@ -327,20 +332,25 @@ pub mod v10 {
     #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum SavedPaymentMethodType {
+        #[serde(alias = "CARD")]
         Card,
+        #[serde(alias = "REVOLUT_PAY")]
         RevolutPay,
     }
 
     #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum SavedPaymentMethodInitiator {
+        #[serde(alias = "CUSTOMER")]
         Customer,
+        #[serde(alias = "MERCHANT")]
         Merchant,
     }
 
     #[derive(Debug, Deserialize, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum SavedPaymentMethodEnvironment {
+        #[serde(alias = "BROWSER")]
         Browser,
     }
 
@@ -388,10 +398,15 @@ pub mod v10 {
     #[derive(Debug, Deserialize, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum PaymentType {
+        #[serde(alias = "APPLE_PAY")]
         ApplePay,
+        #[serde(alias = "CARD")]
         Card,
+        #[serde(alias = "GOOGLE_PAY")]
         GooglePay,
+        #[serde(alias = "REVOLUT_PAY_CARD")]
         RevolutPayCard,
+        #[serde(alias = "REVOLUT_PAY_ACCOUNT")]
         RevolutPayAccount,
     }
 
@@ -442,7 +457,7 @@ pub mod v10 {
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Payment {
         pub id: String,
-        pub state: String,
+        pub state: PaymentState,
         pub decline_reason: Option<String>,
         pub bank_message: Option<String>,
         pub created_at: String,
@@ -457,6 +472,23 @@ pub mod v10 {
         pub billing_address: Option<Address>,
         pub risk_level: Option<String>,
         pub fees: Option<Vec<Fee>>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum PaymentState {
+        #[serde(alias = "PENDING")]
+        Pending,
+        #[serde(alias = "PROCESSING")]
+        Processing,
+        #[serde(alias = "AUTHORISED")]
+        Authorised,
+        #[serde(alias = "COMPLETED")]
+        Completed,
+        #[serde(alias = "CANCELLED")]
+        Cancelled,
+        #[serde(alias = "FAILED")]
+        Failed,
     }
 
     #[derive(Debug, Deserialize, Serialize)]

@@ -39,10 +39,19 @@ pub mod v10 {
         name: Option<String>,
         balance: f64,
         currency: String,
-        state: String,
+        state: AccountState,
         public: bool,
         created_at: String,
         updated_at: String,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum AccountState {
+        #[serde(alias = "ACTIVE")]
+        Active,
+        #[serde(alias = "INACTIVE")]
+        Inactive,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]

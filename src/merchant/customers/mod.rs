@@ -62,9 +62,11 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, PartialEq, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum PaymentMethodType {
+        #[serde(alias = "CARD")]
         Card,
+        #[serde(alias = "REVOLUT_PAY")]
         RevolutPay,
     }
 
@@ -102,8 +104,9 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
-    #[serde(rename_all = "UPPERCASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum PaymentMethodSavedForRequest {
+        #[serde(alias = "CUSTOMER")]
         Customer,
     }
 

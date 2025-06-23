@@ -29,10 +29,8 @@
 //! will result in an error at compile time.
 
 use crate::{
-    business::client::{
-        self, BusinessAuthentication, Environment, HttpMethod, ProductionEnvironment,
-    },
-    client::Client,
+    business::client::{self, BusinessAuthentication, Environment, HttpMethod},
+    client::{Client, ProductionEnvironment},
     errors::ApiResult,
 };
 
@@ -71,7 +69,7 @@ pub mod v10 {
         id: String,
         last_digits: String,
         expiry: String,
-        state: String,
+        state: CardState,
         label: Option<String>,
         r#virtual: bool,
         product: Option<CardProduct>,
@@ -82,6 +80,21 @@ pub mod v10 {
         holder_id: Option<String>,
         created_at: String,
         updated_at: String,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum CardState {
+        #[serde(alias = "CREATED")]
+        Created,
+        #[serde(alias = "PENDING")]
+        Pending,
+        #[serde(alias = "ACTIVE")]
+        Active,
+        #[serde(alias = "FROZEN")]
+        Frozen,
+        #[serde(alias = "LOCKED")]
+        Locked,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]

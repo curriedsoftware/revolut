@@ -25,9 +25,9 @@
 use serde::{Serialize, de::DeserializeOwned};
 use std::{cell::RefCell, clone::Clone, cmp::PartialEq, fmt::Debug, marker::PhantomData};
 
-use crate::{
+pub use crate::{
     client::{
-        Body, Client, ClientBuilder, Environment, HttpMethod, MerchantClient,
+        self, Body, Client, ClientBuilder, Environment, HttpMethod, MerchantClient,
         MissingClientAuthentication, MissingEnvironment, ProductionEnvironment, RevolutEndpoint,
         SandboxEnvironment,
     },
