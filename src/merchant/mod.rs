@@ -22,16 +22,17 @@
  * SOFTWARE.
  ***/
 
-use crate::{client::Client, merchant::client::MerchantAuthentication};
+use crate::client::Client;
 
 pub mod client;
+pub mod customers;
+pub mod disputes;
+pub mod orders;
+pub mod payments;
+pub mod payouts;
+pub mod report_runs;
+pub mod webhooks;
+
 pub mod v2024_09_01;
 
 pub use v2024_09_01 as latest;
-
-#[derive(Debug)]
-pub struct Merchant<'a, T> {
-    pub(crate) client: &'a Client<T, MerchantAuthentication>,
-}
-
-impl<T> Merchant<'_, T> {}

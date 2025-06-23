@@ -21,3 +21,151 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  ***/
+
+use crate::{
+    client::{Body, Client, Environment, HttpMethod},
+    errors::ApiResult,
+    merchant::client::MerchantAuthentication,
+};
+
+pub mod unversioned {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[serde(tag = "type", rename_all = "snake_case")]
+    pub enum ReportRunRequest {
+        SettlementReport(SettlementReport),
+        CustomReport(CustomReport),
+        PayoutStatementReport(PayoutStatementReport),
+        IcppFeeBreakdownReport,
+    }
+
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    pub struct SettlementReport {
+        pub filter: SettlementReportFilter,
+        pub format: String,
+        pub r#type: String,
+        pub options: Option<SettlementReportOptions>,
+    }
+
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    pub struct SettlementReportFilter {
+        pub from: Option<String>,
+        pub to: String,
+        pub entity_types: Option<String>,
+        pub entity_states: Option<String>,
+        pub currency: Option<String>,
+        pub location_id: Option<String>,
+    }
+
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    pub struct SettlementReportOptions {
+        pub timezone: Option<String>,
+        pub columns: Option<String>,
+    }
+
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    pub struct CustomReport {
+        pub filter: CustomReportFilter,
+        pub format: String,
+        pub r#type: String,
+        pub options: Option<CustomReportOptions>,
+    }
+
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    pub struct CustomReportFilter {
+        pub from: Option<String>,
+        pub to: String,
+        pub entity_types: Option<String>,
+        pub entity_states: Option<String>,
+        pub currency: Option<String>,
+        pub location_id: Option<String>,
+    }
+
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    pub struct CustomReportOptions {
+        pub timezone: Option<String>,
+        pub columns: Option<String>,
+    }
+
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    pub struct PayoutStatementReport {
+        pub filter: PayoutStatementFilter,
+        pub format: String,
+        pub r#type: String,
+        pub options: Option<PayoutStatementReportOptions>,
+    }
+
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    pub struct PayoutStatementFilter {
+        pub payout_id: String,
+    }
+
+    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    pub struct PayoutStatementReportOptions {
+        pub timezone: Option<String>,
+        pub columns: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct ReportRun {
+        pub report_run_id: String,
+        pub status: ReportRunStatus,
+        pub file_url: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    #[serde(tag = "type", rename_all = "snake_case")]
+    pub enum ReportRunStatus {
+        #[serde(alias = "PROCESSING")]
+        Processing,
+        #[serde(alias = "COMPLETED")]
+        Completed,
+        #[serde(alias = "FAILED")]
+        Failed,
+        #[serde(alias = "EXPIRED")]
+        Expired,
+    }
+}
+
+pub async fn create<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+    order: &unversioned::ReportRunRequest,
+) -> ApiResult<unversioned::ReportRun> {
+    client
+        .request(
+            HttpMethod::Post {
+                body: Some(Body::Json(&order)),
+            },
+            &client.environment.unversioned_uri("/orders"),
+        )
+        .await
+}
+
+pub async fn retrieve<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+    report_run_id: &str,
+) -> ApiResult<unversioned::ReportRun> {
+    client
+        .request(
+            HttpMethod::Get::<()>,
+            &client
+                .environment
+                .unversioned_uri(&format!("/report-runs/{report_run_id}")),
+        )
+        .await
+}
+
+pub async fn download<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+    report_run_id: &str,
+) -> ApiResult<Vec<u8>> {
+    client
+        .request(
+            HttpMethod::Get::<()>,
+            &client
+                .environment
+                .unversioned_uri(&format!("/report-runs/{report_run_id}/file")),
+        )
+        .await
+}

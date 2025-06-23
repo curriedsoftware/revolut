@@ -25,18 +25,44 @@
 use std::marker::PhantomData;
 
 pub use crate::client::{
-    ClientBuilder, MissingClientAuthentication, MissingEnvironment, OpenBankingAuthentication,
-    OpenBankingClient,
+    ClientBuilder, Environment, MissingClientAuthentication, MissingEnvironment, OpenBankingClient,
+    ProductionEnvironment, RevolutEndpoint, SandboxEnvironment,
 };
 
-pub fn openbanking_client(
-) -> ClientBuilder<MissingEnvironment, MissingClientAuthentication, OpenBankingClient> {
+pub fn openbanking_client()
+-> ClientBuilder<MissingEnvironment, MissingClientAuthentication, OpenBankingClient> {
     ClientBuilder {
         environment: MissingEnvironment,
         authentication: MissingClientAuthentication,
         client_type: PhantomData,
     }
 }
+
+impl Environment for SandboxEnvironment<OpenBankingClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        self.unversioned_uri(&format!("{version}{path}"))
+    }
+
+    fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!(
+            "{}{}",
+            "https://sandbox-oba-auth.revolut.com/api/", path
+        ))
+    }
+}
+
+impl Environment for ProductionEnvironment<OpenBankingClient> {
+    fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
+        self.unversioned_uri(&format!("{version}{path}"))
+    }
+
+    fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
+        RevolutEndpoint(format!("{}{}", "https://oba-auth.revolut.com/api/", path))
+    }
+}
+
+#[derive(Debug)]
+pub struct OpenBankingAuthentication {}
 
 impl<E> ClientBuilder<E, MissingClientAuthentication, OpenBankingClient> {
     pub fn with_authentication(

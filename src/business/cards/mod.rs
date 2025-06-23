@@ -29,9 +29,9 @@
 //! will result in an error at compile time.
 
 use crate::{
-    business::client::{BusinessAuthentication, Environment, HttpMethod, ProductionEnvironment},
-    client::Client,
-    errors::{self, Result},
+    business::client::{self, BusinessAuthentication, Environment, HttpMethod},
+    client::{Client, ProductionEnvironment},
+    errors::ApiResult,
 };
 
 pub mod v10 {
@@ -69,7 +69,7 @@ pub mod v10 {
         id: String,
         last_digits: String,
         expiry: String,
-        state: String,
+        state: CardState,
         label: Option<String>,
         r#virtual: bool,
         product: Option<CardProduct>,
@@ -83,6 +83,21 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum CardState {
+        #[serde(alias = "CREATED")]
+        Created,
+        #[serde(alias = "PENDING")]
+        Pending,
+        #[serde(alias = "ACTIVE")]
+        Active,
+        #[serde(alias = "FROZEN")]
+        Frozen,
+        #[serde(alias = "LOCKED")]
+        Locked,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct CardSensitiveDetails {
         pan: String,
         cvv: String,
@@ -91,9 +106,12 @@ pub mod v10 {
 }
 
 pub async fn list(
-    client: &Client<ProductionEnvironment, BusinessAuthentication>,
-) -> Result<Vec<v10::Card>> {
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
+) -> ApiResult<Vec<v10::Card>> {
     client
-        .request(HttpMethod::Get, &client.environment.uri("1.0", "/cards"))
+        .request(
+            HttpMethod::<()>::Get,
+            &client.environment.uri("1.0", "/cards"),
+        )
         .await
 }

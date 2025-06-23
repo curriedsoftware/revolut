@@ -29,9 +29,11 @@
 //! will result in an error at compile time.
 
 use crate::{
-    business::client::{BusinessAuthentication, Environment, HttpMethod, ProductionEnvironment},
+    business::client::{
+        self, BusinessAuthentication, Environment, HttpMethod, ProductionEnvironment,
+    },
     client::Client,
-    errors::Result,
+    errors::ApiResult,
 };
 
 use std::vec::Vec;
@@ -75,7 +77,7 @@ pub mod v10 {
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Expense {
         id: String,
-        state: String,
+        state: ExpenseState,
         transaction_type: String,
         description: Option<String>,
         submitted_at: Option<String>,
@@ -89,23 +91,47 @@ pub mod v10 {
         receipt_ids: Vec<String>,
         spent_amount: ExpenseSpentAmount,
     }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum ExpenseState {
+        #[serde(alias = "MISSING_INFO")]
+        MissingInfo,
+        #[serde(alias = "AWAITING_REVIEW")]
+        AwaitingReview,
+        #[serde(alias = "REJECTED")]
+        Rejected,
+        #[serde(alias = "PENDING_REIMBURSEMENT")]
+        PendingReimbursement,
+        #[serde(alias = "REFUND_REQUESTED")]
+        RefundRequested,
+        #[serde(alias = "REFUNDED")]
+        Refunded,
+        #[serde(alias = "APPROVED")]
+        Approved,
+        #[serde(alias = "REVERTED")]
+        Reverted,
+    }
 }
 
 pub async fn list(
-    client: &Client<ProductionEnvironment, BusinessAuthentication>,
-) -> Result<Vec<v10::Expense>> {
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
+) -> ApiResult<Vec<v10::Expense>> {
     client
-        .request(HttpMethod::Get, &client.environment.uri("1.0", "/expenses"))
+        .request(
+            HttpMethod::<()>::Get,
+            &client.environment.uri("1.0", "/expenses"),
+        )
         .await
 }
 
 pub async fn expense(
-    client: &Client<ProductionEnvironment, BusinessAuthentication>,
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
     expense_id: &str,
-) -> Result<v10::Expense> {
+) -> ApiResult<v10::Expense> {
     client
         .request(
-            HttpMethod::Get,
+            HttpMethod::<()>::Get,
             &client
                 .environment
                 .uri("1.0", &format!("/expenses/{expense_id}")),
@@ -114,13 +140,13 @@ pub async fn expense(
 }
 
 pub async fn expense_receipt(
-    client: &Client<ProductionEnvironment, BusinessAuthentication>,
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
     expense_id: &str,
     receipt_id: &str,
-) -> Result<Vec<u8>> {
+) -> ApiResult<Vec<u8>> {
     client
         .request_raw(
-            HttpMethod::Get,
+            HttpMethod::<()>::Get,
             &client.environment.uri(
                 "1.0",
                 &format!("/expenses/{expense_id}/receipts/{receipt_id}/content"),
