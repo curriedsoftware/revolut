@@ -75,6 +75,11 @@ pub mod v10 {
         pub events: Option<Vec<WebhookEvent>>,
         pub signing_secret: String,
     }
+
+    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    pub struct RotateWebhookSigningSecretRequest {
+        pub expiration_period: Option<String>,
+    }
 }
 
 pub async fn create<E: Environment>(
@@ -98,6 +103,68 @@ pub async fn list<E: Environment>(
         .request(
             HttpMethod::Get::<()>,
             &client.environment.uri("1.0", "/webhooks"),
+        )
+        .await
+}
+
+pub async fn retrieve<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+    webhook_id: &str,
+) -> ApiResult<v10::Webhook> {
+    client
+        .request(
+            HttpMethod::Get::<()>,
+            &client
+                .environment
+                .uri("1.0", &format!("/webhooks/{webhook_id}")),
+        )
+        .await
+}
+
+pub async fn update<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+    webhook_id: &str,
+    webhook: &v10::WebhookRequest,
+) -> ApiResult<v10::Webhook> {
+    client
+        .request(
+            HttpMethod::Put {
+                body: Some(Body::Json(&webhook)),
+            },
+            &client
+                .environment
+                .uri("1.0", &format!("/webhooks/{webhook_id}")),
+        )
+        .await
+}
+
+pub async fn delete<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+    webhook_id: &str,
+) -> ApiResult<()> {
+    client
+        .request(
+            HttpMethod::Delete::<()>,
+            &client
+                .environment
+                .uri("1.0", &format!("/webhooks/{webhook_id}")),
+        )
+        .await
+}
+
+pub async fn rotate_signing_secret<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+    webhook_id: &str,
+    rotate_webhook_signing_secret: &v10::RotateWebhookSigningSecretRequest,
+) -> ApiResult<v10::Webhook> {
+    client
+        .request(
+            HttpMethod::Post {
+                body: Some(Body::Json(&rotate_webhook_signing_secret)),
+            },
+            &client
+                .environment
+                .uri("1.0", &format!("/webhooks/{webhook_id}")),
         )
         .await
 }
