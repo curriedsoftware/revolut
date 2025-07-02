@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "webpki-roots"
-version = "0.26.10"
+version = "1.0.1"
 build = false
 autolib = false
 autobins = false

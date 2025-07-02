@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "quinn"
-version = "0.11.7"
+version = "0.11.8"
 build = "build.rs"
 autolib = false
 autobins = false
@@ -45,11 +45,13 @@ features = [
 [features]
 aws-lc-rs = ["proto/aws-lc-rs"]
 aws-lc-rs-fips = ["proto/aws-lc-rs-fips"]
+bloom = ["proto/bloom"]
 default = [
     "log",
     "platform-verifier",
     "runtime-tokio",
     "rustls-ring",
+    "bloom",
 ]
 lock_tracking = []
 log = [
@@ -151,7 +153,7 @@ optional = true
 version = "0.2"
 
 [dependencies.proto]
-version = "0.11.10"
+version = "0.11.12"
 default-features = false
 package = "quinn-proto"
 

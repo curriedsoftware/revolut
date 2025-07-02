@@ -2,7 +2,7 @@
 name = "revolut"
 version = "0.1.1"
 authors = ["Rafael Fernández López <ereslibre@curried.software>"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 description = "A library to communicate with the Revolut API"
 repository = "https://github.com/curriedsoftware/revolut"
@@ -20,6 +20,6 @@ tokio = { version = "1.44", features = ["full"] }
 
 [dependencies]
 chrono = "0.4.41"
-reqwest = { version = "0.12.15", default-features = false, features = ["json", "rustls-tls", "rustls-tls-webpki-roots"] }
+reqwest = { version = "0.12.15", default-features = false, features = ["json", "multipart", "rustls-tls", "rustls-tls-webpki-roots"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

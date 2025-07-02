@@ -23,11 +23,13 @@
  ***/
 
 use serde::Deserialize;
+use std::fmt::Debug;
 
 #[derive(Debug, Deserialize)]
 pub enum Error {
     ClientBuilderError(ClientBuilderError),
     ClientError(ClientError),
+    BackendError(BackendError),
 }
 
 #[derive(Debug, Deserialize)]
@@ -40,6 +42,44 @@ pub enum ClientBuilderError {
 pub enum ClientError {
     CannotLogIn(String),
     RequestError(String),
+    SerializationError(String),
+    GenericError(String),
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+#[derive(Debug, Deserialize)]
+pub struct BackendError {
+    code: Option<String>,
+    error_code: Option<String>,
+    #[serde(rename = "errorId")]
+    error_id: Option<String>,
+    errors: Option<Vec<ErrorItem>>,
+    id: Option<String>,
+    message: Option<String>,
+    timestamp: Option<u64>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ErrorItem {
+    error_code: String,
+    message: String,
+}
+
+pub type ApiResult<T> = std::result::Result<T, Error>;
+
+impl From<ClientBuilderError> for Error {
+    fn from(error: ClientBuilderError) -> Self {
+        Error::ClientBuilderError(error)
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(error: serde_json::Error) -> Self {
+        Error::ClientError(ClientError::SerializationError(format!("{error:?}")))
+    }
+}
+
+impl From<reqwest::Error> for Error {
+    fn from(error: reqwest::Error) -> Self {
+        Error::ClientError(ClientError::RequestError(format!("{error:?}")))
+    }
+}

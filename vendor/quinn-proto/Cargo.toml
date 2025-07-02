@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.71"
 name = "quinn-proto"
-version = "0.11.11"
+version = "0.11.12"
 build = false
 autolib = false
 autobins = false
@@ -49,9 +49,11 @@ aws-lc-rs-fips = [
     "aws-lc-rs",
     "aws-lc-rs?/fips",
 ]
+bloom = ["dep:fastbloom"]
 default = [
     "rustls-ring",
     "log",
+    "bloom",
 ]
 log = ["tracing/log"]
 platform-verifier = ["dep:rustls-platform-verifier"]
@@ -89,6 +91,13 @@ default-features = false
 
 [dependencies.bytes]
 version = "1"
+
+[dependencies.fastbloom]
+version = "0.9"
+optional = true
+
+[dependencies.lru-slab]
+version = "0.1.2"
 
 [dependencies.rand]
 version = "0.9"
@@ -136,6 +145,9 @@ version = "0.4"
 
 [dev-dependencies.lazy_static]
 version = "1"
+
+[dev-dependencies.rand_pcg]
+version = "0.9"
 
 [dev-dependencies.rcgen]
 version = "0.13"
