@@ -277,16 +277,16 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
 
     async fn ensure_logged_in(&self) -> Result<(), Error> {
         if let Some(access_token_expires_at) = &*self.access_token_expires_at.borrow() {
-            if (access_token_expires_at.to_utc() > Utc::now()) {
+            if access_token_expires_at.to_utc() > Utc::now() {
                 return Ok(());
             }
         }
         self.login().await
     }
 
-    pub(crate) async fn request_raw<'a, T: Serialize + Clone + PartialEq>(
+    pub(crate) async fn request_raw<T: Serialize + Clone + PartialEq>(
         &self,
-        method: HttpMethod<'a, T>,
+        method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
     ) -> Result<Vec<u8>, Error> {
         self.ensure_logged_in()
@@ -321,7 +321,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
                         for part in parts.iter() {
                             let multipart_part =
                                 reqwest::multipart::Part::bytes(Vec::from(part.contents))
-                                    .mime_str(&part.mime_str);
+                                    .mime_str(part.mime_str);
                             multipart_form =
                                 multipart_form.part(part.file_name.to_string(), multipart_part?);
                         }
@@ -348,13 +348,9 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .to_vec())
     }
 
-    pub(crate) async fn request<
-        'a,
-        R: DeserializeOwned + Debug,
-        T: Serialize + Clone + PartialEq,
-    >(
+    pub(crate) async fn request<R: DeserializeOwned + Debug, T: Serialize + Clone + PartialEq>(
         &self,
-        method: HttpMethod<'a, T>,
+        method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
     ) -> Result<R, Error> {
         self.ensure_logged_in().await.map_err(|err| {
@@ -389,7 +385,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
                         for part in parts.iter() {
                             let multipart_part =
                                 reqwest::multipart::Part::bytes(Vec::from(part.contents))
-                                    .mime_str(&part.mime_str);
+                                    .mime_str(part.mime_str);
                             multipart_form =
                                 multipart_form.part(part.file_name.to_string(), multipart_part?);
                         }

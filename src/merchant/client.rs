@@ -146,12 +146,11 @@ impl<E: Environment, C> ClientBuilder<E, MerchantAuthentication, C> {
 
 impl<E: Environment> Client<E, MerchantAuthentication> {
     pub(crate) async fn request<
-        'a,
         R: DeserializeOwned + Debug,
         T: Clone + Debug + PartialEq + Serialize,
     >(
         &self,
-        method: HttpMethod<'a, T>,
+        method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
     ) -> ApiResult<R> {
         let Some(ref secret_key) = self.secret_key else {
@@ -182,7 +181,7 @@ impl<E: Environment> Client<E, MerchantAuthentication> {
                         for part in parts.iter() {
                             let multipart_part =
                                 reqwest::multipart::Part::bytes(Vec::from(part.contents))
-                                    .mime_str(&part.mime_str);
+                                    .mime_str(part.mime_str);
                             multipart_form =
                                 multipart_form.part(part.file_name.to_string(), multipart_part?);
                         }

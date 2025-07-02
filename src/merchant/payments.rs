@@ -23,7 +23,7 @@
  ***/
 
 use crate::{
-    client::{Body, Client, Environment, HttpMethod},
+    client::{Client, Environment, HttpMethod},
     errors::ApiResult,
     merchant::client::MerchantAuthentication,
 };

@@ -192,10 +192,10 @@ pub async fn accept(
         .await
 }
 
-pub async fn upload_evidence<'a>(
+pub async fn upload_evidence(
     client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
     dispute_id: &str,
-    evidence: unversioned::EvidenceRequest<'a>,
+    evidence: unversioned::EvidenceRequest<'_>,
 ) -> ApiResult<unversioned::Evidence> {
     let (evidence_data, evidence_content_type) = match evidence.data {
         unversioned::EvidenceType::JPEG(evidence) => (evidence, "image/jpeg"),

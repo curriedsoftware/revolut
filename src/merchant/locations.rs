@@ -22,8 +22,6 @@
  * SOFTWARE.
  ***/
 
-use unversioned::LocationRequest;
-
 use crate::{
     client::{Body, Client, Environment, HttpMethod},
     errors::ApiResult,

@@ -23,7 +23,7 @@
  ***/
 
 use revolut::{
-    business::client::{BusinessAuthentication, BusinessAuthenticationBuilder, business_client},
+    business::client::{BusinessAuthenticationBuilder, business_client},
     errors::ApiResult,
 };
 
