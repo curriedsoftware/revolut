@@ -31,7 +31,7 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct CustomerRequest {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub full_name: Option<String>,
@@ -45,7 +45,7 @@ pub mod v10 {
         pub date_of_birth: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Customer {
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -61,7 +61,7 @@ pub mod v10 {
         pub date_of_birth: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum PaymentMethodType {
         #[serde(alias = "CARD")]
@@ -70,7 +70,7 @@ pub mod v10 {
         RevolutPay,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct PaymentMethod {
         pub id: String,
         pub r#type: PaymentMethodType,
@@ -78,7 +78,7 @@ pub mod v10 {
         pub method_details: Option<PaymentMethodDetails>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct PaymentMethodDetails {
         pub bin: Option<String>,
         pub last4: Option<String>,
@@ -93,7 +93,7 @@ pub mod v10 {
         pub created_at: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct BillingAddress {
         pub street_line_1: Option<String>,
         pub street_line_2: Option<String>,
@@ -103,14 +103,14 @@ pub mod v10 {
         pub country_code: Option<String>,
     }
 
-    #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum PaymentMethodSavedForRequest {
         #[serde(alias = "CUSTOMER")]
         Customer,
     }
 
-    #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct PaymentMethodRequest {
         saved_for: PaymentMethodSavedForRequest,
     }

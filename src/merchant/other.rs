@@ -31,21 +31,21 @@ use crate::{
 pub mod unversioned {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct RegisterAddressValidationEndpointForFastCheckoutRequest {
         pub event_type: RegisterAddressValidationEndpointForFastCheckoutEventType,
         pub url: String,
         pub location_id: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum RegisterAddressValidationEndpointForFastCheckoutEventType {
         #[serde(alias = "fast_checkout.validate_address")]
         ValidateAddress,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct RegisterAddressValidationEndpointForFastCheckout {
         pub id: String,
         pub signing_key: String,

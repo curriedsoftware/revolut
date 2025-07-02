@@ -31,12 +31,12 @@ use crate::{
 pub mod unversioned {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct RegisterDomainRequest {
         pub domain: String,
     }
 
-    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct UnregisterDomainRequest {
         pub domain: String,
         pub reason: String,

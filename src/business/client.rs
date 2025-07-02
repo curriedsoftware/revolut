@@ -24,7 +24,7 @@
 
 use chrono::{Duration, Utc};
 use serde::{Serialize, de::DeserializeOwned};
-use std::{cell::RefCell, clone::Clone, cmp::PartialEq, string::ToString};
+use std::{cell::RefCell, clone::Clone, string::ToString};
 
 pub use crate::{
     BusinessClient, MerchantClient, OpenBankingClient,
@@ -284,7 +284,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         self.login().await
     }
 
-    pub(crate) async fn request_raw<T: Serialize + Clone + PartialEq>(
+    pub(crate) async fn request_raw<T: Serialize + Clone>(
         &self,
         method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
@@ -300,13 +300,8 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         };
 
         let request = match method {
-            HttpMethod::Get | HttpMethod::Delete => {
-                if method == HttpMethod::Get {
-                    self.client.get(Into::<&str>::into(uri))
-                } else {
-                    self.client.delete(Into::<&str>::into(uri))
-                }
-            }
+            HttpMethod::Get => self.client.get(Into::<&str>::into(uri)),
+            HttpMethod::Delete => self.client.delete(Into::<&str>::into(uri)),
             HttpMethod::Post { ref body }
             | HttpMethod::Patch { ref body }
             | HttpMethod::Put { ref body } => {
@@ -348,7 +343,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .to_vec())
     }
 
-    pub(crate) async fn request<R: DeserializeOwned + Debug, T: Serialize + Clone + PartialEq>(
+    pub(crate) async fn request<R: DeserializeOwned + Debug, T: Serialize + Clone>(
         &self,
         method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
@@ -364,13 +359,8 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         };
 
         let request = match method {
-            HttpMethod::Get | HttpMethod::Delete => {
-                if method == HttpMethod::Get {
-                    self.client.get(Into::<&str>::into(uri))
-                } else {
-                    self.client.delete(Into::<&str>::into(uri))
-                }
-            }
+            HttpMethod::Get => self.client.get(Into::<&str>::into(uri)),
+            HttpMethod::Delete => self.client.delete(Into::<&str>::into(uri)),
             HttpMethod::Post { ref body }
             | HttpMethod::Patch { ref body }
             | HttpMethod::Put { ref body } => {

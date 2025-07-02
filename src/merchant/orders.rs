@@ -34,7 +34,7 @@ pub mod v10 {
         std::collections::HashMap,
     };
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Customer {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub id: Option<String>,
@@ -48,7 +48,7 @@ pub mod v10 {
         pub date_of_birth: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum LineItemType {
         #[serde(alias = "PHYSICAL")]
@@ -57,13 +57,13 @@ pub mod v10 {
         Service,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Quantity {
         pub value: f64,
         pub unit: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct LineItem {
         pub name: String,
         pub r#type: LineItemType,
@@ -78,25 +78,25 @@ pub mod v10 {
         pub url: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Discount {
         pub name: String,
         pub amount: u64,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Tax {
         pub name: String,
         pub amount: u64,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Passenger {
         pub first_name: String,
         pub last_name: String,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct JourneyLeg {
         pub sequence: String,
         pub departure_airport_code: String,
@@ -108,7 +108,7 @@ pub mod v10 {
         pub airline_code: String,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Transaction {
         pub id: String,
         pub status: TransactionStatus,
@@ -118,7 +118,7 @@ pub mod v10 {
         pub recipient_user_id: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum TransactionStatus {
         #[serde(alias = "PENDING")]
@@ -131,7 +131,7 @@ pub mod v10 {
         Completed,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Address {
         pub street_line_1: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -145,7 +145,7 @@ pub mod v10 {
         pub postcode: String,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Subseller {
         pub id: String,
         pub name: String,
@@ -154,7 +154,7 @@ pub mod v10 {
         pub address: Address,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Location {
         pub street_line_1: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -166,7 +166,7 @@ pub mod v10 {
         pub postcode: String,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Ticket {
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -175,7 +175,7 @@ pub mod v10 {
         pub refundability: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Event {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub start_date: Option<String>,
@@ -194,13 +194,13 @@ pub mod v10 {
         pub tickets: Vec<Ticket>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Guest {
         pub first_name: String,
         pub last_name: String,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Contact {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
@@ -210,7 +210,7 @@ pub mod v10 {
         pub phone: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Shipment {
         pub shipping_company_name: String,
         pub tracking_number: String,
@@ -220,7 +220,7 @@ pub mod v10 {
         pub tracking_url: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Shipping {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub address: Option<Address>,
@@ -230,7 +230,7 @@ pub mod v10 {
         pub shipments: Option<Vec<Shipment>>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     #[serde(tag = "type", rename_all = "snake_case")]
     pub enum IndustryData {
         #[serde(alias = "AIRLINE")]
@@ -292,7 +292,7 @@ pub mod v10 {
         Marketplace { subseller: Subseller },
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct MerchantOrderData {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub url: Option<String>,
@@ -300,13 +300,13 @@ pub mod v10 {
         pub reference: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct UpcomingPaymentData {
         pub date: String,
         pub payment_method_id: String,
     }
 
-    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct OrderRequest {
         pub amount: u64,
         pub currency: String,
@@ -342,7 +342,7 @@ pub mod v10 {
         pub statement_descriptor_suffix: Option<String>,
     }
 
-    #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum SavedPaymentMethodType {
         #[serde(alias = "CARD")]
@@ -351,7 +351,7 @@ pub mod v10 {
         RevolutPay,
     }
 
-    #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum SavedPaymentMethodInitiator {
         #[serde(alias = "CUSTOMER")]
@@ -367,7 +367,7 @@ pub mod v10 {
         Browser,
     }
 
-    #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct SavedPaymentMethod {
         r#type: SavedPaymentMethodType,
         id: String,
@@ -680,7 +680,7 @@ pub mod v10 {
         pub last_four: Option<String>,
     }
 
-    #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct RefundRequest {
         pub amount: u64,
         pub currency: String,
@@ -750,7 +750,7 @@ pub async fn capture<E: Environment>(
     order_id: &str,
     amount: u64,
 ) -> ApiResult<v10::Order> {
-    #[derive(Clone, Debug, PartialEq, serde::Serialize)]
+    #[derive(Clone, Debug, serde::Serialize)]
     struct Amount {
         amount: u64,
     }
@@ -803,7 +803,7 @@ pub async fn pay<E: Environment>(
     order_id: &str,
     saved_payment_method: &v10::SavedPaymentMethod,
 ) -> ApiResult<v10::OrderPayment> {
-    #[derive(Clone, Debug, PartialEq, serde::Serialize)]
+    #[derive(Clone, Debug, serde::Serialize)]
     struct SavedPaymentMethod<'a> {
         saved_payment_method: &'a v10::SavedPaymentMethod,
     }

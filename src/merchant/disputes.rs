@@ -145,7 +145,7 @@ pub mod unversioned {
         JPEG(&'a [u8]),
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct ChallengeDisputeRequest {
         pub reason: String,
         pub comment: Option<String>,

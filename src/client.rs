@@ -49,21 +49,21 @@ pub struct Client<E: Environment, T> {
 pub struct MissingEnvironment;
 pub struct MissingClientAuthentication;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub struct Part<'a> {
     pub contents: &'a [u8],
     pub mime_str: &'a str,
     pub file_name: &'a str,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub enum Body<'a, T: Clone + Serialize> {
     Json(&'a T),
     Raw(&'a [u8]),
     Multipart(&'a Vec<Part<'a>>),
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub enum HttpMethod<'a, T: Clone + Serialize> {
     Get,
     Delete,

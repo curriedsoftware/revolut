@@ -31,13 +31,13 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct WebhookRequest {
         pub url: String,
         pub events: Vec<WebhookEvent>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
     pub enum WebhookEvent {
         #[serde(alias = "order_completed")]
@@ -68,7 +68,7 @@ pub mod v10 {
         DisputeLost,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Webhook {
         pub id: String,
         pub url: Option<String>,
@@ -76,7 +76,7 @@ pub mod v10 {
         pub signing_secret: String,
     }
 
-    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct RotateWebhookSigningSecretRequest {
         pub expiration_period: Option<String>,
     }

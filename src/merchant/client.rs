@@ -23,7 +23,7 @@
  ***/
 
 use serde::{Serialize, de::DeserializeOwned};
-use std::{cell::RefCell, clone::Clone, cmp::PartialEq, fmt::Debug, marker::PhantomData};
+use std::{cell::RefCell, clone::Clone, fmt::Debug, marker::PhantomData};
 
 pub use crate::{
     client::{
@@ -145,10 +145,7 @@ impl<E: Environment, C> ClientBuilder<E, MerchantAuthentication, C> {
 }
 
 impl<E: Environment> Client<E, MerchantAuthentication> {
-    pub(crate) async fn request<
-        R: DeserializeOwned + Debug,
-        T: Clone + Debug + PartialEq + Serialize,
-    >(
+    pub(crate) async fn request<R: DeserializeOwned + Debug, T: Clone + Debug + Serialize>(
         &self,
         method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
@@ -160,13 +157,8 @@ impl<E: Environment> Client<E, MerchantAuthentication> {
         };
 
         let request = match method {
-            HttpMethod::Get | HttpMethod::Delete => {
-                if method == HttpMethod::Get {
-                    self.client.get(Into::<&str>::into(uri))
-                } else {
-                    self.client.delete(Into::<&str>::into(uri))
-                }
-            }
+            HttpMethod::Get => self.client.get(Into::<&str>::into(uri)),
+            HttpMethod::Delete => self.client.delete(Into::<&str>::into(uri)),
             HttpMethod::Post { ref body }
             | HttpMethod::Patch { ref body }
             | HttpMethod::Put { ref body } => {

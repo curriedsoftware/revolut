@@ -31,25 +31,25 @@ use crate::{
 pub mod unversioned {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct LocationRequest {
         pub name: String,
         pub r#type: LocationType,
         pub details: LocationDetails,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum LocationType {
         Online,
     }
 
-    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct LocationDetails {
         pub domain: String,
     }
 
-    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct Location {
         pub id: String,
         pub name: String,
