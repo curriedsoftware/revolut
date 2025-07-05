@@ -35,14 +35,14 @@ pub mod v10 {
 
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Account {
-        id: String,
-        name: Option<String>,
-        balance: f64,
-        currency: String,
-        state: AccountState,
-        public: bool,
-        created_at: String,
-        updated_at: String,
+        pub id: String,
+        pub name: Option<String>,
+        pub balance: f64,
+        pub currency: String,
+        pub state: AccountState,
+        pub public: bool,
+        pub created_at: String,
+        pub updated_at: String,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -63,28 +63,28 @@ pub mod v10 {
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct AccountAddress {
-        street_line1: Option<String>,
-        street_line2: Option<String>,
-        region: Option<String>,
-        city: Option<String>,
-        country: String,
-        postcode: String,
+        pub street_line1: Option<String>,
+        pub street_line2: Option<String>,
+        pub region: Option<String>,
+        pub city: Option<String>,
+        pub country: String,
+        pub postcode: String,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct BankDetails {
-        iban: Option<String>,
-        bic: Option<String>,
-        account_no: Option<String>,
-        sort_code: Option<String>,
-        routing_number: Option<String>,
-        beneficiary: String,
-        beneficiary_address: AccountAddress,
-        bank_country: Option<String>,
-        pooled: Option<bool>,
-        unique_reference: Option<String>,
-        schemes: Vec<String>,
-        estimated_time: AccountEstimatedTime,
+        pub iban: Option<String>,
+        pub bic: Option<String>,
+        pub account_no: Option<String>,
+        pub sort_code: Option<String>,
+        pub routing_number: Option<String>,
+        pub beneficiary: String,
+        pub beneficiary_address: AccountAddress,
+        pub bank_country: Option<String>,
+        pub pooled: Option<bool>,
+        pub unique_reference: Option<String>,
+        pub schemes: Vec<String>,
+        pub estimated_time: AccountEstimatedTime,
     }
 }
 
