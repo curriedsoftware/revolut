@@ -24,4 +24,58 @@
 
 //! [Business foreign exchange API](https://developer.revolut.com/docs/business/foreign-exchange).
 
-struct ExchangeRate {}
+use crate::{
+    business::client::{BusinessAuthentication, Environment, HttpMethod},
+    client::Client,
+    errors::{self, ApiResult},
+};
+
+pub mod v10 {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Serialize)]
+    pub struct ExchangeRateParams {
+        pub from: String,
+        pub amount: Option<f64>,
+        pub to: String,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct ExchangeRate {
+        pub from: AmountWithCurrency,
+        pub to: AmountWithCurrency,
+        pub fee: AmountWithCurrency,
+        pub rate_date: String,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct AmountWithCurrency {
+        pub amount: Option<f64>,
+        pub currency: Option<String>,
+    }
+}
+
+impl std::fmt::Display for v10::ExchangeRateParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let query = format!("?from={}&to={}", self.from, self.to);
+        if let Some(amount) = self.amount {
+            write!(f, "{query}&amount={amount}")
+        } else {
+            write!(f, "{query}")
+        }
+    }
+}
+
+pub async fn get<E: Environment>(
+    client: &Client<E, BusinessAuthentication>,
+    get_params: v10::ExchangeRateParams,
+) -> ApiResult<Vec<v10::ExchangeRate>> {
+    client
+        .request(
+            HttpMethod::<()>::Get,
+            &client
+                .environment
+                .uri("1.0", &format!("/rate{}", get_params)),
+        )
+        .await
+}

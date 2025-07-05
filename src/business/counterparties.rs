@@ -36,7 +36,7 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Default, Serialize)]
     pub struct CounterpartyListParams {
         pub name: Option<String>,
         pub account_no: Option<String>,
@@ -218,9 +218,9 @@ pub mod v10 {
     }
 }
 
-impl std::string::ToString for v10::CounterpartyListParams {
-    fn to_string(&self) -> String {
-        [
+impl std::fmt::Display for v10::CounterpartyListParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let res = [
             ("name", &self.name),
             ("account_no", &self.account_no),
             ("sort_code", &self.sort_code),
@@ -244,7 +244,8 @@ impl std::string::ToString for v10::CounterpartyListParams {
             } else {
                 acc
             }
-        })
+        });
+        write!(f, "{res}")
     }
 }
 
@@ -255,10 +256,9 @@ pub async fn list(
     client
         .request(
             HttpMethod::<()>::Get,
-            &client.environment.uri(
-                "1.0",
-                &format!("/counterparties{}", list_params.to_string()),
-            ),
+            &client
+                .environment
+                .uri("1.0", &format!("/counterparties{}", list_params)),
         )
         .await
 }
