@@ -99,7 +99,7 @@ pub async fn list<E: Environment>(
         .await
 }
 
-pub async fn account<E: Environment>(
+pub async fn retrieve<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
     account_id: &str,
 ) -> ApiResult<v10::Account> {

@@ -30,8 +30,6 @@ use crate::{
     errors::{self, ApiResult},
 };
 
-use serde_json::json;
-
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
@@ -142,6 +140,7 @@ pub async fn exchange<E: Environment>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     #[test]
     fn check_documented_examples() -> Result<(), Box<dyn std::error::Error>> {

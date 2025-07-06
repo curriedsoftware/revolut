@@ -47,7 +47,7 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {
     }
 
     pub async fn account(&self, account_id: &str) -> ApiResult<accounts::v10::Account> {
-        accounts::account(self, account_id).await
+        accounts::retrieve(self, account_id).await
     }
 
     pub async fn bank_details(&self, account_id: &str) -> ApiResult<accounts::v10::BankDetails> {
