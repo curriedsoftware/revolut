@@ -134,7 +134,7 @@ pub async fn exchange<E: Environment>(
             HttpMethod::Post {
                 body: Some(Body::Json(&exchange)),
             },
-            &client.environment.uri("1.0", &format!("/exchange")),
+            &client.environment.uri("1.0", "/exchange"),
         )
         .await
 }
