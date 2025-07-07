@@ -67,8 +67,9 @@ pub mod v10 {
         pub address: Option<CounterpartyAddress>,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum CounterpartyProfileType {
         #[serde(alias = "PERSONAL")]
         Personal,
@@ -106,8 +107,9 @@ pub mod v10 {
         cards: Vec<CounterpartyCard>,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum CounterpartyState {
         #[serde(alias = "CREATED")]
         Created,
@@ -135,8 +137,9 @@ pub mod v10 {
         pub recipient_charges: Option<CounterpartyAccountRecipientCharges>, // deprecated
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum CounterpartyAccountRecipientCharges {
         #[serde(alias = "NO")]
         No,
@@ -154,8 +157,9 @@ pub mod v10 {
         pub currency: String,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum CounterpartyCardScheme {
         #[serde(alias = "VISA")]
         Visa,
@@ -163,8 +167,9 @@ pub mod v10 {
         Mastercard,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum CounterpartyAccountType {
         #[serde(alias = "REVOLUT")]
         Revolut,
@@ -194,8 +199,9 @@ pub mod v10 {
         pub code: Option<String>,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum AccountNameReasonType {
         #[serde(alias = "CLOSE_MATCH")]
         CloseMatch,
@@ -220,7 +226,7 @@ pub mod v10 {
 
 impl std::fmt::Display for v10::CounterpartyListParams {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let res = [
+        let query = [
             ("name", &self.name),
             ("account_no", &self.account_no),
             ("sort_code", &self.sort_code),
@@ -245,7 +251,7 @@ impl std::fmt::Display for v10::CounterpartyListParams {
                 acc
             }
         });
-        write!(f, "{res}")
+        write!(f, "{query}")
     }
 }
 

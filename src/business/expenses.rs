@@ -92,8 +92,9 @@ pub mod v10 {
         spent_amount: ExpenseSpentAmount,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum ExpenseState {
         #[serde(alias = "MISSING_INFO")]
         MissingInfo,
@@ -125,7 +126,7 @@ pub async fn list(
         .await
 }
 
-pub async fn expense(
+pub async fn retrieve(
     client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
     expense_id: &str,
 ) -> ApiResult<v10::Expense> {

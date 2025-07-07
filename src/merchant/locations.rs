@@ -38,8 +38,9 @@ pub mod unversioned {
         pub details: LocationDetails,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum LocationType {
         Online,
     }

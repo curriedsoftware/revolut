@@ -101,8 +101,9 @@ pub mod v10 {
         pub currency: Option<String>,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum PaymentState {
         #[serde(alias = "CREATED")]
         Created,

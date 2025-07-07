@@ -52,8 +52,9 @@ pub mod unversioned {
         pub payment: Option<Payment>,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum DisputeState {
         #[serde(alias = "NEEDS_RESPONSE")]
         NeedsResponse,
@@ -65,8 +66,9 @@ pub mod unversioned {
         Lost,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum DisputeSubstate {
         #[serde(alias = "ARBITRATION")]
         Arbitration,
@@ -112,8 +114,9 @@ pub mod unversioned {
         pub card_last_four: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum PaymentMethodType {
         #[serde(alias = "APPLE_PAY")]
         ApplePay,

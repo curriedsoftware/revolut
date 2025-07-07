@@ -31,8 +31,9 @@ use crate::{
 pub mod unversioned {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(tag = "type", rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum ReportRunRequest {
         SettlementReport(SettlementReport),
         CustomReport(CustomReport),
@@ -114,8 +115,9 @@ pub mod unversioned {
         pub file_url: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(tag = "type", rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum ReportRunStatus {
         #[serde(alias = "PROCESSING")]
         Processing,

@@ -51,8 +51,9 @@ pub mod unversioned {
         pub order_id: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum PaymentState {
         #[serde(alias = "PENDING")]
         Pending,
@@ -94,8 +95,9 @@ pub mod unversioned {
         Failed,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(tag = "type", rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum PaymentMethod {
         #[serde(alias = "APPLE_PAY")]
         ApplePay(Card),
@@ -139,8 +141,9 @@ pub mod unversioned {
         pub version: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum ThreeDsState {
         #[serde(alias = "VERIFIED")]
         Verified,

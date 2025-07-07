@@ -38,8 +38,9 @@ pub mod unversioned {
         pub location_id: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum RegisterAddressValidationEndpointForFastCheckoutEventType {
         #[serde(alias = "fast_checkout.validate_address")]
         ValidateAddress,
