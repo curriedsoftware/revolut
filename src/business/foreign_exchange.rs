@@ -33,8 +33,8 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Serialize)]
-    pub struct ExchangeRateParams {
+    #[derive(Clone, Debug, Default)]
+    pub struct ExchangeRateGetParams {
         pub from: String,
         pub amount: Option<f64>,
         pub to: String,
@@ -99,7 +99,7 @@ pub mod v10 {
     }
 }
 
-impl std::fmt::Display for v10::ExchangeRateParams {
+impl std::fmt::Display for v10::ExchangeRateGetParams {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let query = format!("?from={}&to={}", self.from, self.to);
         if let Some(amount) = self.amount {
@@ -112,7 +112,7 @@ impl std::fmt::Display for v10::ExchangeRateParams {
 
 pub async fn get<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
-    get_params: v10::ExchangeRateParams,
+    get_params: v10::ExchangeRateGetParams,
 ) -> ApiResult<Vec<v10::ExchangeRate>> {
     client
         .request(

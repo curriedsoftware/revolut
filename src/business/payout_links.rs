@@ -33,7 +33,7 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Default)]
+    #[derive(Clone, Debug, Default)]
     pub struct PayoutLinkListParams {
         pub state: Option<Vec<PayoutLinkState>>,
         pub created_before: Option<String>,
