@@ -48,8 +48,9 @@ pub mod unversioned {
         Failed,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum PayoutDestinationType {
         #[serde(alias = "CURRENT_POCKET")]
         CurrentPocket,

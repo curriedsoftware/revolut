@@ -110,7 +110,7 @@ impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthe
     }
 
     pub async fn expense(&self, expense_id: &str) -> ApiResult<expenses::v10::Expense> {
-        expenses::expense(self, expense_id).await
+        expenses::retrieve(self, expense_id).await
     }
 
     pub async fn expense_receipt(&self, expense_id: &str, receipt_id: &str) -> ApiResult<Vec<u8>> {

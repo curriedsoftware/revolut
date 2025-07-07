@@ -80,8 +80,9 @@ pub mod v10 {
         pub state: Option<ExchangeState>,
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, strum::Display, PartialEq, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum ExchangeState {
         #[serde(alias = "CREATED")]
         Created,

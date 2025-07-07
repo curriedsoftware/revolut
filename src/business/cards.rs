@@ -82,8 +82,9 @@ pub mod v10 {
         updated_at: String,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum CardState {
         #[serde(alias = "CREATED")]
         Created,

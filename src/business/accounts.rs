@@ -45,8 +45,9 @@ pub mod v10 {
         pub updated_at: String,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum AccountState {
         #[serde(alias = "ACTIVE")]
         Active,

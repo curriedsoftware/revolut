@@ -24,4 +24,37 @@
 
 //! [Business transfers API](https://developer.revolut.com/docs/business/transfers).
 
-struct Transfer {}
+use crate::{
+    business::client::{self, BusinessAuthentication, Environment, HttpMethod},
+    client::{Body, Client, ProductionEnvironment},
+    errors::ApiResult,
+};
+
+pub mod v10 {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct TransferRequest {}
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct Transfer {}
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct TransferReason {
+        pub country: String,
+        pub currency: String,
+        pub code: String,
+        pub description: String,
+    }
+}
+
+pub async fn get_transfer_reasons<E: Environment>(
+    client: &Client<E, BusinessAuthentication>,
+) -> ApiResult<Vec<v10::TransferReason>> {
+    client
+        .request(
+            HttpMethod::<()>::Get,
+            &client.environment.uri("1.0", "/transfer-reasons"),
+        )
+        .await
+}
