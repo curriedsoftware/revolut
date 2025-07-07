@@ -36,7 +36,7 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Clone, Debug, Default, Serialize)]
+    #[derive(Clone, Debug, Default)]
     pub struct CounterpartyListParams {
         pub name: Option<String>,
         pub account_no: Option<String>,
