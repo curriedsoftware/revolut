@@ -106,10 +106,7 @@ impl std::fmt::Display for v10::ListParams {
         .iter()
         .fold(String::new(), |acc, (key, value)| {
             if let Some(value) = value {
-                let value = percent_encoding::utf8_percent_encode(
-                    value,
-                    percent_encoding::NON_ALPHANUMERIC,
-                );
+                let value = urlencoding::encode(value);
                 if acc.is_empty() {
                     format!("{acc}?{key}={}", value)
                 } else {
