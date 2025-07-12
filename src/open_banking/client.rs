@@ -44,10 +44,7 @@ impl Environment for SandboxEnvironment<OpenBankingClient> {
     }
 
     fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
-        RevolutEndpoint(format!(
-            "{}{}",
-            "https://sandbox-oba-auth.revolut.com/api/", path
-        ))
+        RevolutEndpoint(format!("https://sandbox-oba-auth.revolut.com/api/{path}",))
     }
 }
 
@@ -57,7 +54,7 @@ impl Environment for ProductionEnvironment<OpenBankingClient> {
     }
 
     fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
-        RevolutEndpoint(format!("{}{}", "https://oba-auth.revolut.com/api/", path))
+        RevolutEndpoint(format!("https://oba-auth.revolut.com/api/{path}"))
     }
 }
 

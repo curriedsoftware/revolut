@@ -34,10 +34,32 @@ pub mod v10 {
     use serde::{Deserialize, Serialize};
 
     #[derive(Debug, Deserialize, Serialize)]
-    pub struct TransferRequest {}
+    pub struct PayRequest {
+        pub request_id: String,
+        pub account_id: String,
+        pub receiver: TransferReceiver,
+        pub amont: f64,
+        pub currency: Option<String>,
+        pub reference: Option<String>,
+        pub charge_bearer: Option<String>,
+        pub transfer_reason_code: Option<String>,
+        pub exchange_reason_code: Option<String>,
+    }
 
     #[derive(Debug, Deserialize, Serialize)]
-    pub struct Transfer {}
+    pub struct Pay {
+        pub id: String,
+        pub state: TransferState,
+        pub created_at: String,
+        pub completed_at: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct TransferReceiver {
+        pub counterparty_id: String,
+        pub account_id: Option<String>,
+        pub card_id: Option<String>,
+    }
 
     #[derive(Debug, Deserialize, Serialize)]
     pub struct TransferReason {
@@ -45,6 +67,48 @@ pub mod v10 {
         pub currency: String,
         pub code: String,
         pub description: String,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct ExchangeReason {
+        pub code: String,
+        pub name: String,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct TransferRequest {
+        pub request_id: String,
+        pub source_account_id: String,
+        pub target_account_id: String,
+        pub amount: f64,
+        pub currency: String,
+        pub reference: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct Transfer {
+        pub id: String,
+        pub state: TransferState,
+        pub created_at: String,
+        pub completed_at: Option<String>,
+    }
+
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
+    pub enum TransferState {
+        #[serde(alias = "CREATED")]
+        Created,
+        #[serde(alias = "PENDING")]
+        Pending,
+        #[serde(alias = "COMPLETED")]
+        Completed,
+        #[serde(alias = "DECLINED")]
+        Declined,
+        #[serde(alias = "FAILED")]
+        Failed,
+        #[serde(alias = "REVERTED")]
+        Reverted,
     }
 }
 
@@ -55,6 +119,45 @@ pub async fn get_transfer_reasons<E: Environment>(
         .request(
             HttpMethod::<()>::Get,
             &client.environment.uri("1.0", "/transfer-reasons"),
+        )
+        .await
+}
+
+pub async fn get_exchange_reasons<E: Environment>(
+    client: &Client<E, BusinessAuthentication>,
+) -> ApiResult<Vec<v10::ExchangeReason>> {
+    client
+        .request(
+            HttpMethod::<()>::Get,
+            &client.environment.uri("1.0", "/exchange-reasons"),
+        )
+        .await
+}
+
+pub async fn transfer<E: Environment>(
+    client: &Client<E, BusinessAuthentication>,
+    transfer_params: &v10::TransferRequest,
+) -> ApiResult<v10::Transfer> {
+    client
+        .request(
+            HttpMethod::Post {
+                body: Some(Body::Json(&transfer_params)),
+            },
+            &client.environment.uri("1.0", "/transfer"),
+        )
+        .await
+}
+
+pub async fn pay<E: Environment>(
+    client: &Client<E, BusinessAuthentication>,
+    pay_params: &v10::PayRequest,
+) -> ApiResult<v10::Pay> {
+    client
+        .request(
+            HttpMethod::Post {
+                body: Some(Body::Json(&pay_params)),
+            },
+            &client.environment.uri("1.0", "/pay"),
         )
         .await
 }

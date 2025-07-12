@@ -108,9 +108,9 @@ impl std::fmt::Display for v10::ListParams {
             if let Some(value) = value {
                 let value = urlencoding::encode(value);
                 if acc.is_empty() {
-                    format!("{acc}?{key}={}", value)
+                    format!("{acc}?{key}={value}")
                 } else {
-                    format!("{acc}&{key}={}", value)
+                    format!("{acc}&{key}={value}")
                 }
             } else {
                 acc
@@ -129,7 +129,7 @@ pub async fn list(
             HttpMethod::<()>::Get,
             &client
                 .environment
-                .uri("1.0", &format!("/team-members{}", list_params)),
+                .uri("1.0", &format!("/team-members{list_params}")),
         )
         .await
 }
