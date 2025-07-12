@@ -51,8 +51,7 @@ pub fn business_client()
 impl Environment for SandboxEnvironment<BusinessClient> {
     fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
         RevolutEndpoint(format!(
-            "{}{}{}",
-            "https://sandbox-b2b.revolut.com/api/", version, path
+            "https://sandbox-b2b.revolut.com/api/{version}{path}",
         ))
     }
 
@@ -64,10 +63,7 @@ impl Environment for SandboxEnvironment<BusinessClient> {
 
 impl Environment for ProductionEnvironment<BusinessClient> {
     fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
-        RevolutEndpoint(format!(
-            "{}{}{}",
-            "https://b2b.revolut.com/api/", version, path
-        ))
+        RevolutEndpoint(format!("https://b2b.revolut.com/api/{version}{path}",))
     }
 
     fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {

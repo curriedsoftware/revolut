@@ -49,20 +49,17 @@ impl Environment for SandboxEnvironment<MerchantClient> {
     }
 
     fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
-        RevolutEndpoint(format!(
-            "{}{}",
-            "https://sandbox-merchant.revolut.com/api", path
-        ))
+        RevolutEndpoint(format!("https://sandbox-merchant.revolut.com/api{path}",))
     }
 }
 
 impl Environment for ProductionEnvironment<MerchantClient> {
     fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
-        self.unversioned_uri(&format!("{version}{path}"))
+        self.unversioned_uri(&format!("/{version}{path}"))
     }
 
     fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
-        RevolutEndpoint(format!("{}{}", "https://merchant.revolut.com/api/", path))
+        RevolutEndpoint(format!("https://merchant.revolut.com/api{path}"))
     }
 }
 

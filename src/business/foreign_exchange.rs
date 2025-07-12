@@ -117,9 +117,7 @@ pub async fn get<E: Environment>(
     client
         .request(
             HttpMethod::<()>::Get,
-            &client
-                .environment
-                .uri("1.0", &format!("/rate{}", get_params)),
+            &client.environment.uri("1.0", &format!("/rate{get_params}")),
         )
         .await
 }

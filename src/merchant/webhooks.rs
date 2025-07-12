@@ -163,9 +163,10 @@ pub async fn rotate_signing_secret<E: Environment>(
             HttpMethod::Post {
                 body: Some(Body::Json(&rotate_webhook_signing_secret)),
             },
-            &client
-                .environment
-                .uri("1.0", &format!("/webhooks/{webhook_id}")),
+            &client.environment.uri(
+                "1.0",
+                &format!("/webhooks/{webhook_id}/rotate-signing-secret"),
+            ),
         )
         .await
 }

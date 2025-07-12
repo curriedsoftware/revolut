@@ -240,9 +240,9 @@ impl std::fmt::Display for v10::CounterpartyListParams {
             if let Some(value) = value {
                 let value = urlencoding::encode(value);
                 if acc.is_empty() {
-                    format!("{acc}?{key}={}", value)
+                    format!("{acc}?{key}={value}")
                 } else {
-                    format!("{acc}&{key}={}", value)
+                    format!("{acc}&{key}={value}")
                 }
             } else {
                 acc
@@ -261,7 +261,7 @@ pub async fn list(
             HttpMethod::<()>::Get,
             &client
                 .environment
-                .uri("1.0", &format!("/counterparties{}", list_params)),
+                .uri("1.0", &format!("/counterparties{list_params}")),
         )
         .await
 }
