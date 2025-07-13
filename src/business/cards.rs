@@ -30,7 +30,7 @@
 
 use crate::{
     business::client::{self, BusinessAuthentication, Environment, HttpMethod},
-    client::{Client, ProductionEnvironment},
+    client::{Body, Client, ProductionEnvironment},
     errors::ApiResult,
 };
 
@@ -104,6 +104,24 @@ pub mod v10 {
         cvv: String,
         expiry: String,
     }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct CreateCardParams {
+        pub request_id: String,
+        pub r#virtual: bool,
+        pub holder_id: String,
+        pub label: Option<String>,
+        pub accounts: Option<Vec<String>>,
+        pub categories: Option<Vec<String>>,
+        pub spending_limits: Option<CardSpendingLimits>,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct UpdateCardParams {
+        pub label: Option<String>,
+        pub categories: Option<Vec<String>>,
+        pub spending_limits: Option<CardSpendingLimits>,
+    }
 }
 
 pub async fn list(
@@ -113,6 +131,101 @@ pub async fn list(
         .request(
             HttpMethod::<()>::Get,
             &client.environment.uri("1.0", "/cards"),
+        )
+        .await
+}
+
+pub async fn create(
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
+    card: &v10::CreateCardParams,
+) -> ApiResult<v10::Card> {
+    client
+        .request(
+            HttpMethod::Post {
+                body: Some(Body::Json(&card)),
+            },
+            &client.environment.uri("1.0", "/cards"),
+        )
+        .await
+}
+
+pub async fn retrieve(
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
+    card_id: &str,
+) -> ApiResult<v10::Card> {
+    client
+        .request(
+            HttpMethod::Get::<()>,
+            &client.environment.uri("1.0", &format!("/cards/{card_id}")),
+        )
+        .await
+}
+
+pub async fn update(
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
+    card_id: &str,
+    card: &v10::UpdateCardParams,
+) -> ApiResult<v10::Card> {
+    client
+        .request(
+            HttpMethod::Patch {
+                body: Some(Body::Json(&card)),
+            },
+            &client.environment.uri("1.0", &format!("/cards/{card_id}")),
+        )
+        .await
+}
+
+pub async fn terminate(
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
+    card_id: &str,
+) -> ApiResult<()> {
+    client
+        .request(
+            HttpMethod::Delete::<()>,
+            &client.environment.uri("1.0", &format!("/cards/{card_id}")),
+        )
+        .await
+}
+
+pub async fn freeze(
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
+    card_id: &str,
+) -> ApiResult<()> {
+    client
+        .request(
+            HttpMethod::Post::<()> { body: None },
+            &client
+                .environment
+                .uri("1.0", &format!("/cards/{card_id}/freeze")),
+        )
+        .await
+}
+
+pub async fn unfreeze(
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
+    card_id: &str,
+) -> ApiResult<()> {
+    client
+        .request(
+            HttpMethod::Post::<()> { body: None },
+            &client
+                .environment
+                .uri("1.0", &format!("/cards/{card_id}/unfreeze")),
+        )
+        .await
+}
+
+pub async fn sensitive_details(
+    client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
+    card_id: &str,
+) -> ApiResult<v10::CardSensitiveDetails> {
+    client
+        .request(
+            HttpMethod::Get::<()>,
+            &client
+                .environment
+                .uri("1.0", &format!("/cards/{card_id}/sensitive-details")),
         )
         .await
 }
