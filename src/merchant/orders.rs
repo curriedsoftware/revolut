@@ -787,8 +787,8 @@ pub async fn cancel<E: Environment>(
     order_id: &str,
 ) -> ApiResult<v10::Order> {
     client
-        .request::<v10::Order, ()>(
-            HttpMethod::Post { body: None },
+        .request(
+            HttpMethod::Post::<()> { body: None },
             &client
                 .environment
                 .unversioned_uri(&format!("/orders/{order_id}/cancel")),
