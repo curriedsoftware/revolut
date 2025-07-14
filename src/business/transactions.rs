@@ -210,7 +210,7 @@ pub enum RetrieveParam<'a> {
 
 pub async fn retrieve<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
-    retrieve_param: RetrieveParam<'_>,
+    retrieve_param: &RetrieveParam<'_>,
 ) -> ApiResult<v10::Transaction> {
     let path = match retrieve_param {
         RetrieveParam::Transaction { transaction_id } => {

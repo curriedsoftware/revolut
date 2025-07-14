@@ -122,7 +122,7 @@ impl std::fmt::Display for v10::ListParams {
 
 pub async fn list(
     client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
-    list_params: v10::ListParams,
+    list_params: &v10::ListParams,
 ) -> ApiResult<Vec<v10::TeamMember>> {
     client
         .request(
@@ -137,7 +137,7 @@ pub async fn list(
 pub async fn invite_new_member(
     client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
     member_invite: &v10::TeamMemberInviteRequest,
-) -> ApiResult<Vec<v10::TeamMemberInvite>> {
+) -> ApiResult<v10::TeamMemberInvite> {
     client
         .request(
             HttpMethod::Post {
@@ -150,7 +150,7 @@ pub async fn invite_new_member(
 
 pub async fn list_team_roles(
     client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
-    list_params: v10::ListParams,
+    list_params: &v10::ListParams,
 ) -> ApiResult<Vec<v10::TeamRole>> {
     client
         .request(

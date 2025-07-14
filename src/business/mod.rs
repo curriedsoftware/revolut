@@ -64,35 +64,42 @@ impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthe
         cards::list(self).await
     }
 
-    pub async fn create_card(&self, card: &cards::v10::Card) -> ApiResult<cards::v10::Card> {
-        unimplemented!()
+    pub async fn create_card(
+        &self,
+        card: &cards::v10::CreateCardParams,
+    ) -> ApiResult<cards::v10::Card> {
+        cards::create(self, card).await
     }
 
     pub async fn card(&self, card_id: &str) -> ApiResult<cards::v10::Card> {
-        unimplemented!()
+        cards::retrieve(self, card_id).await
     }
 
-    pub async fn update_card(&self, card: &cards::v10::Card) -> ApiResult<cards::v10::Card> {
-        unimplemented!()
+    pub async fn update_card(
+        &self,
+        card_id: &str,
+        card: &cards::v10::UpdateCardParams,
+    ) -> ApiResult<cards::v10::Card> {
+        cards::update(self, card_id, card).await
     }
 
     pub async fn terminate_card(&self, card_id: &str) -> ApiResult<()> {
-        unimplemented!()
+        cards::terminate(self, card_id).await
     }
 
     pub async fn freeze_card(&self, card_id: &str) -> ApiResult<()> {
-        unimplemented!()
+        cards::freeze(self, card_id).await
     }
 
     pub async fn unfreeze_card(&self, card_id: &str) -> ApiResult<()> {
-        unimplemented!()
+        cards::unfreeze(self, card_id).await
     }
 
     pub async fn card_sensitive_details(
         &self,
         card_id: &str,
     ) -> ApiResult<cards::v10::CardSensitiveDetails> {
-        unimplemented!()
+        cards::sensitive_details(self, card_id).await
     }
 }
 
@@ -135,12 +142,19 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {}
 /// Trying to access these endpoints from the production environment
 /// will result in a compile error.
 impl Client<SandboxEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
-    pub async fn simulate_transfer_state_update() {
-        unimplemented!()
+    pub async fn simulate_transfer_state_update(
+        &self,
+        id: &str,
+        state: &simulations::v10::TransferStateRequest,
+    ) -> ApiResult<simulations::v10::TransferStateUpdate> {
+        simulations::transfer_state_update(self, id, state).await
     }
 
-    pub async fn simulate_account_topup() {
-        unimplemented!()
+    pub async fn simulate_account_topup(
+        &self,
+        top_up: &simulations::v10::TopUpRequest,
+    ) -> ApiResult<simulations::v10::TopUp> {
+        simulations::account_top_up(self, top_up).await
     }
 }
 
@@ -149,22 +163,48 @@ impl Client<SandboxEnvironment<client::BusinessClient>, client::BusinessAuthenti
 /// Trying to access these endpoints from the sandbox environment will
 /// result in a compile error.
 impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
-    pub async fn team_members() {
-        unimplemented!()
+    pub async fn team_members(
+        &self,
+        list_params: &team_members::v10::ListParams,
+    ) -> ApiResult<Vec<team_members::v10::TeamMember>> {
+        team_members::list(self, list_params).await
     }
 
-    pub async fn invite_new_member() {
-        unimplemented!()
+    pub async fn invite_new_member(
+        &self,
+        member_invite: &team_members::v10::TeamMemberInviteRequest,
+    ) -> ApiResult<team_members::v10::TeamMemberInvite> {
+        team_members::invite_new_member(self, member_invite).await
     }
 
-    pub async fn team_roles() {
-        unimplemented!()
+    pub async fn team_roles(
+        &self,
+        list_params: &team_members::v10::ListParams,
+    ) -> ApiResult<Vec<team_members::v10::TeamRole>> {
+        team_members::list_team_roles(self, list_params).await
     }
 }
 
 /// Transactions API. Available in sandbox and production
 /// environments.
-impl<E: Environment> Client<E, client::BusinessAuthentication> {}
+impl<E: Environment> Client<E, client::BusinessAuthentication> {
+    pub async fn transaction_list(
+        &self,
+        list_params: &transactions::v10::TransactionListParams,
+    ) -> ApiResult<Vec<transactions::v10::Transaction>> {
+        transactions::list(self, list_params).await
+    }
+
+    pub async fn retrieve(
+        &self,
+        retrieve_param: &transactions::RetrieveParam<'_>,
+    ) -> ApiResult<transactions::v10::Transaction> {
+        transactions::retrieve(self, retrieve_param).await
+    }
+}
 
 /// Transfers API. Available in sandbox and production environments.
+impl<E: Environment> Client<E, client::BusinessAuthentication> {}
+
+/// Webhooks API. Available in sandbox and production environments.
 impl<E: Environment> Client<E, client::BusinessAuthentication> {}
