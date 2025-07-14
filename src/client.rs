@@ -23,7 +23,7 @@
  ***/
 
 use serde::Serialize;
-use std::{cell::RefCell, clone::Clone};
+use std::clone::Clone;
 
 pub use crate::{
     BusinessClient, MerchantClient, OpenBankingClient,

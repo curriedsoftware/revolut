@@ -23,7 +23,7 @@
  ***/
 
 use serde::{Serialize, de::DeserializeOwned};
-use std::{cell::RefCell, clone::Clone, fmt::Debug, marker::PhantomData};
+use std::{clone::Clone, fmt::Debug, marker::PhantomData};
 
 pub use crate::{
     client::{

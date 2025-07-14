@@ -25,8 +25,8 @@
 //! [Business payout links API](https://developer.revolut.com/docs/business/payout-links).
 
 use crate::{
-    business::client::{self, BusinessAuthentication, Environment, HttpMethod},
-    client::{Body, Client, ProductionEnvironment},
+    business::client::{BusinessAuthentication, Environment, HttpMethod},
+    client::{Body, Client},
     errors::ApiResult,
 };
 
@@ -214,7 +214,6 @@ pub async fn cancel<E: Environment>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
 
     #[test]
     fn check_list_query_parameters() {

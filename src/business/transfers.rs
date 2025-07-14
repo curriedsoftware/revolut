@@ -25,8 +25,8 @@
 //! [Business transfers API](https://developer.revolut.com/docs/business/transfers).
 
 use crate::{
-    business::client::{self, BusinessAuthentication, Environment, HttpMethod},
-    client::{Body, Client, ProductionEnvironment},
+    business::client::{BusinessAuthentication, Environment, HttpMethod},
+    client::{Body, Client},
     errors::ApiResult,
 };
 

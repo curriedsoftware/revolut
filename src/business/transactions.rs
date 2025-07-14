@@ -25,8 +25,8 @@
 //! [Business transactions API](https://developer.revolut.com/docs/business/transactions).
 
 use crate::{
-    business::client::{self, BusinessAuthentication, Environment, HttpMethod},
-    client::{Body, Client, ProductionEnvironment},
+    business::client::{BusinessAuthentication, Environment, HttpMethod},
+    client::Client,
     errors::ApiResult,
 };
 
@@ -208,9 +208,9 @@ pub enum RetrieveParam<'a> {
     Request { request_id: &'a str },
 }
 
-pub async fn retrieve<'a, E: Environment>(
+pub async fn retrieve<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
-    retrieve_param: RetrieveParam<'a>,
+    retrieve_param: RetrieveParam<'_>,
 ) -> ApiResult<v10::Transaction> {
     let path = match retrieve_param {
         RetrieveParam::Transaction { transaction_id } => {
@@ -228,7 +228,6 @@ pub async fn retrieve<'a, E: Environment>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
 
     #[test]
     fn check_list_query_parameters() {

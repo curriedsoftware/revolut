@@ -217,8 +217,8 @@ impl<C: MissingAuthorizationCodeT> BusinessAuthenticationBuilder<String, C, Stri
             client_assertion: self.client_assertion,
             authorization_code: None,
             refresh_token: Some(self.refresh_token),
-            access_token: RefCell::new(None),
             access_token_expires_at: RefCell::new(None),
+            access_token: RefCell::new(None),
         }
     }
 }
@@ -229,8 +229,8 @@ impl<R: MissingRefreshTokenT> BusinessAuthenticationBuilder<String, String, R> {
             client_assertion: self.client_assertion,
             authorization_code: Some(self.authorization_code),
             refresh_token: None,
-            access_token: RefCell::new(None),
             access_token_expires_at: RefCell::new(None),
+            access_token: RefCell::new(None),
         }
     }
 }
@@ -240,8 +240,8 @@ pub struct BusinessAuthentication {
     pub client_assertion: String,
     pub authorization_code: Option<String>,
     pub refresh_token: Option<String>,
-    pub access_token: RefCell<Option<String>>,
     pub access_token_expires_at: RefCell<Option<chrono::DateTime<chrono::Utc>>>,
+    pub access_token: RefCell<Option<String>>,
 }
 
 impl<E> ClientBuilder<E, MissingClientAuthentication, BusinessClient> {

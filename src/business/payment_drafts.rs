@@ -27,7 +27,7 @@
 use crate::{
     business::client::BusinessAuthentication,
     client::{Body, Client, Environment, HttpMethod},
-    errors::{self, ApiResult},
+    errors::ApiResult,
 };
 
 pub mod v10 {
