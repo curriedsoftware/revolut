@@ -134,9 +134,6 @@ impl<E: Environment, C> ClientBuilder<E, MerchantAuthentication, C> {
                 errors::ClientBuilderError::CannotInstantiateClient(format!("{err:?}"))
             })?,
             authentication: self.authentication,
-            access_token: RefCell::new(None),
-            access_token_expires_at: RefCell::new(None),
-            secret_key: Some(secret_key),
         })
     }
 }
@@ -147,12 +144,6 @@ impl<E: Environment> Client<E, MerchantAuthentication> {
         method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
     ) -> ApiResult<R> {
-        let Some(ref secret_key) = self.secret_key else {
-            return Err(errors::Error::ClientError(
-                errors::ClientError::CannotLogIn("could not retrieve secret key".to_string()),
-            ));
-        };
-
         let request = match method {
             HttpMethod::Get => self.client.get(Into::<&str>::into(uri)),
             HttpMethod::Delete => self.client.delete(Into::<&str>::into(uri)),
@@ -182,7 +173,10 @@ impl<E: Environment> Client<E, MerchantAuthentication> {
         };
 
         let response = request
-            .header("Authorization", format!("Bearer {secret_key}"))
+            .header(
+                "Authorization",
+                format!("Bearer {}", self.authentication.secret_key),
+            )
             .header("Accept", "application/json")
             .header("Revolut-Api-Version", "2024-09-01")
             .send()

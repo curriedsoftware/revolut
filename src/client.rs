@@ -37,13 +37,6 @@ pub struct Client<E: Environment, T> {
     pub environment: E,
     pub client: reqwest::Client,
     pub authentication: T,
-    // -- Business authentication
-    pub access_token_expires_at: RefCell<Option<chrono::DateTime<chrono::Utc>>>,
-    pub access_token: RefCell<Option<String>>,
-    // -- Business authentication
-    // -- Merchant authentication
-    pub secret_key: Option<String>,
-    // -- Merchant authentication
 }
 
 pub struct MissingEnvironment;

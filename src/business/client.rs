@@ -217,6 +217,8 @@ impl<C: MissingAuthorizationCodeT> BusinessAuthenticationBuilder<String, C, Stri
             client_assertion: self.client_assertion,
             authorization_code: None,
             refresh_token: Some(self.refresh_token),
+            access_token: RefCell::new(None),
+            access_token_expires_at: RefCell::new(None),
         }
     }
 }
@@ -227,6 +229,8 @@ impl<R: MissingRefreshTokenT> BusinessAuthenticationBuilder<String, String, R> {
             client_assertion: self.client_assertion,
             authorization_code: Some(self.authorization_code),
             refresh_token: None,
+            access_token: RefCell::new(None),
+            access_token_expires_at: RefCell::new(None),
         }
     }
 }
@@ -236,6 +240,8 @@ pub struct BusinessAuthentication {
     pub client_assertion: String,
     pub authorization_code: Option<String>,
     pub refresh_token: Option<String>,
+    pub access_token: RefCell<Option<String>>,
+    pub access_token_expires_at: RefCell<Option<chrono::DateTime<chrono::Utc>>>,
 }
 
 impl<E> ClientBuilder<E, MissingClientAuthentication, BusinessClient> {
@@ -272,7 +278,9 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
     }
 
     async fn ensure_logged_in(&self) -> Result<(), Error> {
-        if let Some(access_token_expires_at) = &*self.access_token_expires_at.borrow() {
+        if let Some(access_token_expires_at) =
+            &*self.authentication.access_token_expires_at.borrow()
+        {
             if access_token_expires_at.to_utc() > Utc::now() {
                 return Ok(());
             }
@@ -289,7 +297,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .await
             .map_err(|err| Error::ClientError(ClientError::CannotLogIn(format!("{err:?}"))))?;
 
-        let Some(access_token) = (*self.access_token.borrow()).clone() else {
+        let Some(access_token) = (*self.authentication.access_token.borrow()).clone() else {
             return Err(errors::Error::ClientError(
                 errors::ClientError::CannotLogIn("could not retrieve access token".to_string()),
             ));
@@ -348,7 +356,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             errors::Error::ClientError(ClientError::CannotLogIn(format!("{err:?}")))
         })?;
 
-        let Some(access_token) = (*self.access_token.borrow()).clone() else {
+        let Some(access_token) = (*self.authentication.access_token.borrow()).clone() else {
             return Err(errors::Error::ClientError(
                 errors::ClientError::CannotLogIn("could not retrieve access token".to_string()),
             ));
@@ -458,8 +466,8 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
     async fn login(&self) -> Result<(), Error> {
         let authentication = self.login_with_refresh_token().await?;
 
-        *self.access_token.borrow_mut() = Some(authentication.access_token);
-        *self.access_token_expires_at.borrow_mut() =
+        *self.authentication.access_token.borrow_mut() = Some(authentication.access_token);
+        *self.authentication.access_token_expires_at.borrow_mut() =
             Some(Utc::now() + Duration::seconds(authentication.expires_in));
 
         Ok(())
@@ -475,9 +483,6 @@ impl<E: Environment, C> ClientBuilder<E, BusinessAuthentication, C> {
                 errors::ClientBuilderError::CannotInstantiateClient(format!("{err:?}"))
             })?,
             authentication: self.authentication,
-            access_token: RefCell::new(None),
-            access_token_expires_at: RefCell::new(None),
-            secret_key: None,
         })
     }
 }
