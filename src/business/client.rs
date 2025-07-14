@@ -80,7 +80,7 @@ pub mod v10 {
     pub struct ClientAuthenticationResponse {
         pub access_token: String,
         pub token_type: String,
-        pub expires_in: i64,
+        pub expires_in: u64,
     }
 
     #[derive(Debug, Deserialize)]
@@ -487,7 +487,12 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .write()
             .map_err(|err| {
                 errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
-            })? = Some(Utc::now() + Duration::seconds(authentication.expires_in));
+            })? = Some(
+            Utc::now()
+                + Duration::seconds(authentication.expires_in.try_into().map_err(|err| {
+                    errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
+                })?),
+        );
 
         Ok(())
     }
