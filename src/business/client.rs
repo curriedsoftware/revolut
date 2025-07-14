@@ -24,7 +24,8 @@
 
 use chrono::{Duration, Utc};
 use serde::{Serialize, de::DeserializeOwned};
-use std::{cell::RefCell, clone::Clone, string::ToString};
+use std::sync::RwLock;
+use std::{clone::Clone, string::ToString};
 
 pub use crate::{
     BusinessClient, MerchantClient, OpenBankingClient,
@@ -217,8 +218,8 @@ impl<C: MissingAuthorizationCodeT> BusinessAuthenticationBuilder<String, C, Stri
             client_assertion: self.client_assertion,
             authorization_code: None,
             refresh_token: Some(self.refresh_token),
-            access_token_expires_at: RefCell::new(None),
-            access_token: RefCell::new(None),
+            access_token_expires_at: RwLock::new(None),
+            access_token: RwLock::new(None),
         }
     }
 }
@@ -229,8 +230,8 @@ impl<R: MissingRefreshTokenT> BusinessAuthenticationBuilder<String, String, R> {
             client_assertion: self.client_assertion,
             authorization_code: Some(self.authorization_code),
             refresh_token: None,
-            access_token_expires_at: RefCell::new(None),
-            access_token: RefCell::new(None),
+            access_token_expires_at: RwLock::new(None),
+            access_token: RwLock::new(None),
         }
     }
 }
@@ -240,8 +241,8 @@ pub struct BusinessAuthentication {
     pub client_assertion: String,
     pub authorization_code: Option<String>,
     pub refresh_token: Option<String>,
-    pub access_token_expires_at: RefCell<Option<chrono::DateTime<chrono::Utc>>>,
-    pub access_token: RefCell<Option<String>>,
+    pub access_token_expires_at: RwLock<Option<chrono::DateTime<chrono::Utc>>>,
+    pub access_token: RwLock<Option<String>>,
 }
 
 impl<E> ClientBuilder<E, MissingClientAuthentication, BusinessClient> {
@@ -278,8 +279,13 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
     }
 
     async fn ensure_logged_in(&self) -> Result<(), Error> {
-        if let Some(access_token_expires_at) =
-            &*self.authentication.access_token_expires_at.borrow()
+        if let Some(access_token_expires_at) = &*self
+            .authentication
+            .access_token_expires_at
+            .read()
+            .map_err(|err| {
+                errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
+            })?
         {
             if access_token_expires_at.to_utc() > Utc::now() {
                 return Ok(());
@@ -297,7 +303,10 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .await
             .map_err(|err| Error::ClientError(ClientError::CannotLogIn(format!("{err:?}"))))?;
 
-        let Some(access_token) = (*self.authentication.access_token.borrow()).clone() else {
+        let Some(access_token) = (*self.authentication.access_token.read().map_err(|err| {
+            errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
+        })?)
+        .clone() else {
             return Err(errors::Error::ClientError(
                 errors::ClientError::CannotLogIn("could not retrieve access token".to_string()),
             ));
@@ -356,7 +365,10 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             errors::Error::ClientError(ClientError::CannotLogIn(format!("{err:?}")))
         })?;
 
-        let Some(access_token) = (*self.authentication.access_token.borrow()).clone() else {
+        let Some(access_token) = (*self.authentication.access_token.read().map_err(|err| {
+            errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
+        })?)
+        .clone() else {
             return Err(errors::Error::ClientError(
                 errors::ClientError::CannotLogIn("could not retrieve access token".to_string()),
             ));
@@ -466,9 +478,16 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
     async fn login(&self) -> Result<(), Error> {
         let authentication = self.login_with_refresh_token().await?;
 
-        *self.authentication.access_token.borrow_mut() = Some(authentication.access_token);
-        *self.authentication.access_token_expires_at.borrow_mut() =
-            Some(Utc::now() + Duration::seconds(authentication.expires_in));
+        *self.authentication.access_token.write().map_err(|err| {
+            errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
+        })? = Some(authentication.access_token);
+        *self
+            .authentication
+            .access_token_expires_at
+            .write()
+            .map_err(|err| {
+                errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
+            })? = Some(Utc::now() + Duration::seconds(authentication.expires_in));
 
         Ok(())
     }
