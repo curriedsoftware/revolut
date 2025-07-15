@@ -48,20 +48,20 @@ pub enum ClientError {
 
 #[derive(Debug, Deserialize)]
 pub struct BackendError {
-    code: Option<String>,
-    error_code: Option<String>,
+    pub code: Option<String>,
+    pub error_code: Option<String>,
     #[serde(rename = "errorId")]
-    error_id: Option<String>,
-    errors: Option<Vec<ErrorItem>>,
-    id: Option<String>,
-    message: Option<String>,
-    timestamp: Option<u64>,
+    pub error_id: Option<String>,
+    pub errors: Option<Vec<ErrorItem>>,
+    pub id: Option<String>,
+    pub message: Option<String>,
+    pub timestamp: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ErrorItem {
-    error_code: String,
-    message: String,
+    pub error_code: String,
+    pub message: String,
 }
 
 pub type ApiResult<T> = std::result::Result<T, Error>;

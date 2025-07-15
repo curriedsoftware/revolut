@@ -57,7 +57,7 @@ impl Environment for SandboxEnvironment<BusinessClient> {
         ))
     }
 
-    fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
+    fn unversioned_uri(&self, _path: &str) -> RevolutEndpoint {
         // The Business API is always versioned.
         unreachable!()
     }
@@ -68,7 +68,7 @@ impl Environment for ProductionEnvironment<BusinessClient> {
         RevolutEndpoint(format!("https://b2b.revolut.com/api/{version}{path}",))
     }
 
-    fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
+    fn unversioned_uri(&self, _path: &str) -> RevolutEndpoint {
         // The Business API is always versioned.
         unreachable!()
     }
