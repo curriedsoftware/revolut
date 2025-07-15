@@ -35,7 +35,7 @@ use std::{fmt::Debug, marker::PhantomData};
 #[derive(Debug)]
 pub struct Client<E: Environment, T> {
     pub environment: E,
-    pub client: reqwest::Client,
+    pub client: reqwest_middleware::ClientWithMiddleware,
     pub authentication: T,
 }
 
