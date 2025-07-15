@@ -155,7 +155,9 @@ pub async fn list_team_roles(
     client
         .request(
             HttpMethod::<()>::Get,
-            &client.environment.uri("1.0", "/roles"),
+            &client
+                .environment
+                .uri("1.0", &format!("/roles{list_params}")),
         )
         .await
 }
