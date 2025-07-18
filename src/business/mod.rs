@@ -204,7 +204,72 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {
 }
 
 /// Transfers API. Available in sandbox and production environments.
-impl<E: Environment> Client<E, client::BusinessAuthentication> {}
+impl<E: Environment> Client<E, client::BusinessAuthentication> {
+    pub async fn get_transfer_reasons(&self) -> ApiResult<Vec<transfers::v10::TransferReason>> {
+        transfers::get_transfer_reasons(self).await
+    }
+
+    pub async fn get_exchange_reasons(&self) -> ApiResult<Vec<transfers::v10::ExchangeReason>> {
+        transfers::get_exchange_reasons(self).await
+    }
+
+    pub async fn transfer(
+        &self,
+        transfer_params: &transfers::v10::TransferRequest,
+    ) -> ApiResult<transfers::v10::Transfer> {
+        transfers::transfer(self, transfer_params).await
+    }
+
+    pub async fn pay(
+        &self,
+        pay_params: &transfers::v10::PayRequest,
+    ) -> ApiResult<transfers::v10::Pay> {
+        transfers::pay(self, pay_params).await
+    }
+}
 
 /// Webhooks API. Available in sandbox and production environments.
-impl<E: Environment> Client<E, client::BusinessAuthentication> {}
+impl<E: Environment> Client<E, client::BusinessAuthentication> {
+    pub async fn create_webhook(
+        &self,
+        webhook: &webhooks::v2::WebhookRequest,
+    ) -> ApiResult<webhooks::v2::WebhookCreationResponse> {
+        webhooks::v2::create(self, webhook).await
+    }
+
+    pub async fn webhooks(&self) -> ApiResult<Vec<webhooks::v2::Webhook>> {
+        webhooks::v2::list(self).await
+    }
+
+    pub async fn webhook(&self, webhook_id: &str) -> ApiResult<webhooks::v2::Webhook> {
+        webhooks::v2::retrieve(self, webhook_id).await
+    }
+
+    pub async fn update_webhook(
+        &self,
+        webhook_id: &str,
+        webhook: &webhooks::v2::WebhookRequest,
+    ) -> ApiResult<webhooks::v2::Webhook> {
+        webhooks::v2::update(self, webhook_id, webhook).await
+    }
+
+    pub async fn delete_webhook(&self, webhook_id: &str) -> ApiResult<()> {
+        webhooks::v2::delete(self, webhook_id).await
+    }
+
+    pub async fn rotate_signing_secret(
+        &self,
+        webhook_id: &str,
+        rotate_webhook_signing_secret: &webhooks::v2::RotateWebhookSigningSecretRequest,
+    ) -> ApiResult<webhooks::v2::Webhook> {
+        webhooks::v2::rotate_signing_secret(self, webhook_id, rotate_webhook_signing_secret).await
+    }
+
+    pub async fn failed_webhook_events(
+        &self,
+        webhook_id: &str,
+        list_params: &webhooks::v2::FailedWebhookEventsListParams,
+    ) -> ApiResult<Vec<webhooks::v2::FailedWebhookEvent>> {
+        webhooks::v2::failed_webhook_events(self, webhook_id, list_params).await
+    }
+}
