@@ -14,7 +14,7 @@ Revolut API integration for Rust.
 
 ## Business API
 
-### Setting up
+### Setting up Business API
 
 Follow the instructions at the [Revolut API documentation
 site](https://developer.revolut.com/docs/business/business-api).
@@ -31,6 +31,8 @@ The library will automatically request new access tokens when the
 cached one expires, or when it performs the first request in cold
 state.
 
+### Some examples
+
 #### List accounts
 
 ```shell-session
@@ -41,6 +43,43 @@ $ REVOLUT_CLIENT_ASSERTION='<CLIENT_ASSERTION>' REVOLUT_REFRESH_TOKEN='<REFRESH_
 
 #### Generate a new access token
 
+Generating a new access token requires the authorization code that was
+granted in step [Setting up Business API](#setting-up-business-api)
+along with the client assertion.
+
 ```shell-session
 $ REVOLUT_CLIENT_ASSERTION='<CLIENT_ASSERTION>' REVOLUT_AUTHORIZATION_CODE='<AUTHORIZATION_CODE>' just retrieve-access-token
+```
+
+#### Refresh access token
+
+Refreshing the access token requires the refresh token that was
+granted in step [Setting up Business API](#setting-up-business-api)
+along with the client assertion.
+
+```shell-session
+$ REVOLUT_CLIENT_ASSERTION='<CLIENT_ASSERTION>' REVOLUT_AUTHORIZATION_CODE='<AUTHORIZATION_CODE>' just refresh-access-token
+```
+
+## Merchant API
+
+### Setting up Merchant API
+
+Follow the instructions at the [Revolut API documentation
+site](https://developer.revolut.com/docs/merchant/merchant-api).
+
+In order to initiate requests, you need to provide:
+
+1. Secret key
+  1. [How to obtain the secret key](https://developer.revolut.com/docs/merchant/merchant-api#authorization)
+
+### Some examples
+
+In order to communicate with the Revolut Merchant API, you will need
+to have [set up the Merchant API](#setting-up-merchant-api).
+
+#### List orders
+
+```shell-session
+$ REVOLUT_SECRET_KEY='<SECRET_KEY>' just list-orders
 ```
