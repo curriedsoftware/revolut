@@ -24,7 +24,7 @@ necessary:
 
 1. Refresh token
     1. [How to obtain the refresh token](https://developer.revolut.com/docs/guides/manage-accounts/get-started/make-your-first-api-request#4-exchange-authorization-code-for-access-token)
-2. Client assertion
+1. Client assertion
     1. [How to obtain the client assertion](https://developer.revolut.com/docs/guides/manage-accounts/get-started/make-your-first-api-request#4-exchange-authorization-code-for-access-token)
 
 The library will automatically request new access tokens when the
@@ -71,7 +71,7 @@ site](https://developer.revolut.com/docs/merchant/merchant-api).
 In order to initiate requests, you need to provide:
 
 1. Secret key
-  1. [How to obtain the secret key](https://developer.revolut.com/docs/merchant/merchant-api#authorization)
+    1. [How to obtain the secret key](https://developer.revolut.com/docs/merchant/merchant-api#authorization)
 
 ### Some examples
 
