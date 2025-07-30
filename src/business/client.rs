@@ -264,19 +264,25 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         &self,
         params: HashMap<String, String>,
     ) -> Result<R, Error> {
-        self.client
+        let res = self
+            .client
             .post(&self.environment.uri("1.0", "/auth/token").0)
             .form(&params)
             .send()
             .await
             .map_err(|err| {
                 errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
-            })?
-            .json()
-            .await
-            .map_err(|err| {
-                errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
-            })
+            })?;
+
+        if res.status().is_client_error() {
+            return Err(Error::ClientError(ClientError::HttpStatus(
+                res.status().as_u16(),
+            )));
+        }
+
+        res.json().await.map_err(|err| {
+            errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
+        })
     }
 
     async fn ensure_logged_in(&self) -> Result<(), Error> {
@@ -300,9 +306,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
     ) -> Result<Vec<u8>, Error> {
-        self.ensure_logged_in()
-            .await
-            .map_err(|err| Error::ClientError(ClientError::CannotLogIn(format!("{err:?}"))))?;
+        self.ensure_logged_in().await?;
 
         let Some(access_token) = (*self.authentication.access_token.read().map_err(|err| {
             errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
@@ -341,14 +345,22 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             }
         };
 
-        Ok(request
+        let res = request
             .header("Authorization", format!("Bearer {access_token}"))
             .header("Accept", "application/json")
             .send()
             .await
             .map_err(|err| {
                 errors::Error::ClientError(errors::ClientError::RequestError(format!("{err:?}")))
-            })?
+            })?;
+
+        if res.status().is_client_error() {
+            return Err(Error::ClientError(ClientError::HttpStatus(
+                res.status().as_u16(),
+            )));
+        }
+
+        Ok(res
             .bytes()
             .await
             .map_err(|err| {
@@ -362,9 +374,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
     ) -> Result<R, Error> {
-        self.ensure_logged_in().await.map_err(|err| {
-            errors::Error::ClientError(ClientError::CannotLogIn(format!("{err:?}")))
-        })?;
+        self.ensure_logged_in().await?;
 
         let Some(access_token) = (*self.authentication.access_token.read().map_err(|err| {
             errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))

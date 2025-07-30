@@ -41,6 +41,7 @@ pub enum ClientBuilderError {
 #[derive(Debug, Deserialize)]
 pub enum ClientError {
     CannotLogIn(String),
+    HttpStatus(u16),
     RequestError(String),
     SerializationError(String),
     GenericError(String),
