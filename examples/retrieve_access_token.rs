@@ -41,7 +41,7 @@ async fn main() -> ApiResult<()> {
 
     println!(
         "{}",
-        client.login_with_authorization_code().await?.access_token
+        serde_json::to_string(&client.login_with_authorization_code().await?)?
     );
 
     Ok(())
