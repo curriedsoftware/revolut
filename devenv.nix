@@ -19,7 +19,7 @@
     cargo audit -f ${./Cargo.nix.lock} --json | ${lib.getExe pkgs.jq} -e '. as $expression | $expression, ($expression | .vulnerabilities.found | not)'
   '';
 
-  pre-commit.hooks = {
+  git-hooks.hooks = {
     rustfmt.enable = true;
     clippy.enable = true;
   };
