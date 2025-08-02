@@ -103,9 +103,40 @@ impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthe
     }
 }
 
-/// Counterparties API. Available in sandbox and production
-/// environments.
-impl<E: Environment> Client<E, client::BusinessAuthentication> {}
+/// Counterparties API. Available only in production environments.
+impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
+    pub async fn counterparties(
+        &self,
+        list_params: &counterparties::v10::ListParams,
+    ) -> ApiResult<Vec<counterparties::v10::Counterparty>> {
+        counterparties::list(self, list_params).await
+    }
+
+    pub async fn counterparty(
+        &self,
+        counterparty_id: &str,
+    ) -> ApiResult<counterparties::v10::Counterparty> {
+        counterparties::retrieve(self, counterparty_id).await
+    }
+
+    pub async fn delete_counterparty(&self, counterparty_id: &str) -> ApiResult<()> {
+        counterparties::delete(self, counterparty_id).await
+    }
+
+    pub async fn create_counterparty(
+        &self,
+        counterparty: &counterparties::v10::CounterpartyRequest,
+    ) -> ApiResult<counterparties::v10::Counterparty> {
+        counterparties::create(self, counterparty).await
+    }
+
+    pub async fn validate_account_name(
+        &self,
+        account_name: &counterparties::v10::AccountNameRequest,
+    ) -> ApiResult<counterparties::v10::AccountName> {
+        counterparties::validate_account_name(self, account_name).await
+    }
+}
 
 /// The Expenses API is only available in the production environment.
 ///
@@ -127,15 +158,79 @@ impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthe
 
 /// Foreign Exchange API. Available in sandbox and production
 /// environments.
-impl<E: Environment> Client<E, client::BusinessAuthentication> {}
+impl<E: Environment> Client<E, client::BusinessAuthentication> {
+    pub async fn foreign_exchange(
+        &self,
+        get_params: &foreign_exchange::v10::ExchangeRateGetParams,
+    ) -> ApiResult<Vec<foreign_exchange::v10::ExchangeRate>> {
+        foreign_exchange::get(self, get_params).await
+    }
+
+    pub async fn exchange(
+        &self,
+        exchange: &foreign_exchange::v10::ExchangeRequest,
+    ) -> ApiResult<foreign_exchange::v10::Exchange> {
+        foreign_exchange::exchange(self, exchange).await
+    }
+}
 
 /// Payment Drafts API. Available in sandbox and production
 /// environments.
-impl<E: Environment> Client<E, client::BusinessAuthentication> {}
+impl<E: Environment> Client<E, client::BusinessAuthentication> {
+    pub async fn payment_drafts(&self) -> ApiResult<payment_drafts::v10::PaymentDraft> {
+        payment_drafts::list(self).await
+    }
+
+    pub async fn create_payment_draft(
+        &self,
+        payment_draft: &payment_drafts::v10::PaymentDraftRequest,
+    ) -> ApiResult<payment_drafts::v10::CreatePaymentDraft> {
+        payment_drafts::create(self, payment_draft).await
+    }
+
+    pub async fn payment_draft(
+        &self,
+        payment_draft_id: &str,
+    ) -> ApiResult<payment_drafts::v10::PaymentDraftDetails> {
+        payment_drafts::retrieve(self, payment_draft_id).await
+    }
+
+    pub async fn delete_payment_draft(&self, payment_draft_id: &str) -> ApiResult<()> {
+        payment_drafts::delete(self, payment_draft_id).await
+    }
+}
 
 /// Payout links API. Available in sandbox and production
 /// environments.
-impl<E: Environment> Client<E, client::BusinessAuthentication> {}
+impl<E: Environment> Client<E, client::BusinessAuthentication> {
+    pub async fn payout_links(
+        &self,
+        list_params: &payout_links::v10::PayoutLinkListParams,
+    ) -> ApiResult<Vec<payout_links::v10::PayoutLink>> {
+        payout_links::list(self, list_params).await
+    }
+
+    pub async fn payout_link(
+        &self,
+        payout_link_id: &str,
+    ) -> ApiResult<payout_links::v10::PayoutLink> {
+        payout_links::retrieve(self, payout_link_id).await
+    }
+
+    pub async fn create_payout_link(
+        &self,
+        payout_link: &payout_links::v10::PayoutLinkRequest,
+    ) -> ApiResult<payout_links::v10::PayoutLink> {
+        payout_links::create(self, payout_link).await
+    }
+
+    pub async fn cancel_payout_link(
+        &self,
+        payout_link_id: &str,
+    ) -> ApiResult<payout_links::v10::PayoutLink> {
+        payout_links::cancel(self, payout_link_id).await
+    }
+}
 
 /// The Simulations API is only available in the sandbox environment.
 ///

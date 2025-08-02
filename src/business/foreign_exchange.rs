@@ -112,7 +112,7 @@ impl std::fmt::Display for v10::ExchangeRateGetParams {
 
 pub async fn get<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
-    get_params: v10::ExchangeRateGetParams,
+    get_params: &v10::ExchangeRateGetParams,
 ) -> ApiResult<Vec<v10::ExchangeRate>> {
     client
         .request(
@@ -124,7 +124,7 @@ pub async fn get<E: Environment>(
 
 pub async fn exchange<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
-    exchange: v10::ExchangeRequest,
+    exchange: &v10::ExchangeRequest,
 ) -> ApiResult<v10::Exchange> {
     client
         .request(

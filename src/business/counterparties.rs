@@ -37,7 +37,7 @@ pub mod v10 {
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, Default)]
-    pub struct CounterpartyListParams {
+    pub struct ListParams {
         pub name: Option<String>,
         pub account_no: Option<String>,
         pub sort_code: Option<String>,
@@ -224,7 +224,7 @@ pub mod v10 {
     }
 }
 
-impl std::fmt::Display for v10::CounterpartyListParams {
+impl std::fmt::Display for v10::ListParams {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let query = [
             ("name", &self.name),
@@ -254,7 +254,7 @@ impl std::fmt::Display for v10::CounterpartyListParams {
 
 pub async fn list(
     client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
-    list_params: v10::CounterpartyListParams,
+    list_params: &v10::ListParams,
 ) -> ApiResult<Vec<v10::Counterparty>> {
     client
         .request(

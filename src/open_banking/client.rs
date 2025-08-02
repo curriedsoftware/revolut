@@ -29,6 +29,7 @@ pub use crate::client::{
     ProductionEnvironment, RevolutEndpoint, SandboxEnvironment,
 };
 
+#[allow(dead_code)]
 pub fn openbanking_client()
 -> ClientBuilder<MissingEnvironment, MissingClientAuthentication, OpenBankingClient> {
     ClientBuilder {
