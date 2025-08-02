@@ -75,16 +75,16 @@ impl Environment for ProductionEnvironment<BusinessClient> {
 }
 
 pub mod v10 {
-    use serde::Deserialize;
+    use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct ClientAuthenticationResponse {
         pub access_token: String,
         pub token_type: String,
         pub expires_in: u64,
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct ClientAuthenticationWithRefreshTokenResponse {
         pub access_token: String,
         pub token_type: String,
