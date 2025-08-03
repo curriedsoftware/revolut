@@ -73,7 +73,7 @@ pub struct RotateWebhookSigningSecretRequest {
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-pub struct FailedWebhookEventsListParams {
+pub struct ListParams {
     pub limit: Option<u64>,
     pub created_before: Option<String>,
 }
@@ -89,7 +89,7 @@ pub struct FailedWebhookEvent {
     pub last_sent_date: Option<String>,
 }
 
-impl std::fmt::Display for FailedWebhookEventsListParams {
+impl std::fmt::Display for ListParams {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let query = [
             ("limit", &self.limit.map(|limit| limit.to_string())),
@@ -203,7 +203,7 @@ pub async fn rotate_signing_secret<E: Environment>(
 pub async fn failed_webhook_events<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
     webhook_id: &str,
-    list_params: &FailedWebhookEventsListParams,
+    list_params: &ListParams,
 ) -> ApiResult<Vec<FailedWebhookEvent>> {
     client
         .request(

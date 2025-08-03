@@ -31,6 +31,17 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
+    #[derive(Clone, Debug, Default)]
+    pub struct ListParams {
+        pub limit: Option<u64>,
+        pub page: Option<u64>,
+    }
+
+    #[derive(Clone, Debug, Default)]
+    pub struct PaymentMethodListParams {
+        pub only_merchant: Option<bool>,
+    }
+
     #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct CustomerRequest {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -118,6 +129,56 @@ pub mod v10 {
     }
 }
 
+impl std::fmt::Display for v10::ListParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let query = [
+            ("limit", &self.limit.map(|limit| limit.to_string())),
+            ("page", &self.page.map(|page| page.to_string())),
+        ]
+        .iter()
+        .fold(String::new(), |acc, (key, value)| {
+            if let Some(value) = value {
+                let value = urlencoding::encode(value);
+                if acc.is_empty() {
+                    format!("{acc}?{key}={value}")
+                } else {
+                    format!("{acc}&{key}={value}")
+                }
+            } else {
+                acc
+            }
+        });
+        write!(f, "{query}")
+    }
+}
+
+impl std::fmt::Display for v10::PaymentMethodListParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let query = [(
+            "only_merchant",
+            if self.only_merchant == Some(true) {
+                Some("true")
+            } else {
+                None
+            },
+        )]
+        .iter()
+        .fold(String::new(), |acc, (key, value)| {
+            if let Some(value) = value {
+                let value = urlencoding::encode(value);
+                if acc.is_empty() {
+                    format!("{acc}?{key}={value}")
+                } else {
+                    format!("{acc}&{key}={value}")
+                }
+            } else {
+                acc
+            }
+        });
+        write!(f, "{query}")
+    }
+}
+
 pub async fn create<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
     customer: &v10::CustomerRequest,
@@ -134,11 +195,14 @@ pub async fn create<E: Environment>(
 
 pub async fn list<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
+    list_params: &v10::ListParams,
 ) -> ApiResult<Vec<v10::Customer>> {
     client
         .request(
             HttpMethod::<()>::Get,
-            &client.environment.uri("1.0", "/customers"),
+            &client
+                .environment
+                .uri("1.0", &format!("/customers{list_params}")),
         )
         .await
 }
@@ -191,13 +255,15 @@ pub async fn delete<E: Environment>(
 pub async fn payment_methods<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
     customer_id: &str,
+    list_params: &v10::PaymentMethodListParams,
 ) -> ApiResult<Vec<v10::PaymentMethod>> {
     client
         .request(
             HttpMethod::<()>::Get,
-            &client
-                .environment
-                .uri("1.0", &format!("/customers/{customer_id}/payment-methods")),
+            &client.environment.uri(
+                "1.0",
+                &format!("/customers/{customer_id}/payment-methods{list_params}"),
+            ),
         )
         .await
 }

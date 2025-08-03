@@ -43,42 +43,51 @@ pub mod v10 {
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Default)]
+    pub struct ListParams {
+        pub from: Option<String>,
+        pub to: Option<String>,
+        pub count: Option<u64>,
+        pub state: Option<ExpenseState>,
+        pub transaction_type: Option<TransactionType>,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Amount {
         amount: Option<f64>,
         currency: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Category {
         name: String,
         code: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct TaxRate {
         name: String,
         percentage: f64,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct ExpenseSplit {
         amount: Amount,
         category: Category,
         tax_rate: TaxRate,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct ExpenseSpentAmount {
         amount: f64,
         currency: String,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Expense {
         id: String,
         state: ExpenseState,
-        transaction_type: String,
+        transaction_type: TransactionType,
         description: Option<String>,
         submitted_at: Option<String>,
         completed_at: Option<String>,
@@ -92,7 +101,7 @@ pub mod v10 {
         spent_amount: ExpenseSpentAmount,
     }
 
-    #[derive(Debug, Deserialize, strum::Display, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     #[strum(serialize_all = "snake_case")]
     pub enum ExpenseState {
@@ -113,15 +122,66 @@ pub mod v10 {
         #[serde(alias = "REVERTED")]
         Reverted,
     }
+
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
+    pub enum TransactionType {
+        #[serde(alias = "ATM")]
+        Atm,
+        #[serde(alias = "CARD_PAYMENT")]
+        CardPayment,
+        #[serde(alias = "FEE")]
+        Fee,
+        #[serde(alias = "TRANSFER")]
+        Transfer,
+        #[serde(alias = "EXTERNAL")]
+        External,
+    }
+}
+
+impl std::fmt::Display for v10::ListParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let query = [
+            ("from", &self.from),
+            ("to", &self.to),
+            ("count", &self.count.map(|count| count.to_string())),
+            ("state", &self.state.clone().map(|state| state.to_string())),
+            (
+                "transaction_type",
+                &self
+                    .transaction_type
+                    .clone()
+                    .map(|transaction_type| transaction_type.to_string()),
+            ),
+        ]
+        .iter()
+        .fold(String::new(), |acc, (key, value)| {
+            if let Some(value) = value {
+                let value = urlencoding::encode(value);
+                if acc.is_empty() {
+                    format!("{acc}?{key}={value}")
+                } else {
+                    format!("{acc}&{key}={value}")
+                }
+            } else {
+                acc
+            }
+        });
+        write!(f, "{query}")
+    }
 }
 
 pub async fn list(
     client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
+    list_params: &v10::ListParams,
 ) -> ApiResult<Vec<v10::Expense>> {
     client
         .request(
             HttpMethod::<()>::Get,
-            &client.environment.uri("1.0", "/expenses"),
+            &client
+                .environment
+                .uri("1.0", &format!("/expenses{list_params}")),
         )
         .await
 }

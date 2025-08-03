@@ -60,9 +60,11 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
         orders::capture(self, order_id, amount).await
     }
 
-    pub async fn orders(&self) -> ApiResult<Vec<orders::v10::Order>> {
-        // TODO: add filtering and pagination
-        orders::list(self).await
+    pub async fn orders(
+        &self,
+        list_params: &orders::v10::ListParams,
+    ) -> ApiResult<Vec<orders::v10::Order>> {
+        orders::list(self, list_params).await
     }
 
     pub async fn cancel_order(&self, order_id: &str) -> ApiResult<orders::v10::Order> {
@@ -102,9 +104,11 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
         customers::create(self, customer).await
     }
 
-    pub async fn customers(&self) -> ApiResult<Vec<customers::v10::Customer>> {
-        // TODO: add pagination
-        customers::list(self).await
+    pub async fn customers(
+        &self,
+        list_params: &customers::v10::ListParams,
+    ) -> ApiResult<Vec<customers::v10::Customer>> {
+        customers::list(self, list_params).await
     }
 
     pub async fn customer(&self, customer_id: &str) -> ApiResult<customers::v10::Customer> {
@@ -126,9 +130,9 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
     pub async fn payment_methods(
         &self,
         customer_id: &str,
+        list_params: &customers::v10::PaymentMethodListParams,
     ) -> ApiResult<Vec<customers::v10::PaymentMethod>> {
-        // TODO: add filtering
-        customers::payment_methods(self, customer_id).await
+        customers::payment_methods(self, customer_id, list_params).await
     }
 
     pub async fn payment_method(
@@ -169,9 +173,11 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
 
 // Payouts API. Available in sandbox and production environments.
 impl<E: Environment> Client<E, client::MerchantAuthentication> {
-    pub async fn payouts(&self) -> ApiResult<Vec<payouts::unversioned::Payout>> {
-        // TODO: add filtering and pagination
-        payouts::list(self).await
+    pub async fn payouts(
+        &self,
+        list_params: &payouts::unversioned::ListParams,
+    ) -> ApiResult<Vec<payouts::unversioned::Payout>> {
+        payouts::list(self, list_params).await
     }
 
     pub async fn payout_details(&self, payout_id: &str) -> ApiResult<payouts::unversioned::Payout> {
@@ -184,9 +190,11 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
 /// Trying to access these endpoints from the sandbox environment will
 /// result in a compile error.
 impl Client<ProductionEnvironment<client::MerchantClient>, client::MerchantAuthentication> {
-    pub async fn disputes(&self) -> ApiResult<Vec<disputes::unversioned::Dispute>> {
-        // TODO: add filtering and pagination
-        disputes::list(self).await
+    pub async fn disputes(
+        &self,
+        list_params: &disputes::unversioned::ListParams,
+    ) -> ApiResult<Vec<disputes::unversioned::Dispute>> {
+        disputes::list(self, list_params).await
     }
 
     pub async fn dispute(&self, dispute_id: &str) -> ApiResult<disputes::unversioned::Dispute> {

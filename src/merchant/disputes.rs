@@ -37,6 +37,15 @@ use crate::{
 pub mod unversioned {
     use serde::{Deserialize, Serialize};
 
+    #[derive(Clone, Debug, Default)]
+    pub struct ListParams {
+        pub limit: Option<u16>,
+        pub from_created_date: Option<String>,
+        pub to_created_date: Option<String>,
+        pub state: Option<Vec<DisputeState>>,
+        pub payment_id: Option<Vec<String>>,
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Dispute {
         pub id: Option<String>,
@@ -52,7 +61,7 @@ pub mod unversioned {
         pub payment: Option<Payment>,
     }
 
-    #[derive(Debug, Deserialize, strum::Display, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     #[strum(serialize_all = "snake_case")]
     pub enum DisputeState {
@@ -156,13 +165,58 @@ pub mod unversioned {
     }
 }
 
+impl std::fmt::Display for unversioned::ListParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let state = self.state.clone();
+
+        let mut query = state
+            .unwrap_or_default()
+            .into_iter()
+            .map(|state| ("state", Some(state.to_string())))
+            .collect::<Vec<(&str, Option<String>)>>();
+
+        let limit = self
+            .limit
+            .map(|limit| std::string::ToString::to_string(&limit));
+
+        query.extend(vec![
+            ("from_created_date", self.from_created_date.clone()),
+            ("to_created_date", self.to_created_date.clone()),
+            ("limit", limit.clone()),
+        ]);
+
+        if let Some(payment_ids) = &self.payment_id {
+            for payment_id in payment_ids {
+                query.push(("payment_id", Some(payment_id.clone())));
+            }
+        }
+
+        let query = query.iter().fold(String::new(), |acc, (key, value)| {
+            if let Some(value) = value {
+                let value = urlencoding::encode(value);
+                if acc.is_empty() {
+                    format!("{acc}?{key}={value}")
+                } else {
+                    format!("{acc}&{key}={value}")
+                }
+            } else {
+                acc
+            }
+        });
+        write!(f, "{query}")
+    }
+}
+
 pub async fn list(
     client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
+    list_params: &unversioned::ListParams,
 ) -> ApiResult<Vec<unversioned::Dispute>> {
     client
         .request(
             HttpMethod::<()>::Get,
-            &client.environment.unversioned_uri("/disputes"),
+            &client
+                .environment
+                .unversioned_uri(&format!("/disputes{list_params}")),
         )
         .await
 }

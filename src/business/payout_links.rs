@@ -34,7 +34,7 @@ pub mod v10 {
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, Default)]
-    pub struct PayoutLinkListParams {
+    pub struct ListParams {
         pub state: Option<Vec<PayoutLinkState>>,
         pub created_before: Option<String>,
         pub limit: Option<u64>,
@@ -119,7 +119,7 @@ pub mod v10 {
     }
 }
 
-impl std::fmt::Display for v10::PayoutLinkListParams {
+impl std::fmt::Display for v10::ListParams {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let state = self.state.clone();
 
@@ -157,7 +157,7 @@ impl std::fmt::Display for v10::PayoutLinkListParams {
 
 pub async fn list<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
-    list_params: &v10::PayoutLinkListParams,
+    list_params: &v10::ListParams,
 ) -> ApiResult<Vec<v10::PayoutLink>> {
     client
         .request(
@@ -219,7 +219,7 @@ mod tests {
     fn check_list_query_parameters() {
         assert_eq!(
             "?state=created",
-            v10::PayoutLinkListParams {
+            v10::ListParams {
                 state: Some(vec![v10::PayoutLinkState::Created]),
                 ..Default::default()
             }
@@ -227,7 +227,7 @@ mod tests {
         );
         assert_eq!(
             "?state=created&state=active",
-            v10::PayoutLinkListParams {
+            v10::ListParams {
                 state: Some(vec![
                     v10::PayoutLinkState::Created,
                     v10::PayoutLinkState::Active,

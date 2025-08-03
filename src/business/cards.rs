@@ -37,6 +37,12 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
+    #[derive(Clone, Debug, Default)]
+    pub struct ListParams {
+        pub created_before: Option<String>,
+        pub limit: Option<u16>,
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct CardProduct {
         code: String,
@@ -124,13 +130,39 @@ pub mod v10 {
     }
 }
 
+impl std::fmt::Display for v10::ListParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let query = [
+            ("created_before", &self.created_before),
+            ("limit", &self.limit.map(|limit| limit.to_string())),
+        ]
+        .iter()
+        .fold(String::new(), |acc, (key, value)| {
+            if let Some(value) = value {
+                let value = urlencoding::encode(value);
+                if acc.is_empty() {
+                    format!("{acc}?{key}={value}")
+                } else {
+                    format!("{acc}&{key}={value}")
+                }
+            } else {
+                acc
+            }
+        });
+        write!(f, "{query}")
+    }
+}
+
 pub async fn list(
     client: &Client<ProductionEnvironment<client::BusinessClient>, BusinessAuthentication>,
+    list_params: &v10::ListParams,
 ) -> ApiResult<Vec<v10::Card>> {
     client
         .request(
             HttpMethod::<()>::Get,
-            &client.environment.uri("1.0", "/cards"),
+            &client
+                .environment
+                .uri("1.0", &format!("/cards{list_params}")),
         )
         .await
 }
