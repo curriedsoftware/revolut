@@ -37,7 +37,7 @@ pub mod v10 {
     pub struct ListParams {
         pub state: Option<Vec<PayoutLinkState>>,
         pub created_before: Option<String>,
-        pub limit: Option<u64>,
+        pub limit: Option<u16>,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]

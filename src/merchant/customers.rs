@@ -33,7 +33,7 @@ pub mod v10 {
 
     #[derive(Clone, Debug, Default)]
     pub struct ListParams {
-        pub limit: Option<u64>,
+        pub limit: Option<u16>,
         pub page: Option<u64>,
     }
 

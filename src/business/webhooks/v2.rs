@@ -74,7 +74,7 @@ pub struct RotateWebhookSigningSecretRequest {
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct ListParams {
-    pub limit: Option<u64>,
+    pub limit: Option<u16>,
     pub created_before: Option<String>,
 }
 

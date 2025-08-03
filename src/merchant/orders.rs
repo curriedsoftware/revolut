@@ -36,7 +36,7 @@ pub mod v10 {
 
     #[derive(Clone, Debug, Default)]
     pub struct ListParams {
-        pub limit: Option<u64>,
+        pub limit: Option<u16>,
         pub created_before: Option<String>,
         pub from_created_date: Option<String>,
         pub to_created_date: Option<String>,
