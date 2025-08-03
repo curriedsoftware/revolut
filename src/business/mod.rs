@@ -60,9 +60,11 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {
 /// Trying to access these endpoints from the sandbox environment will
 /// result in a compile error.
 impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
-    pub async fn cards(&self) -> ApiResult<Vec<cards::v10::Card>> {
-        // FIXME: add filter and limit
-        cards::list(self).await
+    pub async fn cards(
+        &self,
+        list_params: &cards::v10::ListParams,
+    ) -> ApiResult<Vec<cards::v10::Card>> {
+        cards::list(self, list_params).await
     }
 
     pub async fn create_card(
@@ -147,9 +149,11 @@ impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthe
 /// Trying to access these endpoints from the sandbox environment will
 /// result in a compile error.
 impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
-    pub async fn expenses(&self) -> ApiResult<Vec<expenses::v10::Expense>> {
-        // FIXME: add filter and limit
-        expenses::list(self).await
+    pub async fn expenses(
+        &self,
+        list_params: &expenses::v10::ListParams,
+    ) -> ApiResult<Vec<expenses::v10::Expense>> {
+        expenses::list(self, list_params).await
     }
 
     pub async fn expense(&self, expense_id: &str) -> ApiResult<expenses::v10::Expense> {
@@ -210,7 +214,7 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {
 impl<E: Environment> Client<E, client::BusinessAuthentication> {
     pub async fn payout_links(
         &self,
-        list_params: &payout_links::v10::PayoutLinkListParams,
+        list_params: &payout_links::v10::ListParams,
     ) -> ApiResult<Vec<payout_links::v10::PayoutLink>> {
         payout_links::list(self, list_params).await
     }
@@ -290,7 +294,7 @@ impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthe
 impl<E: Environment> Client<E, client::BusinessAuthentication> {
     pub async fn transaction_list(
         &self,
-        list_params: &transactions::v10::TransactionListParams,
+        list_params: &transactions::v10::ListParams,
     ) -> ApiResult<Vec<transactions::v10::Transaction>> {
         transactions::list(self, list_params).await
     }
@@ -368,7 +372,7 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {
     pub async fn failed_webhook_events(
         &self,
         webhook_id: &str,
-        list_params: &webhooks::v2::FailedWebhookEventsListParams,
+        list_params: &webhooks::v2::ListParams,
     ) -> ApiResult<Vec<webhooks::v2::FailedWebhookEvent>> {
         webhooks::v2::failed_webhook_events(self, webhook_id, list_params).await
     }

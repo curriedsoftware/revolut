@@ -31,6 +31,15 @@ use crate::{
 pub mod unversioned {
     use serde::{Deserialize, Serialize};
 
+    #[derive(Clone, Debug, Default)]
+    pub struct ListParams {
+        pub currency: Option<String>,
+        pub limit: Option<u16>,
+        pub from_created_date: Option<String>,
+        pub to_created_date: Option<String>,
+        pub state: Option<Vec<PayoutState>>,
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Payout {
         pub id: String,
@@ -41,7 +50,9 @@ pub mod unversioned {
         pub currency: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum PayoutState {
         Processing,
         Completed,
@@ -59,13 +70,53 @@ pub mod unversioned {
     }
 }
 
+impl std::fmt::Display for unversioned::ListParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let state = self.state.clone();
+
+        let mut query = state
+            .unwrap_or_default()
+            .into_iter()
+            .map(|state| ("state", Some(state.to_string())))
+            .collect::<Vec<(&str, Option<String>)>>();
+
+        let limit = self
+            .limit
+            .map(|limit| std::string::ToString::to_string(&limit));
+
+        query.extend(vec![
+            ("currency", self.currency.clone()),
+            ("from_created_date", self.from_created_date.clone()),
+            ("to_created_date", self.to_created_date.clone()),
+            ("limit", limit.clone()),
+        ]);
+
+        let query = query.iter().fold(String::new(), |acc, (key, value)| {
+            if let Some(value) = value {
+                let value = urlencoding::encode(value);
+                if acc.is_empty() {
+                    format!("{acc}?{key}={value}")
+                } else {
+                    format!("{acc}&{key}={value}")
+                }
+            } else {
+                acc
+            }
+        });
+        write!(f, "{query}")
+    }
+}
+
 pub async fn list<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
+    list_params: &unversioned::ListParams,
 ) -> ApiResult<Vec<unversioned::Payout>> {
     client
         .request(
             HttpMethod::<()>::Get,
-            &client.environment.unversioned_uri("/payouts"),
+            &client
+                .environment
+                .unversioned_uri(&format!("/payouts{list_params}")),
         )
         .await
 }

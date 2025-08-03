@@ -34,6 +34,18 @@ pub mod v10 {
         std::collections::HashMap,
     };
 
+    #[derive(Clone, Debug, Default)]
+    pub struct ListParams {
+        pub limit: Option<u64>,
+        pub created_before: Option<String>,
+        pub from_created_date: Option<String>,
+        pub to_created_date: Option<String>,
+        pub customer_id: Option<String>,
+        pub email: Option<String>,
+        pub merchant_order_ext_ref: Option<String>,
+        pub state: Option<Vec<State>>,
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Customer {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -398,7 +410,7 @@ pub mod v10 {
         CreditReimbursement,
     }
 
-    #[derive(Debug, Deserialize, strum::Display, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     #[strum(serialize_all = "snake_case")]
     pub enum State {
@@ -702,6 +714,49 @@ pub mod v10 {
     }
 }
 
+impl std::fmt::Display for v10::ListParams {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let state = self.state.clone();
+
+        let mut query = state
+            .unwrap_or_default()
+            .into_iter()
+            .map(|state| ("state", Some(state.to_string())))
+            .collect::<Vec<(&str, Option<String>)>>();
+
+        let limit = self
+            .limit
+            .map(|limit| std::string::ToString::to_string(&limit));
+
+        query.extend(vec![
+            ("created_before", self.created_before.clone()),
+            ("from_created_date", self.from_created_date.clone()),
+            ("to_created_date", self.to_created_date.clone()),
+            ("customer_id", self.customer_id.clone()),
+            ("email", self.email.clone()),
+            (
+                "merchant_order_ext_ref",
+                self.merchant_order_ext_ref.clone(),
+            ),
+            ("limit", limit.clone()),
+        ]);
+
+        let query = query.iter().fold(String::new(), |acc, (key, value)| {
+            if let Some(value) = value {
+                let value = urlencoding::encode(value);
+                if acc.is_empty() {
+                    format!("{acc}?{key}={value}")
+                } else {
+                    format!("{acc}&{key}={value}")
+                }
+            } else {
+                acc
+            }
+        });
+        write!(f, "{query}")
+    }
+}
+
 pub async fn create<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
     order: &v10::OrderRequest,
@@ -735,8 +790,6 @@ pub async fn update<E: Environment>(
     order_id: &str,
     order: &v10::OrderRequest,
 ) -> ApiResult<v10::Order> {
-    // TODO: Implement parameter restrictions based on current state:
-    // https://developer.revolut.com/docs/merchant/update-order
     client
         .request(
             HttpMethod::Patch {
@@ -751,11 +804,14 @@ pub async fn update<E: Environment>(
 
 pub async fn list<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
+    list_params: &v10::ListParams,
 ) -> ApiResult<Vec<v10::Order>> {
     client
         .request(
             HttpMethod::<()>::Get,
-            &client.environment.uri("1.0", "/orders"),
+            &client
+                .environment
+                .uri("1.0", &format!("/orders{list_params}")),
         )
         .await
 }

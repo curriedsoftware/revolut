@@ -34,7 +34,7 @@ pub mod v10 {
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, Default)]
-    pub struct TransactionListParams {
+    pub struct ListParams {
         pub from: Option<String>,
         pub to: Option<String>,
         pub account: Option<String>,
@@ -163,7 +163,7 @@ pub mod v10 {
     }
 }
 
-impl std::fmt::Display for v10::TransactionListParams {
+impl std::fmt::Display for v10::ListParams {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let query = [
             ("from", &self.from),
@@ -191,7 +191,7 @@ impl std::fmt::Display for v10::TransactionListParams {
 
 pub async fn list<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
-    list_params: &v10::TransactionListParams,
+    list_params: &v10::ListParams,
 ) -> ApiResult<Vec<v10::Transaction>> {
     client
         .request(
@@ -233,7 +233,7 @@ mod tests {
     fn check_list_query_parameters() {
         assert_eq!(
             "?type=card_payment",
-            v10::TransactionListParams {
+            v10::ListParams {
                 r#type: Some(v10::TransactionType::CardPayment),
                 ..Default::default()
             }

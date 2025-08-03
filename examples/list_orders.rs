@@ -38,7 +38,10 @@ async fn main() -> ApiResult<()> {
         )
         .build()?;
 
-    println!("{}", serde_json::to_string(&client.orders().await?)?);
+    println!(
+        "{}",
+        serde_json::to_string(&client.orders(&Default::default()).await?)?
+    );
 
     Ok(())
 }
