@@ -23,9 +23,9 @@
  ***/
 
 use crate::{
-    client::{Body, Client, Environment, HttpMethod, ProductionEnvironment},
+    client::{Body, Client, Environment, HttpMethod},
     errors::ApiResult,
-    merchant::client::{self, MerchantAuthentication},
+    merchant::client::MerchantAuthentication,
 };
 
 pub mod unversioned {
@@ -56,8 +56,8 @@ pub mod unversioned {
     }
 }
 
-pub async fn register_address_validation_endpoint_for_fast_checkout(
-    client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
+pub async fn register_address_validation_endpoint_for_fast_checkout<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
     address_validation_endpoint: &unversioned::RegisterAddressValidationEndpointForFastCheckoutRequest,
 ) -> ApiResult<unversioned::RegisterAddressValidationEndpointForFastCheckout> {
     client
@@ -70,8 +70,8 @@ pub async fn register_address_validation_endpoint_for_fast_checkout(
         .await
 }
 
-pub async fn retrieve_synchronous_webhook_list(
-    client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
+pub async fn retrieve_synchronous_webhook_list<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
 ) -> ApiResult<Vec<unversioned::RegisterAddressValidationEndpointForFastCheckout>> {
     client
         .request(
@@ -82,7 +82,7 @@ pub async fn retrieve_synchronous_webhook_list(
 }
 
 pub async fn delete_synchronous_webhook<E: Environment>(
-    client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
+    client: &Client<E, MerchantAuthentication>,
     synchronous_webhook_id: &str,
 ) -> ApiResult<()> {
     client

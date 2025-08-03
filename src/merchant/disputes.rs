@@ -158,7 +158,7 @@ pub mod unversioned {
 
 pub async fn list(
     client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
-) -> ApiResult<unversioned::Dispute> {
+) -> ApiResult<Vec<unversioned::Dispute>> {
     client
         .request(
             HttpMethod::<()>::Get,
@@ -198,7 +198,7 @@ pub async fn accept(
 pub async fn upload_evidence(
     client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
     dispute_id: &str,
-    evidence: unversioned::EvidenceRequest<'_>,
+    evidence: &unversioned::EvidenceRequest<'_>,
 ) -> ApiResult<unversioned::Evidence> {
     let (evidence_data, evidence_content_type) = match evidence.data {
         unversioned::EvidenceType::JPEG(evidence) => (evidence, "image/jpeg"),

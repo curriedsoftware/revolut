@@ -23,9 +23,12 @@
  ***/
 
 use crate::{
-    client::Environment,
+    client::{Environment, ProductionEnvironment},
     errors::ApiResult,
-    merchant::{Client, client, customers, orders},
+    merchant::{
+        Client, apple_pay, client, customers, disputes, locations, orders, other, payments,
+        payouts, report_runs, webhooks,
+    },
 };
 
 /// Orders API. Available in sandbox and production environments.
@@ -58,6 +61,7 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
     }
 
     pub async fn orders(&self) -> ApiResult<Vec<orders::v10::Order>> {
+        // TODO: add filtering and pagination
         orders::list(self).await
     }
 
@@ -99,6 +103,7 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
     }
 
     pub async fn customers(&self) -> ApiResult<Vec<customers::v10::Customer>> {
+        // TODO: add pagination
         customers::list(self).await
     }
 
@@ -122,6 +127,7 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
         &self,
         customer_id: &str,
     ) -> ApiResult<Vec<customers::v10::PaymentMethod>> {
+        // TODO: add filtering
         customers::payment_methods(self, customer_id).await
     }
 
@@ -148,5 +154,181 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
         payment_method_id: &str,
     ) -> ApiResult<()> {
         customers::delete_payment_method(self, customer_id, payment_method_id).await
+    }
+}
+
+// Payments API. Available in sandbox and production environments.
+impl<E: Environment> Client<E, client::MerchantAuthentication> {
+    pub async fn payment_details(
+        &self,
+        payment_id: &str,
+    ) -> ApiResult<payments::unversioned::Payment> {
+        payments::retrieve(self, payment_id).await
+    }
+}
+
+// Payouts API. Available in sandbox and production environments.
+impl<E: Environment> Client<E, client::MerchantAuthentication> {
+    pub async fn payouts(&self) -> ApiResult<Vec<payouts::unversioned::Payout>> {
+        // TODO: add filtering and pagination
+        payouts::list(self).await
+    }
+
+    pub async fn payout_details(&self, payout_id: &str) -> ApiResult<payouts::unversioned::Payout> {
+        payouts::retrieve(self, payout_id).await
+    }
+}
+
+// Disputes API. Available only in production environments.
+impl Client<ProductionEnvironment<client::MerchantClient>, client::MerchantAuthentication> {
+    pub async fn disputes(&self) -> ApiResult<Vec<disputes::unversioned::Dispute>> {
+        // TODO: add filtering and pagination
+        disputes::list(self).await
+    }
+
+    pub async fn dispute(&self, dispute_id: &str) -> ApiResult<disputes::unversioned::Dispute> {
+        disputes::retrieve(self, dispute_id).await
+    }
+
+    pub async fn accept_dispute(&self, dispute_id: &str) -> ApiResult<()> {
+        disputes::accept(self, dispute_id).await
+    }
+
+    pub async fn upload_dispute_evidence(
+        &self,
+        dispute_id: &str,
+        evidence: &disputes::unversioned::EvidenceRequest<'_>,
+    ) -> ApiResult<disputes::unversioned::Evidence> {
+        disputes::upload_evidence(self, dispute_id, evidence).await
+    }
+
+    pub async fn challenge_dispute(
+        &self,
+        dispute_id: &str,
+        challenge_dispute: &disputes::unversioned::ChallengeDisputeRequest,
+    ) -> ApiResult<()> {
+        disputes::challenge(self, dispute_id, challenge_dispute).await
+    }
+}
+
+// Report runs API. Available in sandbox and production environments.
+impl<E: Environment> Client<E, client::MerchantAuthentication> {
+    pub async fn create_report_run(
+        &self,
+        order: &report_runs::unversioned::ReportRunRequest,
+    ) -> ApiResult<report_runs::unversioned::ReportRun> {
+        report_runs::create(self, order).await
+    }
+
+    pub async fn report_run_details(
+        &self,
+        report_run_id: &str,
+    ) -> ApiResult<report_runs::unversioned::ReportRun> {
+        report_runs::retrieve(self, report_run_id).await
+    }
+
+    pub async fn download_report_run(&self, report_run_id: &str) -> ApiResult<Vec<u8>> {
+        report_runs::download(self, report_run_id).await
+    }
+}
+
+// Webhooks API. Available in sandbox and production environments.
+impl<E: Environment> Client<E, client::MerchantAuthentication> {
+    pub async fn create_webhook(
+        &self,
+        webhook: &webhooks::v10::WebhookRequest,
+    ) -> ApiResult<webhooks::v10::Webhook> {
+        webhooks::create(self, webhook).await
+    }
+
+    pub async fn webhooks(&self) -> ApiResult<Vec<webhooks::v10::Webhook>> {
+        webhooks::list(self).await
+    }
+
+    pub async fn webhook(&self, webhook_id: &str) -> ApiResult<webhooks::v10::Webhook> {
+        webhooks::retrieve(self, webhook_id).await
+    }
+
+    pub async fn delete_webhook(&self, webhook_id: &str) -> ApiResult<()> {
+        webhooks::delete(self, webhook_id).await
+    }
+
+    pub async fn rotate_webhook_signing_secret(
+        &self,
+        webhook_id: &str,
+        rotate_webhook_signing_secret: &webhooks::v10::RotateWebhookSigningSecretRequest,
+    ) -> ApiResult<webhooks::v10::Webhook> {
+        webhooks::rotate_signing_secret(self, webhook_id, rotate_webhook_signing_secret).await
+    }
+}
+
+// Locations API. Available in sandbox and production environments.
+impl<E: Environment> Client<E, client::MerchantAuthentication> {
+    pub async fn create_location(
+        &self,
+        location: &locations::unversioned::LocationRequest,
+    ) -> ApiResult<locations::unversioned::Location> {
+        locations::create(self, location).await
+    }
+
+    pub async fn locations(&self) -> ApiResult<Vec<locations::unversioned::Location>> {
+        locations::list(self).await
+    }
+
+    pub async fn location(&self, location_id: &str) -> ApiResult<locations::unversioned::Location> {
+        locations::retrieve(self, location_id).await
+    }
+
+    pub async fn update_location(
+        &self,
+        location_id: &str,
+        location: &locations::unversioned::LocationRequest,
+    ) -> ApiResult<locations::unversioned::Location> {
+        locations::update(self, location_id, location).await
+    }
+
+    pub async fn delete_location(&self, location_id: &str) -> ApiResult<()> {
+        locations::delete(self, location_id).await
+    }
+}
+
+// Apple Pay API. Available in sandbox and production environments.
+impl<E: Environment> Client<E, client::MerchantAuthentication> {
+    pub async fn register_domain_for_apple_pay(
+        &self,
+        domain: &apple_pay::unversioned::RegisterDomainRequest,
+    ) -> ApiResult<()> {
+        apple_pay::register(self, domain).await
+    }
+
+    pub async fn unregister_domain_for_apple_pay(
+        &self,
+        domain: &apple_pay::unversioned::UnregisterDomainRequest,
+    ) -> ApiResult<()> {
+        apple_pay::unregister(self, domain).await
+    }
+}
+
+// "Other" API. Available in sandbox and production environments.
+impl<E: Environment> Client<E, client::MerchantAuthentication> {
+    pub async fn register_address_validation_endpoint_for_fast_checkout(
+        &self,
+        address_validation_endpoint: &other::unversioned::RegisterAddressValidationEndpointForFastCheckoutRequest,
+    ) -> ApiResult<other::unversioned::RegisterAddressValidationEndpointForFastCheckout> {
+        other::register_address_validation_endpoint_for_fast_checkout(
+            self,
+            address_validation_endpoint,
+        )
+        .await
+    }
+
+    pub async fn retrieve_synchronous_webhook_list(
+        &self,
+    ) -> ApiResult<Vec<other::unversioned::RegisterAddressValidationEndpointForFastCheckout>> {
+        other::retrieve_synchronous_webhook_list(self).await
+    }
+
+    pub async fn delete_synchronous_webhook(&self, synchronous_webhook_id: &str) -> ApiResult<()> {
+        other::delete_synchronous_webhook(self, synchronous_webhook_id).await
     }
 }

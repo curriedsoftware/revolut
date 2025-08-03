@@ -23,9 +23,9 @@
  ***/
 
 use crate::{
-    client::{Body, Client, Environment, HttpMethod, ProductionEnvironment},
+    client::{Body, Client, Environment, HttpMethod},
     errors::ApiResult,
-    merchant::client::{self, MerchantAuthentication},
+    merchant::client::MerchantAuthentication,
 };
 
 pub mod unversioned {
@@ -43,8 +43,8 @@ pub mod unversioned {
     }
 }
 
-pub async fn register(
-    client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
+pub async fn register<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
     domain: &unversioned::RegisterDomainRequest,
 ) -> ApiResult<()> {
     client
@@ -59,8 +59,8 @@ pub async fn register(
         .await
 }
 
-pub async fn unregister(
-    client: &Client<ProductionEnvironment<client::MerchantClient>, MerchantAuthentication>,
+pub async fn unregister<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
     domain: &unversioned::UnregisterDomainRequest,
 ) -> ApiResult<()> {
     client

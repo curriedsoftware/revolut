@@ -27,7 +27,8 @@
   scripts = {
     setup-business-api.exec = ''
       if [ -d .setup-business-api ]; then
-        echo "Remove .setup-business-api directory before continuing if you want to start from scratch"
+        echo "Remove the .setup-business-api directory before continuing if you want to start from scratch"
+        echo
         pushd .setup-business-api &> /dev/null
       else
         mkdir .setup-business-api
