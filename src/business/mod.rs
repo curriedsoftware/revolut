@@ -61,6 +61,7 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {
 /// result in a compile error.
 impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
     pub async fn cards(&self) -> ApiResult<Vec<cards::v10::Card>> {
+        // FIXME: add filter and limit
         cards::list(self).await
     }
 
@@ -104,6 +105,9 @@ impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthe
 }
 
 /// Counterparties API. Available only in production environments.
+///
+/// Trying to access these endpoints from the sandbox environment will
+/// result in a compile error.
 impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
     pub async fn counterparties(
         &self,
@@ -144,6 +148,7 @@ impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthe
 /// result in a compile error.
 impl Client<ProductionEnvironment<client::BusinessClient>, client::BusinessAuthentication> {
     pub async fn expenses(&self) -> ApiResult<Vec<expenses::v10::Expense>> {
+        // FIXME: add filter and limit
         expenses::list(self).await
     }
 

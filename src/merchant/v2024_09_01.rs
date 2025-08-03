@@ -179,7 +179,10 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
     }
 }
 
-// Disputes API. Available only in production environments.
+// Disputes API. Available only in the production environment.
+///
+/// Trying to access these endpoints from the sandbox environment will
+/// result in a compile error.
 impl Client<ProductionEnvironment<client::MerchantClient>, client::MerchantAuthentication> {
     pub async fn disputes(&self) -> ApiResult<Vec<disputes::unversioned::Dispute>> {
         // TODO: add filtering and pagination
