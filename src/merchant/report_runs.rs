@@ -32,8 +32,8 @@ pub mod unversioned {
     use serde::{Deserialize, Serialize};
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(tag = "type", rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum ReportRunRequest {
         SettlementReport(SettlementReport),
         CustomReport(CustomReport),
@@ -116,16 +116,16 @@ pub mod unversioned {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(tag = "type", rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum ReportRunStatus {
-        #[serde(alias = "PROCESSING")]
+        #[serde(alias = "processing")]
         Processing,
-        #[serde(alias = "COMPLETED")]
+        #[serde(alias = "completed")]
         Completed,
-        #[serde(alias = "FAILED")]
+        #[serde(alias = "failed")]
         Failed,
-        #[serde(alias = "EXPIRED")]
+        #[serde(alias = "expired")]
         Expired,
     }
 }

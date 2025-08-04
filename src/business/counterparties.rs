@@ -68,12 +68,12 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum CounterpartyProfileType {
-        #[serde(alias = "PERSONAL")]
+        #[serde(alias = "personal")]
         Personal,
-        #[serde(alias = "BUSINESS")]
+        #[serde(alias = "business")]
         Business,
     }
 
@@ -108,14 +108,14 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum CounterpartyState {
-        #[serde(alias = "CREATED")]
+        #[serde(alias = "created")]
         Created,
-        #[serde(alias = "DRAFT")]
+        #[serde(alias = "draft")]
         Draft,
-        #[serde(alias = "DELETED")]
+        #[serde(alias = "deleted")]
         Deleted,
     }
 
@@ -138,12 +138,12 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum CounterpartyAccountRecipientCharges {
-        #[serde(alias = "NO")]
+        #[serde(alias = "no")]
         No,
-        #[serde(alias = "EXPECTED")]
+        #[serde(alias = "expected")]
         Expected,
     }
 
@@ -158,22 +158,22 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum CounterpartyCardScheme {
-        #[serde(alias = "VISA")]
+        #[serde(alias = "visa")]
         Visa,
-        #[serde(alias = "MASTERCARD")]
+        #[serde(alias = "mastercard")]
         Mastercard,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum CounterpartyAccountType {
-        #[serde(alias = "REVOLUT")]
+        #[serde(alias = "revolut")]
         Revolut,
-        #[serde(alias = "EXTERNAL")]
+        #[serde(alias = "external")]
         External,
     }
 
@@ -200,26 +200,26 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum AccountNameReasonType {
-        #[serde(alias = "CLOSE_MATCH")]
+        #[serde(alias = "close_match")]
         CloseMatch,
-        #[serde(alias = "INDIVIDUAL_ACCOUNT_NAME_MATCHED")]
+        #[serde(alias = "individual_account_name_matched")]
         IndividualAccountNameMatched,
-        #[serde(alias = "COMPANY_ACCOUNT_NAME_MATCHED")]
+        #[serde(alias = "company_account_name_matched")]
         CompanyAccountNameMatched,
-        #[serde(alias = "INDIVIDUAL_ACCOUNT_CLOSE_MATCH")]
+        #[serde(alias = "individual_account_close_match")]
         IndividualAccountCloseMatch,
-        #[serde(alias = "COMPANY_ACCOUNT_CLOSE_MATCH")]
+        #[serde(alias = "company_account_close_match")]
         CompanyAccountCloseMatch,
-        #[serde(alias = "NOT_MATCHED")]
+        #[serde(alias = "not_matched")]
         NotMatched,
-        #[serde(alias = "ACCOUNT_DOES_NOT_EXIST")]
+        #[serde(alias = "account_does_not_exist")]
         AccountDoesNotExist,
-        #[serde(alias = "ACCOUNT_SWITCHED")]
+        #[serde(alias = "account_switched")]
         AccountSwitched,
-        #[serde(alias = "CANNOT_BE_CHECKED")]
+        #[serde(alias = "cannot_be_checked")]
         CannotBeChecked,
     }
 }

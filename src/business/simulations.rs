@@ -38,7 +38,7 @@ pub mod v10 {
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, strum::Display)]
-    #[strum(serialize_all = "snake_case")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum TransferStateRequest {
         Complete,
         Revert,
@@ -55,16 +55,16 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum TransferState {
-        #[serde(alias = "COMPLETED")]
+        #[serde(alias = "completed")]
         Completed,
-        #[serde(alias = "REVERTED")]
+        #[serde(alias = "reverted")]
         Reverted,
-        #[serde(alias = "DECLINED")]
+        #[serde(alias = "declined")]
         Declined,
-        #[serde(alias = "FAILED")]
+        #[serde(alias = "failed")]
         Failed,
     }
 
@@ -86,16 +86,16 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum TopUpState {
-        #[serde(alias = "PENDING")]
+        #[serde(alias = "pending")]
         Pending,
-        #[serde(alias = "COMPLETED")]
+        #[serde(alias = "completed")]
         Completed,
-        #[serde(alias = "REVERTED")]
+        #[serde(alias = "reverted")]
         Reverted,
-        #[serde(alias = "FAILED")]
+        #[serde(alias = "failed")]
         Failed,
     }
 }

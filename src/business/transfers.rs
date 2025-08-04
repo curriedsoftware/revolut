@@ -94,20 +94,20 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum TransferState {
-        #[serde(alias = "CREATED")]
+        #[serde(alias = "created")]
         Created,
-        #[serde(alias = "PENDING")]
+        #[serde(alias = "pending")]
         Pending,
-        #[serde(alias = "COMPLETED")]
+        #[serde(alias = "completed")]
         Completed,
-        #[serde(alias = "DECLINED")]
+        #[serde(alias = "declined")]
         Declined,
-        #[serde(alias = "FAILED")]
+        #[serde(alias = "failed")]
         Failed,
-        #[serde(alias = "REVERTED")]
+        #[serde(alias = "reverted")]
         Reverted,
     }
 }

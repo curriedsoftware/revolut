@@ -39,16 +39,16 @@ pub struct WebhookRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-#[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum WebhookEvent {
-    #[serde(alias = "TRANSACTION_CREATED")]
+    #[serde(alias = "transaction_created")]
     TransactionCreated,
-    #[serde(alias = "TRANSACTION_STATE_CHANGED")]
+    #[serde(alias = "transaction_state_changed")]
     TransactionStateChanged,
-    #[serde(alias = "TRANSACTION_LINK_CREATED")]
+    #[serde(alias = "transaction_link_created")]
     PayoutLinkCreated,
-    #[serde(alias = "TRANSACTION_LINK_STATE_CHANGED")]
+    #[serde(alias = "transaction_link_state_changed")]
     PayoutLinkStateChanged,
 }
 
