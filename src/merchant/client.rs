@@ -145,10 +145,7 @@ impl<E: Environment> Client<E, MerchantAuthentication> {
         uri: &RevolutEndpoint,
     ) -> ApiResult<R> {
         let request = match method {
-            HttpMethod::Get => {
-                println!("uri is {}", Into::<&str>::into(uri));
-                self.client.get(Into::<&str>::into(uri))
-            }
+            HttpMethod::Get => self.client.get(Into::<&str>::into(uri)),
             HttpMethod::Delete => self.client.delete(Into::<&str>::into(uri)),
             HttpMethod::Post { ref body }
             | HttpMethod::Patch { ref body }

@@ -245,7 +245,7 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE", tag = "type")]
     #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum IndustryData {
         #[serde(alias = "airline")]
@@ -394,6 +394,7 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
     #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum Type {
         #[serde(alias = "payment")]
@@ -609,6 +610,7 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
     #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum OrderAuthenticationChallenge {
         #[serde(alias = "three_ds")]
@@ -673,7 +675,7 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(tag = "type")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE", tag = "type")]
     #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum OrderPaymentMethod {
         RevolutPay(OrderPaymentMethodRevolutPay),
@@ -681,7 +683,7 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(tag = "subtype")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE", tag = "subtype")]
     #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum OrderPaymentMethodRevolutPay {
         Account(OrderPaymentMethodRevolutPayAccount),
