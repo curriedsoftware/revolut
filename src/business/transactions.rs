@@ -43,36 +43,36 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum TransactionType {
-        #[serde(alias = "ATM")]
+        #[serde(alias = "atm")]
         Atm,
-        #[serde(alias = "CARD_PAYMENT")]
+        #[serde(alias = "card_payment")]
         CardPayment,
-        #[serde(alias = "CARD_REFUND")]
+        #[serde(alias = "card_refund")]
         CardRefund,
-        #[serde(alias = "CARD_CHARGEBACK")]
+        #[serde(alias = "card_chargeback")]
         CardChargeback,
-        #[serde(alias = "CARD_CREDIT")]
+        #[serde(alias = "card_credit")]
         CardCredit,
-        #[serde(alias = "EXCHANGE")]
+        #[serde(alias = "exchange")]
         Exchange,
-        #[serde(alias = "TRANSFER")]
+        #[serde(alias = "transfer")]
         Transfer,
-        #[serde(alias = "LOAN")]
+        #[serde(alias = "loan")]
         Loan,
-        #[serde(alias = "FEE")]
+        #[serde(alias = "fee")]
         Fee,
-        #[serde(alias = "REFUND")]
+        #[serde(alias = "refund")]
         Refund,
-        #[serde(alias = "TOPUP")]
+        #[serde(alias = "topup")]
         Topup,
-        #[serde(alias = "TOPUP_RETURN")]
+        #[serde(alias = "topup_return")]
         TopupReturn,
-        #[serde(alias = "TAX")]
+        #[serde(alias = "tax")]
         Tax,
-        #[serde(alias = "TAX_REFUND")]
+        #[serde(alias = "tax_refund")]
         TaxRefund,
     }
 
@@ -95,20 +95,20 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum TransactionState {
-        #[serde(alias = "CREATED")]
+        #[serde(alias = "created")]
         Created,
-        #[serde(alias = "PENDING")]
+        #[serde(alias = "pending")]
         Pending,
-        #[serde(alias = "COMPLETED")]
+        #[serde(alias = "completed")]
         Completed,
-        #[serde(alias = "DECLINED")]
+        #[serde(alias = "declined")]
         Declined,
-        #[serde(alias = "FAILED")]
+        #[serde(alias = "failed")]
         Failed,
-        #[serde(alias = "REVERTED")]
+        #[serde(alias = "reverted")]
         Reverted,
     }
 
@@ -142,14 +142,14 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum TransactionCounterpartyAccountType {
-        #[serde(alias = "SELF", rename = "self")]
+        #[serde(alias = "self", rename = "self")]
         Self_,
-        #[serde(alias = "REVOLUT")]
+        #[serde(alias = "revolut")]
         Revolut,
-        #[serde(alias = "EXTERNAL")]
+        #[serde(alias = "external")]
         External,
     }
 
@@ -232,7 +232,7 @@ mod tests {
     #[test]
     fn check_list_query_parameters() {
         assert_eq!(
-            "?type=card_payment",
+            "?type=CARD_PAYMENT",
             v10::ListParams {
                 r#type: Some(v10::TransactionType::CardPayment),
                 ..Default::default()

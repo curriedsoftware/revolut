@@ -102,40 +102,40 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum ExpenseState {
-        #[serde(alias = "MISSING_INFO")]
+        #[serde(alias = "missing_info")]
         MissingInfo,
-        #[serde(alias = "AWAITING_REVIEW")]
+        #[serde(alias = "awaiting_review")]
         AwaitingReview,
-        #[serde(alias = "REJECTED")]
+        #[serde(alias = "rejected")]
         Rejected,
-        #[serde(alias = "PENDING_REIMBURSEMENT")]
+        #[serde(alias = "pending_reimbursement")]
         PendingReimbursement,
-        #[serde(alias = "REFUND_REQUESTED")]
+        #[serde(alias = "refund_requested")]
         RefundRequested,
-        #[serde(alias = "REFUNDED")]
+        #[serde(alias = "refunded")]
         Refunded,
-        #[serde(alias = "APPROVED")]
+        #[serde(alias = "approved")]
         Approved,
-        #[serde(alias = "REVERTED")]
+        #[serde(alias = "reverted")]
         Reverted,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum TransactionType {
-        #[serde(alias = "ATM")]
+        #[serde(alias = "atm")]
         Atm,
-        #[serde(alias = "CARD_PAYMENT")]
+        #[serde(alias = "card_payment")]
         CardPayment,
-        #[serde(alias = "FEE")]
+        #[serde(alias = "fee")]
         Fee,
-        #[serde(alias = "TRANSFER")]
+        #[serde(alias = "transfer")]
         Transfer,
-        #[serde(alias = "EXTERNAL")]
+        #[serde(alias = "external")]
         External,
     }
 }

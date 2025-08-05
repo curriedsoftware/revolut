@@ -46,12 +46,12 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum AccountState {
-        #[serde(alias = "ACTIVE")]
+        #[serde(alias = "active")]
         Active,
-        #[serde(alias = "INACTIVE")]
+        #[serde(alias = "inactive")]
         Inactive,
     }
 

@@ -62,46 +62,46 @@ pub mod unversioned {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum DisputeState {
-        #[serde(alias = "NEEDS_RESPONSE")]
+        #[serde(alias = "needs_response")]
         NeedsResponse,
-        #[serde(alias = "UNDER_REVIEW")]
+        #[serde(alias = "under_review")]
         UnderReview,
-        #[serde(alias = "WON")]
+        #[serde(alias = "won")]
         Won,
-        #[serde(alias = "LOST")]
+        #[serde(alias = "lost")]
         Lost,
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum DisputeSubstate {
-        #[serde(alias = "ARBITRATION")]
+        #[serde(alias = "arbitration")]
         Arbitration,
-        #[serde(alias = "LOST_ACCEPTED")]
+        #[serde(alias = "lost_accepted")]
         LostAccepted,
-        #[serde(alias = "LOST_ARBITRATION")]
+        #[serde(alias = "lost_arbitration")]
         LostArbitration,
-        #[serde(alias = "LOST_EXPIRED")]
+        #[serde(alias = "lost_expired")]
         LostExpired,
-        #[serde(alias = "LOST_PRE_ARBITRATION")]
+        #[serde(alias = "lost_pre_arbitration")]
         LostPreArbitration,
-        #[serde(alias = "NEW")]
+        #[serde(alias = "new")]
         New,
-        #[serde(alias = "PRE_ARBITRATION")]
+        #[serde(alias = "pre_arbitration")]
         PreArbitration,
-        #[serde(alias = "REPRESENTMENT")]
+        #[serde(alias = "representment")]
         Representment,
-        #[serde(alias = "WON_ARBITRATION")]
+        #[serde(alias = "won_arbitration")]
         WonArbitration,
-        #[serde(alias = "WON_PRE_ARBITRATION")]
+        #[serde(alias = "won_pre_arbitration")]
         WonPreArbitration,
-        #[serde(alias = "WON_REPRESENTMENT")]
+        #[serde(alias = "won_representment")]
         WonRepresentment,
-        #[serde(alias = "WON_REVERSAL")]
+        #[serde(alias = "won_reversal")]
         WonReversal,
     }
 
@@ -124,20 +124,20 @@ pub mod unversioned {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum PaymentMethodType {
-        #[serde(alias = "APPLE_PAY")]
+        #[serde(alias = "apple_pay")]
         ApplePay,
-        #[serde(alias = "APPLE_TAP_TO_PAY")]
+        #[serde(alias = "apple_tap_to_pay")]
         AppleTapToPay,
-        #[serde(alias = "CARD")]
+        #[serde(alias = "card")]
         Card,
-        #[serde(alias = "GOOGLE_PAY")]
+        #[serde(alias = "google_pay")]
         GooglePay,
-        #[serde(alias = "REVOLUT_PAY_ACCOUNT")]
+        #[serde(alias = "revolut_pay_account")]
         RevolutPayAccount,
-        #[serde(alias = "REVOLUT_PAY_CARD")]
+        #[serde(alias = "revolut_pay_card")]
         RevolutPayCard,
     }
 

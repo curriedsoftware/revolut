@@ -51,16 +51,6 @@ along with the client assertion.
 $ REVOLUT_CLIENT_ASSERTION='<CLIENT_ASSERTION>' REVOLUT_AUTHORIZATION_CODE='<AUTHORIZATION_CODE>' just retrieve-access-token
 ```
 
-#### Refresh access token
-
-Refreshing the access token requires the refresh token that was
-granted in step [Setting up Business API](#setting-up-business-api)
-along with the client assertion.
-
-```shell-session
-$ REVOLUT_CLIENT_ASSERTION='<CLIENT_ASSERTION>' REVOLUT_AUTHORIZATION_CODE='<AUTHORIZATION_CODE>' just refresh-access-token
-```
-
 ## Merchant API
 
 ### Setting up Merchant API

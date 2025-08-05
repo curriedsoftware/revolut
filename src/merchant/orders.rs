@@ -61,12 +61,12 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum LineItemType {
-        #[serde(alias = "PHYSICAL")]
+        #[serde(alias = "physical")]
         Physical,
-        #[serde(alias = "SERVICE")]
+        #[serde(alias = "service")]
         Service,
     }
 
@@ -132,16 +132,16 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum TransactionStatus {
-        #[serde(alias = "PENDING")]
+        #[serde(alias = "pending")]
         Pending,
-        #[serde(alias = "FAILED")]
+        #[serde(alias = "failed")]
         Failed,
-        #[serde(alias = "CANCELLED")]
+        #[serde(alias = "cancelled")]
         Cancelled,
-        #[serde(alias = "COMPLETED")]
+        #[serde(alias = "completed")]
         Completed,
     }
 
@@ -245,10 +245,10 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(tag = "type", rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(tag = "type", rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum IndustryData {
-        #[serde(alias = "AIRLINE")]
+        #[serde(alias = "airline")]
         Airline {
             booking_id: String,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -269,7 +269,7 @@ pub mod v10 {
             #[serde(skip_serializing_if = "Option::is_none")]
             booking_url: Option<String>,
         },
-        #[serde(alias = "CRYPTO")]
+        #[serde(alias = "crypto")]
         Crypto {
             transactions: Vec<Transaction>,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -277,13 +277,13 @@ pub mod v10 {
             #[serde(skip_serializing_if = "Option::is_none")]
             subseller_url: Option<String>,
         },
-        #[serde(alias = "EVENT")]
+        #[serde(alias = "event")]
         Event {
             booking_id: String,
             #[serde(skip_serializing_if = "Option::is_none")]
             events: Option<Vec<Event>>,
         },
-        #[serde(alias = "LODGING")]
+        #[serde(alias = "lodging")]
         Lodging {
             booking_id: String,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -303,7 +303,7 @@ pub mod v10 {
             #[serde(skip_serializing_if = "Option::is_none")]
             guests: Option<Vec<Guest>>,
         },
-        #[serde(alias = "MARKETPLACE")]
+        #[serde(alias = "marketplace")]
         Marketplace { subseller: Subseller },
     }
 
@@ -358,30 +358,30 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum SavedPaymentMethodType {
-        #[serde(alias = "CARD")]
+        #[serde(alias = "card")]
         Card,
-        #[serde(alias = "REVOLUT_PAY")]
+        #[serde(alias = "revolut_pay")]
         RevolutPay,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum SavedPaymentMethodInitiator {
-        #[serde(alias = "CUSTOMER")]
+        #[serde(alias = "customer")]
         Customer,
-        #[serde(alias = "MERCHANT")]
+        #[serde(alias = "merchant")]
         Merchant,
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum SavedPaymentMethodEnvironment {
-        #[serde(alias = "BROWSER")]
+        #[serde(alias = "browser")]
         Browser,
     }
 
@@ -394,53 +394,53 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[strum(serialize_all = "snake_case")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum Type {
-        #[serde(rename = "payment", alias = "PAYMENT")]
+        #[serde(alias = "payment")]
         Payment,
-        #[serde(rename = "payment_request", alias = "PAYMENT_REQUEST")]
+        #[serde(alias = "payment_request")]
         PaymentRequest,
-        #[serde(rename = "refund", alias = "REFUND")]
+        #[serde(alias = "refund")]
         Refund,
-        #[serde(rename = "chargeback", alias = "CHARGEBACK")]
+        #[serde(alias = "chargeback")]
         Chargeback,
-        #[serde(rename = "chargeback_reversal", alias = "CHARGEBACK_REVERSAL")]
+        #[serde(alias = "chargeback_reversal")]
         ChargebackReversal,
-        #[serde(rename = "credit_reimbursement", alias = "CREDIT_REIMBURSEMENT")]
+        #[serde(alias = "credit_reimbursement")]
         CreditReimbursement,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum State {
-        #[serde(alias = "PENDING")]
+        #[serde(alias = "pending")]
         Pending,
-        #[serde(alias = "PROCESSING")]
+        #[serde(alias = "processing")]
         Processing,
-        #[serde(alias = "AUTHORISED")]
+        #[serde(alias = "authorised")]
         Authorised,
-        #[serde(alias = "COMPLETED")]
+        #[serde(alias = "completed")]
         Completed,
-        #[serde(alias = "CANCELLED")]
+        #[serde(alias = "cancelled")]
         Cancelled,
-        #[serde(alias = "FAILED")]
+        #[serde(alias = "failed")]
         Failed,
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum PaymentType {
-        #[serde(alias = "APPLE_PAY")]
+        #[serde(alias = "apple_pay")]
         ApplePay,
-        #[serde(alias = "CARD")]
+        #[serde(alias = "card")]
         Card,
-        #[serde(alias = "GOOGLE_PAY")]
+        #[serde(alias = "google_pay")]
         GooglePay,
-        #[serde(alias = "REVOLUT_PAY_CARD")]
+        #[serde(alias = "revolut_pay_card")]
         RevolutPayCard,
-        #[serde(alias = "REVOLUT_PAY_ACCOUNT")]
+        #[serde(alias = "revolut_pay_account")]
         RevolutPayAccount,
     }
 
@@ -452,14 +452,14 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum ThreeDsState {
-        #[serde(alias = "VERIFIED")]
+        #[serde(alias = "verified")]
         Verified,
-        #[serde(alias = "FAILED")]
+        #[serde(alias = "failed")]
         Failed,
-        #[serde(alias = "CHALLENGE")]
+        #[serde(alias = "challenge")]
         Challenge,
     }
 
@@ -521,20 +521,20 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum PaymentState {
-        #[serde(alias = "PENDING")]
+        #[serde(alias = "pending")]
         Pending,
-        #[serde(alias = "PROCESSING")]
+        #[serde(alias = "processing")]
         Processing,
-        #[serde(alias = "AUTHORISED")]
+        #[serde(alias = "authorised")]
         Authorised,
-        #[serde(alias = "COMPLETED")]
+        #[serde(alias = "completed")]
         Completed,
-        #[serde(alias = "CANCELLED")]
+        #[serde(alias = "cancelled")]
         Cancelled,
-        #[serde(alias = "FAILED")]
+        #[serde(alias = "failed")]
         Failed,
     }
 
@@ -609,11 +609,11 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[strum(serialize_all = "snake_case")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum OrderAuthenticationChallenge {
-        #[serde(rename = "three_ds")]
+        #[serde(alias = "three_ds")]
         ThreeDs(OrderAuthenticationChallengeThreeDs),
-        #[serde(rename = "three_ds_fingerprint")]
+        #[serde(alias = "three_ds_fingerprint")]
         ThreeDsFingerprint(OrderAuthenticationChallengeThreeDsFingerprint),
     }
 
@@ -627,54 +627,54 @@ pub mod v10 {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    #[strum(serialize_all = "snake_case")]
+    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum OrderPaymentState {
-        #[serde(alias = "PENDING")]
+        #[serde(alias = "pending")]
         Pending,
-        #[serde(alias = "AUTHENTICATION_CHALLENGE")]
+        #[serde(alias = "authentication_challenge")]
         AuthenticationChallenge,
-        #[serde(alias = "AUTHENTICATION_VERIFIED")]
+        #[serde(alias = "authentication_verified")]
         AuthenticationVerified,
-        #[serde(alias = "AUTHORISATION_STARTED")]
+        #[serde(alias = "authorisation_started")]
         AuthorisationStarted,
-        #[serde(alias = "AUTHORISATION_PASSED")]
+        #[serde(alias = "authorisation_passed")]
         AuthorisationPassed,
-        #[serde(alias = "AUTHORISED")]
+        #[serde(alias = "authorised")]
         Authorised,
-        #[serde(alias = "CAPTURE_STARTED")]
+        #[serde(alias = "capture_started")]
         CaptureStarted,
-        #[serde(alias = "CAPTURED")]
+        #[serde(alias = "captured")]
         Captured,
-        #[serde(alias = "REFUND_VALIDATED")]
+        #[serde(alias = "refund_validated")]
         RefundValidated,
-        #[serde(alias = "REFUND_STARTED")]
+        #[serde(alias = "refund_started")]
         RefundStarted,
-        #[serde(alias = "CANCELLATION_STARTED")]
+        #[serde(alias = "cancellation_started")]
         CancellationStarted,
-        #[serde(alias = "DECLINING")]
+        #[serde(alias = "declining")]
         Declining,
-        #[serde(alias = "COMPLETING")]
+        #[serde(alias = "completing")]
         Completing,
-        #[serde(alias = "CANCELLING")]
+        #[serde(alias = "cancelling")]
         Cancelling,
-        #[serde(alias = "FAILING")]
+        #[serde(alias = "failing")]
         Failing,
-        #[serde(alias = "COMPLETED")]
+        #[serde(alias = "completed")]
         Completed,
-        #[serde(alias = "DECLINED")]
+        #[serde(alias = "declined")]
         Declined,
-        #[serde(alias = "SOFT_DECLINED")]
+        #[serde(alias = "soft_declined")]
         SoftDeclined,
-        #[serde(alias = "CANCELLED")]
+        #[serde(alias = "cancelled")]
         Cancelled,
-        #[serde(alias = "FAILED")]
+        #[serde(alias = "failed")]
         Failed,
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(tag = "type")]
-    #[strum(serialize_all = "snake_case")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum OrderPaymentMethod {
         RevolutPay(OrderPaymentMethodRevolutPay),
         Card(OrderPaymentMethodCard),
@@ -682,7 +682,7 @@ pub mod v10 {
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(tag = "subtype")]
-    #[strum(serialize_all = "snake_case")]
+    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum OrderPaymentMethodRevolutPay {
         Account(OrderPaymentMethodRevolutPayAccount),
         Card(OrderPaymentMethodRevolutPayCard),
