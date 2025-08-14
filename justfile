@@ -32,6 +32,8 @@ retrieve-access-token: (run-example "retrieve_access_token")
 
 bank-details account_id: (run-example "bank_details" "--account-id" account_id)
 
+create-business-webhook: (run-example "create_business_webhook")
+
 list-accounts: (run-example "list_accounts")
 
 list-business-webhooks: (run-example "list_business_webhooks")
@@ -41,6 +43,8 @@ list-business-webhooks: (run-example "list_business_webhooks")
 cancel-order order_id: (run-example "cancel_order" "--order-id" order_id)
 
 capture-order order_id amount: (run-example "capture_order" "--order-id" order_id "--amount" amount)
+
+create-merchant-webhook: (run-example "create_merchant_webhook")
 
 create-order amount currency: (run-example "create_order" "--amount" amount "--currency" currency)
 

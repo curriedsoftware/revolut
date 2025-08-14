@@ -37,7 +37,7 @@ pub mod v10 {
         pub events: Vec<WebhookEvent>,
     }
 
-    #[derive(Debug, Deserialize, strum::Display, Serialize)]
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
     #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum WebhookEvent {
