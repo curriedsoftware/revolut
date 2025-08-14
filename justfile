@@ -30,19 +30,23 @@ retrieve-access-token: (run-example "retrieve_access_token")
 
 # --- Business API
 
-list-accounts: (run-example "list_accounts")
-
 bank-details account_id: (run-example "bank_details" "--account-id" account_id)
 
+list-accounts: (run-example "list_accounts")
+
+list-business-webhooks: (run-example "list_business_webhooks")
+
 # --- Merchant API
+
+cancel-order order_id: (run-example "cancel_order" "--order-id" order_id)
+
+capture-order order_id amount: (run-example "capture_order" "--order-id" order_id "--amount" amount)
+
+create-order amount currency: (run-example "create_order" "--amount" amount "--currency" currency)
+
+list-merchant-webhooks: (run-example "list_merchant_webhooks")
 
 list-orders: (run-example "list_orders")
 
 list-orders-tidy:
     just run-example "list_orders" | jq -r '.[] | .id + ": " + .state'
-
-create-order amount currency: (run-example "create_order" "--amount" amount "--currency" currency)
-
-cancel-order order_id: (run-example "cancel_order" "--order-id" order_id)
-
-capture-order order_id amount: (run-example "capture_order" "--order-id" order_id "--amount" amount)
