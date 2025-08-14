@@ -142,6 +142,11 @@ impl<'a> Submitter<'a> {
         unsafe { self.enter::<libc::sigset_t>(len as _, want as _, flags, None) }
     }
 
+    /// Submit all queued submission queue events to the kernel and wait for at least `want`
+    /// completion events to complete with additional options
+    ///
+    /// You can specify a set of signals to mask and a timeout for operation, see
+    /// [`SubmitArgs`](types::SubmitArgs) for more details
     pub fn submit_with_args(
         &self,
         want: usize,
@@ -656,6 +661,19 @@ impl<'a> Submitter<'a> {
             self.fd.as_raw_fd(),
             sys::IORING_REGISTER_SYNC_CANCEL,
             cast_ptr::<sys::io_uring_sync_cancel_reg>(&arg).cast(),
+            1,
+        )
+        .map(drop)
+    }
+
+    /// Register a netdev hw rx queue for zerocopy.
+    ///
+    /// Available since 6.15.
+    pub fn register_ifq(&self, reg: &sys::io_uring_zcrx_ifq_reg) -> io::Result<()> {
+        execute(
+            self.fd.as_raw_fd(),
+            sys::IORING_REGISTER_ZCRX_IFQ,
+            cast_ptr::<sys::io_uring_zcrx_ifq_reg>(reg) as _,
             1,
         )
         .map(drop)
