@@ -145,7 +145,7 @@ pub mod v10 {
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
     #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum TransactionCounterpartyAccountType {
-        #[serde(alias = "self", rename = "self")]
+        #[serde(alias = "self", rename = "SELF")]
         Self_,
         #[serde(alias = "revolut")]
         Revolut,
