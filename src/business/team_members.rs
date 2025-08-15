@@ -56,20 +56,13 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum TeamMemberState {
-        #[serde(alias = "created")]
         Created,
-        #[serde(alias = "confirmed")]
         Confirmed,
-        #[serde(alias = "waiting")]
         Waiting,
-        #[serde(alias = "active")]
         Active,
-        #[serde(alias = "locked")]
         Locked,
-        #[serde(alias = "disabled")]
         Disabled,
     }
 

@@ -23,55 +23,34 @@
  ***/
 
 use clap::Parser;
-use std::str::FromStr;
 
 use revolut::{
+    business::client::{BusinessAuthenticationBuilder, business_client},
     errors::ApiResult,
-    merchant::{
-        self,
-        client::{MerchantAuthenticationBuilder, merchant_client},
-    },
 };
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
     #[arg(long)]
-    pub state: Vec<String>,
+    webhook_id: String,
 }
 
 #[tokio::main]
 async fn main() -> ApiResult<()> {
     let args = Args::parse();
 
-    let client = merchant_client()
+    let client = business_client()
         .with_sandbox_environment()
         .with_authentication(
-            MerchantAuthenticationBuilder::default()
-                .with_environment_inherited_secret_key("REVOLUT_SECRET_KEY")?
+            BusinessAuthenticationBuilder::default()
+                .with_environment_inherited_client_assertion("REVOLUT_CLIENT_ASSERTION")?
+                .with_environment_inherited_refresh_token("REVOLUT_REFRESH_TOKEN")?
                 .build(),
         )
         .build()?;
 
-    println!(
-        "{}",
-        serde_json::to_string(
-            &client
-                .orders(&merchant::orders::v10::ListParams {
-                    state: Some(
-                        args.state
-                            .into_iter()
-                            .map(|state| merchant::orders::v10::OrderStateListItem::from_str(
-                                &state
-                            )
-                            .expect(&format!("invalid state {state}")))
-                            .collect()
-                    ),
-                    ..Default::default()
-                })
-                .await?
-        )?
-    );
+    println!("{:?}", client.delete_webhook(&args.webhook_id).await?);
 
     Ok(())
 }

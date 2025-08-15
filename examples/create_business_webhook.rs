@@ -23,32 +23,34 @@
  ***/
 
 use clap::Parser;
-use std::str::FromStr;
 
 use revolut::{
-    errors::ApiResult,
-    merchant::{
+    business::{
         self,
-        client::{MerchantAuthenticationBuilder, merchant_client},
+        client::{BusinessAuthenticationBuilder, business_client},
     },
+    errors::ApiResult,
 };
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
     #[arg(long)]
-    pub state: Vec<String>,
+    url: String,
+    #[arg(long)]
+    events: Vec<business::webhooks::v2::WebhookEvent>,
 }
 
 #[tokio::main]
 async fn main() -> ApiResult<()> {
     let args = Args::parse();
 
-    let client = merchant_client()
+    let client = business_client()
         .with_sandbox_environment()
         .with_authentication(
-            MerchantAuthenticationBuilder::default()
-                .with_environment_inherited_secret_key("REVOLUT_SECRET_KEY")?
+            BusinessAuthenticationBuilder::default()
+                .with_environment_inherited_client_assertion("REVOLUT_CLIENT_ASSERTION")?
+                .with_environment_inherited_refresh_token("REVOLUT_REFRESH_TOKEN")?
                 .build(),
         )
         .build()?;
@@ -57,17 +59,14 @@ async fn main() -> ApiResult<()> {
         "{}",
         serde_json::to_string(
             &client
-                .orders(&merchant::orders::v10::ListParams {
-                    state: Some(
-                        args.state
+                .create_webhook(&business::webhooks::v2::WebhookRequest {
+                    url: args.url,
+                    events: Some(
+                        args.events
                             .into_iter()
-                            .map(|state| merchant::orders::v10::OrderStateListItem::from_str(
-                                &state
-                            )
-                            .expect(&format!("invalid state {state}")))
+                            .map(business::webhooks::v2::WebhookEvent::from)
                             .collect()
                     ),
-                    ..Default::default()
                 })
                 .await?
         )?

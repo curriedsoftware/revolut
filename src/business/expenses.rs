@@ -102,40 +102,27 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum ExpenseState {
-        #[serde(alias = "missing_info")]
         MissingInfo,
-        #[serde(alias = "awaiting_review")]
         AwaitingReview,
-        #[serde(alias = "rejected")]
         Rejected,
-        #[serde(alias = "pending_reimbursement")]
         PendingReimbursement,
-        #[serde(alias = "refund_requested")]
         RefundRequested,
-        #[serde(alias = "refunded")]
         Refunded,
-        #[serde(alias = "approved")]
         Approved,
-        #[serde(alias = "reverted")]
         Reverted,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum TransactionType {
-        #[serde(alias = "atm")]
         Atm,
-        #[serde(alias = "card_payment")]
         CardPayment,
-        #[serde(alias = "fee")]
         Fee,
-        #[serde(alias = "transfer")]
         Transfer,
-        #[serde(alias = "external")]
         External,
     }
 }

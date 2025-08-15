@@ -62,46 +62,29 @@ pub mod unversioned {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum DisputeState {
-        #[serde(alias = "needs_response")]
         NeedsResponse,
-        #[serde(alias = "under_review")]
         UnderReview,
-        #[serde(alias = "won")]
         Won,
-        #[serde(alias = "lost")]
         Lost,
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum DisputeSubstate {
-        #[serde(alias = "arbitration")]
         Arbitration,
-        #[serde(alias = "lost_accepted")]
         LostAccepted,
-        #[serde(alias = "lost_arbitration")]
         LostArbitration,
-        #[serde(alias = "lost_expired")]
         LostExpired,
-        #[serde(alias = "lost_pre_arbitration")]
         LostPreArbitration,
-        #[serde(alias = "new")]
         New,
-        #[serde(alias = "pre_arbitration")]
         PreArbitration,
-        #[serde(alias = "representment")]
         Representment,
-        #[serde(alias = "won_arbitration")]
         WonArbitration,
-        #[serde(alias = "won_pre_arbitration")]
         WonPreArbitration,
-        #[serde(alias = "won_representment")]
         WonRepresentment,
-        #[serde(alias = "won_reversal")]
         WonReversal,
     }
 
@@ -124,20 +107,13 @@ pub mod unversioned {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum PaymentMethodType {
-        #[serde(alias = "apple_pay")]
         ApplePay,
-        #[serde(alias = "apple_tap_to_pay")]
         AppleTapToPay,
-        #[serde(alias = "card")]
         Card,
-        #[serde(alias = "google_pay")]
         GooglePay,
-        #[serde(alias = "revolut_pay_account")]
         RevolutPayAccount,
-        #[serde(alias = "revolut_pay_card")]
         RevolutPayCard,
     }
 

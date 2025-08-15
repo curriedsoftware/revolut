@@ -72,13 +72,11 @@ pub mod v10 {
         pub date_of_birth: Option<String>,
     }
 
+    // SCREAMING_SNAKE_CASE
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum PaymentMethodType {
-        #[serde(alias = "card")]
         Card,
-        #[serde(alias = "revolut_pay")]
         RevolutPay,
     }
 
@@ -115,11 +113,10 @@ pub mod v10 {
         pub country_code: Option<String>,
     }
 
+    // SCREAMING_SNAKE_CASE
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum PaymentMethodSavedForRequest {
-        #[serde(alias = "customer")]
         Customer,
     }
 

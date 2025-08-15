@@ -23,21 +23,17 @@
  ***/
 
 use clap::Parser;
-use std::str::FromStr;
 
 use revolut::{
     errors::ApiResult,
-    merchant::{
-        self,
-        client::{MerchantAuthenticationBuilder, merchant_client},
-    },
+    merchant::client::{MerchantAuthenticationBuilder, merchant_client},
 };
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
     #[arg(long)]
-    pub state: Vec<String>,
+    webhook_id: String,
 }
 
 #[tokio::main]
@@ -53,25 +49,7 @@ async fn main() -> ApiResult<()> {
         )
         .build()?;
 
-    println!(
-        "{}",
-        serde_json::to_string(
-            &client
-                .orders(&merchant::orders::v10::ListParams {
-                    state: Some(
-                        args.state
-                            .into_iter()
-                            .map(|state| merchant::orders::v10::OrderStateListItem::from_str(
-                                &state
-                            )
-                            .expect(&format!("invalid state {state}")))
-                            .collect()
-                    ),
-                    ..Default::default()
-                })
-                .await?
-        )?
-    );
+    println!("{:?}", client.delete_webhook(&args.webhook_id).await?);
 
     Ok(())
 }

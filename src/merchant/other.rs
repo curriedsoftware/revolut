@@ -39,10 +39,8 @@ pub mod unversioned {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum RegisterAddressValidationEndpointForFastCheckoutEventType {
-        #[serde(alias = "fast_checkout.validate_address")]
+        #[serde(rename = "fast_checkout.validate_address")]
         ValidateAddress,
     }
 

@@ -23,21 +23,18 @@
  ***/
 
 use clap::Parser;
-use std::str::FromStr;
 
 use revolut::{
     errors::ApiResult,
-    merchant::{
-        self,
-        client::{MerchantAuthenticationBuilder, merchant_client},
-    },
+    merchant::client::{MerchantAuthenticationBuilder, merchant_client},
 };
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
+    /// Order ID
     #[arg(long)]
-    pub state: Vec<String>,
+    order_id: String,
 }
 
 #[tokio::main]
@@ -55,22 +52,7 @@ async fn main() -> ApiResult<()> {
 
     println!(
         "{}",
-        serde_json::to_string(
-            &client
-                .orders(&merchant::orders::v10::ListParams {
-                    state: Some(
-                        args.state
-                            .into_iter()
-                            .map(|state| merchant::orders::v10::OrderStateListItem::from_str(
-                                &state
-                            )
-                            .expect(&format!("invalid state {state}")))
-                            .collect()
-                    ),
-                    ..Default::default()
-                })
-                .await?
-        )?
+        serde_json::to_string(&client.order(&args.order_id).await?)?
     );
 
     Ok(())

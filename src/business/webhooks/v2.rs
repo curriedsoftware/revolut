@@ -38,26 +38,13 @@ pub struct WebhookRequest {
     pub events: Option<Vec<WebhookEvent>>,
 }
 
-#[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Clone, Debug, Deserialize, Serialize, strum::Display, strum::EnumString)]
+#[serde(rename_all = "PascalCase")]
 pub enum WebhookEvent {
-    #[serde(alias = "transaction_created")]
     TransactionCreated,
-    #[serde(alias = "transaction_state_changed")]
     TransactionStateChanged,
-    #[serde(alias = "transaction_link_created")]
     PayoutLinkCreated,
-    #[serde(alias = "transaction_link_state_changed")]
     PayoutLinkStateChanged,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct WebhookCreationResponse {
-    pub id: String,
-    pub url: String,
-    pub events: Vec<WebhookEvent>,
-    pub signing_secret: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -65,6 +52,14 @@ pub struct Webhook {
     pub id: String,
     pub url: String,
     pub events: Vec<WebhookEvent>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct WebhookWithSigningSecret {
+    pub id: String,
+    pub url: String,
+    pub events: Vec<WebhookEvent>,
+    pub signing_secret: String,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -115,7 +110,7 @@ impl std::fmt::Display for ListParams {
 pub async fn create<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
     webhook: &WebhookRequest,
-) -> ApiResult<WebhookCreationResponse> {
+) -> ApiResult<WebhookWithSigningSecret> {
     client
         .request(
             HttpMethod::Post {
@@ -186,7 +181,7 @@ pub async fn rotate_signing_secret<E: Environment>(
     client: &Client<E, BusinessAuthentication>,
     webhook_id: &str,
     rotate_webhook_signing_secret: &RotateWebhookSigningSecretRequest,
-) -> ApiResult<Webhook> {
+) -> ApiResult<WebhookWithSigningSecret> {
     client
         .request(
             HttpMethod::Post {

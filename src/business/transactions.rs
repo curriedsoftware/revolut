@@ -43,36 +43,22 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum TransactionType {
-        #[serde(alias = "atm")]
         Atm,
-        #[serde(alias = "card_payment")]
         CardPayment,
-        #[serde(alias = "card_refund")]
         CardRefund,
-        #[serde(alias = "card_chargeback")]
         CardChargeback,
-        #[serde(alias = "card_credit")]
         CardCredit,
-        #[serde(alias = "exchange")]
         Exchange,
-        #[serde(alias = "transfer")]
         Transfer,
-        #[serde(alias = "loan")]
         Loan,
-        #[serde(alias = "fee")]
         Fee,
-        #[serde(alias = "refund")]
         Refund,
-        #[serde(alias = "topup")]
         Topup,
-        #[serde(alias = "topup_return")]
         TopupReturn,
-        #[serde(alias = "tax")]
         Tax,
-        #[serde(alias = "tax_refund")]
         TaxRefund,
     }
 
@@ -95,20 +81,13 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum TransactionState {
-        #[serde(alias = "created")]
         Created,
-        #[serde(alias = "pending")]
         Pending,
-        #[serde(alias = "completed")]
         Completed,
-        #[serde(alias = "declined")]
         Declined,
-        #[serde(alias = "failed")]
         Failed,
-        #[serde(alias = "reverted")]
         Reverted,
     }
 
@@ -142,14 +121,11 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum TransactionCounterpartyAccountType {
-        #[serde(alias = "self", rename = "SELF")]
+        #[serde(rename = "self")]
         Self_,
-        #[serde(alias = "revolut")]
         Revolut,
-        #[serde(alias = "external")]
         External,
     }
 
@@ -232,7 +208,7 @@ mod tests {
     #[test]
     fn check_list_query_parameters() {
         assert_eq!(
-            "?type=CARD_PAYMENT",
+            "?type=card_payment",
             v10::ListParams {
                 r#type: Some(v10::TransactionType::CardPayment),
                 ..Default::default()
