@@ -44,17 +44,38 @@ pub mod unversioned {
         Online,
     }
 
-    #[derive(Debug, Default, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct LocationDetails {
         pub domain: String,
     }
 
-    #[derive(Debug, Default, Deserialize, Serialize)]
+    #[cfg(test)]
+    impl Default for LocationDetails {
+        fn default() -> Self {
+            Self {
+                domain: "some-location-domain".to_string(),
+            }
+        }
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
     pub struct Location {
         pub id: String,
         pub name: String,
         pub r#type: String,
         pub details: LocationDetails,
+    }
+
+    #[cfg(test)]
+    impl Default for Location {
+        fn default() -> Self {
+            Self {
+                id: "some-location-id".to_string(),
+                name: "some-name".to_string(),
+                r#type: "some-location-type".to_string(),
+                details: Default::default(),
+            }
+        }
     }
 }
 

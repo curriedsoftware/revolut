@@ -126,6 +126,15 @@ impl Default
 }
 
 impl<C, R> BusinessAuthenticationBuilder<MissingClientAssertion, C, R> {
+    #[cfg(test)]
+    pub fn with_dummy_client_assertion(self) -> BusinessAuthenticationBuilder<(), C, R> {
+        BusinessAuthenticationBuilder {
+            client_assertion: (),
+            authorization_code: self.authorization_code,
+            refresh_token: self.refresh_token,
+        }
+    }
+
     pub fn with_environment_inherited_client_assertion(
         self,
         client_assertion_environment_variable: &str,
@@ -136,6 +145,9 @@ impl<C, R> BusinessAuthenticationBuilder<MissingClientAssertion, C, R> {
                     client_assertion_environment_variable.into(),
                 )
             })?;
+        if client_assertion.is_empty() {
+            return Err(ClientBuilderError::InvalidSecret);
+        }
         Ok(BusinessAuthenticationBuilder {
             client_assertion,
             authorization_code: self.authorization_code,
@@ -146,16 +158,29 @@ impl<C, R> BusinessAuthenticationBuilder<MissingClientAssertion, C, R> {
     pub fn with_client_assertion(
         self,
         client_assertion: impl ToString,
-    ) -> BusinessAuthenticationBuilder<String, C, R> {
-        BusinessAuthenticationBuilder {
-            client_assertion: client_assertion.to_string(),
+    ) -> Result<BusinessAuthenticationBuilder<String, C, R>, ClientBuilderError> {
+        let client_assertion = client_assertion.to_string();
+        if client_assertion.is_empty() {
+            return Err(ClientBuilderError::InvalidSecret);
+        }
+        Ok(BusinessAuthenticationBuilder {
+            client_assertion,
             authorization_code: self.authorization_code,
             refresh_token: self.refresh_token,
-        }
+        })
     }
 }
 
 impl<A, R> BusinessAuthenticationBuilder<A, MissingAuthorizationCode, R> {
+    #[cfg(test)]
+    pub fn with_dummy_authorization_code(self) -> BusinessAuthenticationBuilder<A, (), R> {
+        BusinessAuthenticationBuilder {
+            client_assertion: self.client_assertion,
+            authorization_code: (),
+            refresh_token: self.refresh_token,
+        }
+    }
+
     pub fn with_environment_inherited_authorization_code(
         self,
         authorization_code_environment_variable: &str,
@@ -166,6 +191,9 @@ impl<A, R> BusinessAuthenticationBuilder<A, MissingAuthorizationCode, R> {
                     authorization_code_environment_variable.into(),
                 )
             })?;
+        if authorization_code.is_empty() {
+            return Err(ClientBuilderError::InvalidSecret);
+        }
         Ok(BusinessAuthenticationBuilder {
             client_assertion: self.client_assertion,
             authorization_code,
@@ -176,16 +204,29 @@ impl<A, R> BusinessAuthenticationBuilder<A, MissingAuthorizationCode, R> {
     pub fn with_authorization_code(
         self,
         authorization_code: impl ToString,
-    ) -> BusinessAuthenticationBuilder<A, String, R> {
-        BusinessAuthenticationBuilder {
+    ) -> Result<BusinessAuthenticationBuilder<A, String, R>, ClientBuilderError> {
+        let authorization_code = authorization_code.to_string();
+        if authorization_code.is_empty() {
+            return Err(ClientBuilderError::InvalidSecret);
+        }
+        Ok(BusinessAuthenticationBuilder {
             client_assertion: self.client_assertion,
             authorization_code: authorization_code.to_string(),
             refresh_token: self.refresh_token,
-        }
+        })
     }
 }
 
 impl<A, C> BusinessAuthenticationBuilder<A, C, MissingRefreshToken> {
+    #[cfg(test)]
+    pub fn with_dummy_refresh_token(self) -> BusinessAuthenticationBuilder<A, C, ()> {
+        BusinessAuthenticationBuilder {
+            client_assertion: self.client_assertion,
+            authorization_code: self.authorization_code,
+            refresh_token: (),
+        }
+    }
+
     pub fn with_environment_inherited_refresh_token(
         self,
         refresh_token_environment_variable: &str,
@@ -195,6 +236,9 @@ impl<A, C> BusinessAuthenticationBuilder<A, C, MissingRefreshToken> {
                 refresh_token_environment_variable.into(),
             )
         })?;
+        if refresh_token.is_empty() {
+            return Err(ClientBuilderError::InvalidSecret);
+        }
         Ok(BusinessAuthenticationBuilder {
             client_assertion: self.client_assertion,
             authorization_code: self.authorization_code,
@@ -205,12 +249,16 @@ impl<A, C> BusinessAuthenticationBuilder<A, C, MissingRefreshToken> {
     pub fn with_refresh_token(
         self,
         refresh_token: impl ToString,
-    ) -> BusinessAuthenticationBuilder<A, C, String> {
-        BusinessAuthenticationBuilder {
+    ) -> Result<BusinessAuthenticationBuilder<A, C, String>, ClientBuilderError> {
+        let refresh_token = refresh_token.to_string();
+        if refresh_token.is_empty() {
+            return Err(ClientBuilderError::InvalidSecret);
+        }
+        Ok(BusinessAuthenticationBuilder {
             client_assertion: self.client_assertion,
             authorization_code: self.authorization_code,
             refresh_token: refresh_token.to_string(),
-        }
+        })
     }
 }
 
@@ -231,6 +279,32 @@ impl<R: MissingRefreshTokenT> BusinessAuthenticationBuilder<String, String, R> {
         BusinessAuthentication {
             client_assertion: self.client_assertion,
             authorization_code: Some(self.authorization_code),
+            refresh_token: None,
+            access_token_expires_at: RwLock::new(None),
+            access_token: RwLock::new(None),
+        }
+    }
+}
+
+#[cfg(test)]
+impl<C: MissingAuthorizationCodeT> BusinessAuthenticationBuilder<(), C, ()> {
+    pub fn build(self) -> BusinessAuthentication {
+        BusinessAuthentication {
+            client_assertion: String::new(),
+            authorization_code: None,
+            refresh_token: Some(String::new()),
+            access_token_expires_at: RwLock::new(None),
+            access_token: RwLock::new(None),
+        }
+    }
+}
+
+#[cfg(test)]
+impl<R: MissingRefreshTokenT> BusinessAuthenticationBuilder<(), (), R> {
+    pub fn build(self) -> BusinessAuthentication {
+        BusinessAuthentication {
+            client_assertion: String::new(),
+            authorization_code: Some(String::new()),
             refresh_token: None,
             access_token_expires_at: RwLock::new(None),
             access_token: RwLock::new(None),
@@ -302,7 +376,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         self.login().await
     }
 
-    pub(crate) async fn request_raw<T: Serialize + Clone>(
+    async fn request_raw_<T: Serialize + Clone>(
         &self,
         method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
@@ -370,7 +444,29 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .to_vec())
     }
 
-    pub(crate) async fn request<R: DeserializeOwned + Debug, T: Serialize + Clone>(
+    #[cfg(not(test))]
+    pub(crate) async fn request_raw<T: Serialize + Clone>(
+        &self,
+        method: HttpMethod<'_, T>,
+        uri: &RevolutEndpoint,
+    ) -> Result<Vec<u8>, Error> {
+        self.request_raw_(method, uri).await
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn request_raw<T: Serialize + Clone + std::default::Default>(
+        &self,
+        method: HttpMethod<'_, T>,
+        uri: &RevolutEndpoint,
+    ) -> Result<Vec<u8>, Error> {
+        if self.authentication.client_assertion.is_empty() {
+            return Ok(Default::default());
+        }
+
+        self.request_raw_(method, uri).await
+    }
+
+    async fn request_<R: DeserializeOwned + Debug, T: Serialize + Clone>(
         &self,
         method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
@@ -436,6 +532,31 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         } else {
             Err(Error::BackendError(response.json().await?))
         }
+    }
+
+    #[cfg(not(test))]
+    pub(crate) async fn request<R: DeserializeOwned + Debug, T: Serialize + Clone>(
+        &self,
+        method: HttpMethod<'_, T>,
+        uri: &RevolutEndpoint,
+    ) -> Result<R, Error> {
+        self.request_(method, uri).await
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn request<
+        R: DeserializeOwned + Debug + std::default::Default,
+        T: Serialize + Clone,
+    >(
+        &self,
+        method: HttpMethod<'_, T>,
+        uri: &RevolutEndpoint,
+    ) -> Result<R, Error> {
+        if self.authentication.client_assertion.is_empty() {
+            return Ok(Default::default());
+        }
+
+        self.request_(method, uri).await
     }
 
     pub async fn login_with_authorization_code(

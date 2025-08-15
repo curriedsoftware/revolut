@@ -48,15 +48,43 @@ pub mod v10 {
         code: String,
     }
 
+    #[cfg(test)]
+    impl Default for CardProduct {
+        fn default() -> Self {
+            Self {
+                code: "some-card-product-code".to_string(),
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct CardSpendProgram {
         label: String,
+    }
+
+    #[cfg(test)]
+    impl Default for CardSpendProgram {
+        fn default() -> Self {
+            Self {
+                label: "some-card-spend-program-label".to_string(),
+            }
+        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Amount {
         amount: f64,
         currency: String,
+    }
+
+    #[cfg(test)]
+    impl Default for Amount {
+        fn default() -> Self {
+            Self {
+                amount: 42.42,
+                currency: "EUR".to_string(),
+            }
+        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -68,6 +96,21 @@ pub mod v10 {
         quarter: Option<Amount>,
         year: Option<Amount>,
         all_time: Option<Amount>,
+    }
+
+    #[cfg(test)]
+    impl Default for CardSpendingLimits {
+        fn default() -> Self {
+            Self {
+                single: None,
+                day: None,
+                week: None,
+                month: None,
+                quarter: None,
+                year: None,
+                all_time: None,
+            }
+        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -88,6 +131,28 @@ pub mod v10 {
         updated_at: String,
     }
 
+    #[cfg(test)]
+    impl Default for Card {
+        fn default() -> Self {
+            Self {
+                id: "some-card-id".to_string(),
+                last_digits: "some-last-digits".to_string(),
+                expiry: "some-expiry".to_string(),
+                state: Default::default(),
+                label: None,
+                r#virtual: true,
+                product: None,
+                accounts: Vec::new(),
+                categories: None,
+                spend_program: None,
+                spending_limits: None,
+                holder_id: None,
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum CardState {
@@ -98,6 +163,13 @@ pub mod v10 {
         Locked,
     }
 
+    #[cfg(test)]
+    impl Default for CardState {
+        fn default() -> Self {
+            Self::Active
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct CardSensitiveDetails {
         pan: String,
@@ -105,7 +177,18 @@ pub mod v10 {
         expiry: String,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[cfg(test)]
+    impl Default for CardSensitiveDetails {
+        fn default() -> Self {
+            Self {
+                pan: "some-pan".to_string(),
+                cvv: "some-cvv".to_string(),
+                expiry: "some-expiry".to_string(),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
     pub struct CreateCardParams {
         pub request_id: String,
         pub r#virtual: bool,
@@ -116,7 +199,7 @@ pub mod v10 {
         pub spending_limits: Option<CardSpendingLimits>,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
     pub struct UpdateCardParams {
         pub label: Option<String>,
         pub categories: Option<Vec<String>>,

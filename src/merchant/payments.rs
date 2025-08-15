@@ -51,6 +51,30 @@ pub mod unversioned {
         pub order_id: Option<String>,
     }
 
+    #[cfg(test)]
+    impl Default for Payment {
+        fn default() -> Self {
+            Self {
+                id: "some-payment-id".to_string(),
+                state: Default::default(),
+                decline_reason: None,
+                bank_message: None,
+                created_at: "some-date".to_string(),
+                updated_at: "some-date".to_string(),
+                token: None,
+                amount: 4242,
+                currency: None,
+                settled_amount: None,
+                payment_method: None,
+                authentication_challenge: None,
+                billing_address: None,
+                risk_level: None,
+                fees: None,
+                order_id: None,
+            }
+        }
+    }
+
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum PaymentState {
@@ -75,6 +99,13 @@ pub mod unversioned {
         Failed,
     }
 
+    #[cfg(test)]
+    impl Default for PaymentState {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(tag = "type", rename_all = "snake_case")]
     pub enum PaymentMethod {
@@ -83,6 +114,13 @@ pub mod unversioned {
         GooglePay(Card),
         RevolutPayCard(Card),
         RevolutPayAccount(RevolutPayAccount),
+    }
+
+    #[cfg(test)]
+    impl Default for PaymentMethod {
+        fn default() -> PaymentMethod {
+            PaymentMethod::Card(Default::default())
+        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -99,6 +137,24 @@ pub mod unversioned {
         fingerprint: Option<String>,
     }
 
+    #[cfg(test)]
+    impl Default for Card {
+        fn default() -> Self {
+            Card {
+                id: None,
+                card_brand: None,
+                funding: None,
+                card_country_code: None,
+                card_bin: None,
+                card_last_four: None,
+                card_expiry: None,
+                cardholder_name: None,
+                checks: None,
+                fingerprint: None,
+            }
+        }
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Checks {
         three_ds: Option<ThreeDs>,
@@ -108,11 +164,35 @@ pub mod unversioned {
         cardholder: Option<String>,
     }
 
+    #[cfg(test)]
+    impl Default for Checks {
+        fn default() -> Self {
+            Self {
+                three_ds: None,
+                cvv_verification: None,
+                address: None,
+                postcode: None,
+                cardholder: None,
+            }
+        }
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct ThreeDs {
         pub eci: Option<String>,
         pub state: Option<ThreeDsState>,
         pub version: Option<String>,
+    }
+
+    #[cfg(test)]
+    impl Default for ThreeDs {
+        fn default() -> Self {
+            Self {
+                eci: None,
+                state: None,
+                version: None,
+            }
+        }
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
@@ -123,16 +203,43 @@ pub mod unversioned {
         Challenge,
     }
 
+    #[cfg(test)]
+    impl Default for ThreeDsState {
+        fn default() -> Self {
+            Self::Verified
+        }
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct RevolutPayAccount {
         pub id: String,
         pub fingerprint: Option<String>,
     }
 
+    #[cfg(test)]
+    impl Default for RevolutPayAccount {
+        fn default() -> Self {
+            Self {
+                id: "some-revolut-pay-account-id".to_string(),
+                fingerprint: None,
+            }
+        }
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct AuthenticationChallenge {
         pub r#type: String,
         pub acs_url: String,
+    }
+
+    #[cfg(test)]
+    impl Default for AuthenticationChallenge {
+        fn default() -> Self {
+            Self {
+                r#type: "some-authentication-challenge-type".to_string(),
+                acs_url: "some-acs-url".to_string(),
+            }
+        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -145,11 +252,36 @@ pub mod unversioned {
         pub postcode: String,
     }
 
+    #[cfg(test)]
+    impl Default for BillingAddress {
+        fn default() -> Self {
+            Self {
+                street_line_1: None,
+                street_line_2: None,
+                region: None,
+                city: None,
+                country_code: "ES".to_string(),
+                postcode: "28830".to_string(),
+            }
+        }
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Fee {
         pub r#type: Option<String>,
         pub amount: Option<u64>,
         pub currency: Option<String>,
+    }
+
+    #[cfg(test)]
+    impl Default for Fee {
+        fn default() -> Self {
+            Self {
+                r#type: None,
+                amount: None,
+                currency: None,
+            }
+        }
     }
 }
 

@@ -32,7 +32,7 @@ use crate::{
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct WebhookRequest {
     pub url: String,
     pub events: Option<Vec<WebhookEvent>>,
@@ -47,11 +47,29 @@ pub enum WebhookEvent {
     PayoutLinkStateChanged,
 }
 
+#[cfg(test)]
+impl Default for WebhookEvent {
+    fn default() -> Self {
+        Self::PayoutLinkCreated
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Webhook {
     pub id: String,
     pub url: String,
     pub events: Vec<WebhookEvent>,
+}
+
+#[cfg(test)]
+impl Default for Webhook {
+    fn default() -> Self {
+        Self {
+            id: "some-webhook-id".to_string(),
+            url: "some-webhook-url".to_string(),
+            events: Vec::new(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -60,6 +78,18 @@ pub struct WebhookWithSigningSecret {
     pub url: String,
     pub events: Vec<WebhookEvent>,
     pub signing_secret: String,
+}
+
+#[cfg(test)]
+impl Default for WebhookWithSigningSecret {
+    fn default() -> Self {
+        Self {
+            id: "some-webhook-signing-secret-id".to_string(),
+            url: "some-webhook-url".to_string(),
+            events: Vec::new(),
+            signing_secret: "some-webhook-signing-secret".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -73,15 +103,30 @@ pub struct ListParams {
     pub created_before: Option<String>,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct FailedWebhookEvent {
     pub id: String,
     pub created_at: String,
     pub updated_at: String,
-    pub webook_id: String,
+    pub webhook_id: String,
     pub webhook_url: String,
     pub payload: String,
     pub last_sent_date: Option<String>,
+}
+
+#[cfg(test)]
+impl Default for FailedWebhookEvent {
+    fn default() -> Self {
+        Self {
+            id: "some-failed-webhook-event-id".to_string(),
+            created_at: "some-created-at".to_string(),
+            updated_at: "some-updated-at".to_string(),
+            webhook_id: "some-webhook-id".to_string(),
+            webhook_url: "some-webhook-url".to_string(),
+            payload: "some-payload".to_string(),
+            last_sent_date: None,
+        }
+    }
 }
 
 impl std::fmt::Display for ListParams {

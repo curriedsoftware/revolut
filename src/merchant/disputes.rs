@@ -37,7 +37,7 @@ use crate::{
 pub mod unversioned {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Clone, Debug, Default)]
+    #[derive(Clone, Default, Debug)]
     pub struct ListParams {
         pub limit: Option<u16>,
         pub from_created_date: Option<String>,
@@ -61,6 +61,25 @@ pub mod unversioned {
         pub payment: Option<Payment>,
     }
 
+    #[cfg(test)]
+    impl Default for Dispute {
+        fn default() -> Self {
+            Self {
+                id: None,
+                state: None,
+                substate: None,
+                created_at: None,
+                updated_at: None,
+                response_due_date: None,
+                reason_code: None,
+                reason_description: None,
+                amount: None,
+                currency: None,
+                payment: None,
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     #[strum(serialize_all = "snake_case")]
@@ -69,6 +88,13 @@ pub mod unversioned {
         UnderReview,
         Won,
         Lost,
+    }
+
+    #[cfg(test)]
+    impl Default for DisputeState {
+        fn default() -> Self {
+            Self::Won
+        }
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
@@ -88,6 +114,13 @@ pub mod unversioned {
         WonReversal,
     }
 
+    #[cfg(test)]
+    impl Default for DisputeSubstate {
+        fn default() -> Self {
+            Self::New
+        }
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Payment {
         pub id: Option<String>,
@@ -99,11 +132,37 @@ pub mod unversioned {
         pub payment_method: Option<PaymentMethod>,
     }
 
+    #[cfg(test)]
+    impl Default for Payment {
+        fn default() -> Self {
+            Self {
+                id: None,
+                order_id: None,
+                created_at: None,
+                arn: None,
+                amount: None,
+                currency: None,
+                payment_method: None,
+            }
+        }
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct PaymentMethod {
         pub r#type: Option<PaymentMethodType>,
         pub card_brand: Option<String>,
         pub card_last_four: Option<String>,
+    }
+
+    #[cfg(test)]
+    impl Default for PaymentMethod {
+        fn default() -> Self {
+            Self {
+                r#type: None,
+                card_brand: None,
+                card_last_four: None,
+            }
+        }
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
@@ -117,9 +176,25 @@ pub mod unversioned {
         RevolutPayCard,
     }
 
+    #[cfg(test)]
+    impl Default for PaymentMethodType {
+        fn default() -> Self {
+            Self::Card
+        }
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Evidence {
         pub id: String,
+    }
+
+    #[cfg(test)]
+    impl Default for Evidence {
+        fn default() -> Self {
+            Self {
+                id: "some-evidence-id".to_string(),
+            }
+        }
     }
 
     pub struct EvidenceRequest<'a> {

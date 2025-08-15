@@ -83,6 +83,11 @@ impl Default for MerchantAuthenticationBuilder<MissingSecretKey> {
 }
 
 impl MerchantAuthenticationBuilder<MissingSecretKey> {
+    #[cfg(test)]
+    pub fn with_dummy_secret_key(self) -> MerchantAuthenticationBuilder<()> {
+        MerchantAuthenticationBuilder { secret_key: () }
+    }
+
     pub fn with_environment_inherited_secret_key(
         self,
         secret_key_environment_variable: &str,
@@ -90,13 +95,22 @@ impl MerchantAuthenticationBuilder<MissingSecretKey> {
         let secret_key = std::env::var(secret_key_environment_variable).map_err(|_| {
             ClientBuilderError::MissingEnvironmentVariable(secret_key_environment_variable.into())
         })?;
+        if secret_key.is_empty() {
+            return Err(ClientBuilderError::InvalidSecret);
+        }
         Ok(MerchantAuthenticationBuilder { secret_key })
     }
 
-    pub fn with_secret_key(self, secret_key: &str) -> MerchantAuthenticationBuilder<String> {
-        MerchantAuthenticationBuilder {
-            secret_key: secret_key.to_string(),
+    pub fn with_secret_key(
+        self,
+        secret_key: &str,
+    ) -> Result<MerchantAuthenticationBuilder<String>, ClientBuilderError> {
+        if secret_key.is_empty() {
+            return Err(ClientBuilderError::InvalidSecret);
         }
+        Ok(MerchantAuthenticationBuilder {
+            secret_key: secret_key.to_string(),
+        })
     }
 }
 
@@ -104,6 +118,15 @@ impl MerchantAuthenticationBuilder<String> {
     pub fn build(self) -> MerchantAuthentication {
         MerchantAuthentication {
             secret_key: self.secret_key,
+        }
+    }
+}
+
+#[cfg(test)]
+impl MerchantAuthenticationBuilder<()> {
+    pub fn build(self) -> MerchantAuthentication {
+        MerchantAuthentication {
+            secret_key: String::new(),
         }
     }
 }
@@ -140,7 +163,7 @@ impl<E: Environment, C> ClientBuilder<E, MerchantAuthentication, C> {
 }
 
 impl<E: Environment> Client<E, MerchantAuthentication> {
-    pub(crate) async fn request<R: DeserializeOwned + Debug, T: Clone + Debug + Serialize>(
+    pub(crate) async fn request_<R: DeserializeOwned + Debug, T: Clone + Debug + Serialize>(
         &self,
         method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
@@ -199,5 +222,29 @@ impl<E: Environment> Client<E, MerchantAuthentication> {
         } else {
             Err(Error::BackendError(response.json().await?))
         }
+    }
+
+    #[cfg(not(test))]
+    pub(crate) async fn request<R: DeserializeOwned + Debug, T: Clone + Debug + Serialize>(
+        &self,
+        method: HttpMethod<'_, T>,
+        uri: &RevolutEndpoint,
+    ) -> ApiResult<R> {
+        self.request_(method, uri).await
+    }
+
+    #[cfg(test)]
+    pub(crate) async fn request<
+        R: DeserializeOwned + Debug + std::default::Default,
+        T: Clone + Debug + Serialize,
+    >(
+        &self,
+        method: HttpMethod<'_, T>,
+        uri: &RevolutEndpoint,
+    ) -> ApiResult<R> {
+        if self.authentication.secret_key.is_empty() {
+            return Ok(Default::default());
+        }
+        self.request_(method, uri).await
     }
 }

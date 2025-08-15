@@ -58,16 +58,46 @@ pub mod v10 {
         currency: Option<String>,
     }
 
+    #[cfg(test)]
+    impl Default for Amount {
+        fn default() -> Self {
+            Self {
+                amount: None,
+                currency: None,
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Category {
         name: String,
         code: Option<String>,
     }
 
+    #[cfg(test)]
+    impl Default for Category {
+        fn default() -> Self {
+            Self {
+                name: "some-category-name".to_string(),
+                code: None,
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct TaxRate {
         name: String,
         percentage: f64,
+    }
+
+    #[cfg(test)]
+    impl Default for TaxRate {
+        fn default() -> Self {
+            Self {
+                name: "some-tax-rate-name".to_string(),
+                percentage: 21.21,
+            }
+        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -77,10 +107,31 @@ pub mod v10 {
         tax_rate: TaxRate,
     }
 
+    #[cfg(test)]
+    impl Default for ExpenseSplit {
+        fn default() -> Self {
+            Self {
+                amount: Default::default(),
+                category: Default::default(),
+                tax_rate: Default::default(),
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct ExpenseSpentAmount {
         amount: f64,
         currency: String,
+    }
+
+    #[cfg(test)]
+    impl Default for ExpenseSpentAmount {
+        fn default() -> Self {
+            Self {
+                amount: 21.21,
+                currency: "EUR".to_string(),
+            }
+        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -101,6 +152,28 @@ pub mod v10 {
         spent_amount: ExpenseSpentAmount,
     }
 
+    #[cfg(test)]
+    impl Default for Expense {
+        fn default() -> Self {
+            Self {
+                id: "some-expense-id".to_string(),
+                state: Default::default(),
+                transaction_type: Default::default(),
+                description: None,
+                submitted_at: None,
+                completed_at: None,
+                payer: None,
+                merchant: None,
+                transaction_id: None,
+                expense_date: "some-expense-date".to_string(),
+                labels: HashMap::new(),
+                splits: Vec::new(),
+                receipt_ids: Vec::new(),
+                spent_amount: Default::default(),
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     #[strum(serialize_all = "snake_case")]
@@ -115,6 +188,13 @@ pub mod v10 {
         Reverted,
     }
 
+    #[cfg(test)]
+    impl Default for ExpenseState {
+        fn default() -> Self {
+            Self::Approved
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     #[strum(serialize_all = "snake_case")]
@@ -124,6 +204,13 @@ pub mod v10 {
         Fee,
         Transfer,
         External,
+    }
+
+    #[cfg(test)]
+    impl Default for TransactionType {
+        fn default() -> Self {
+            Self::CardPayment
+        }
     }
 }
 
