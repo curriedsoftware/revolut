@@ -987,3 +987,47 @@ pub async fn payment_list<E: Environment>(
         )
         .await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_list_orders_casing() {
+        assert!(
+            serde_json::from_value::<Vec<v10::OrderListItem>>(serde_json::json!([
+                {
+                    "id": "6849a0a4-ef38-a9ba-9ac2-d6ef5d1997af",
+                    "type": "PAYMENT",
+                    "state": "FAILED",
+                    "created_at": "2025-06-11T15:28:36.339668Z",
+                    "updated_at": "2025-07-11T15:28:36.956369Z",
+                    "capture_mode": "AUTOMATIC",
+                    "metadata": {}
+                }
+            ]))
+            .is_ok()
+        )
+    }
+
+    #[test]
+    fn check_get_order_casing() {
+        assert!(
+            serde_json::from_value::<v10::Order>(serde_json::json!(
+                {
+                    "id": "6849a0a4-ef38-a9ba-9ac2-d6ef5d1997af",
+                    "type": "payment",
+                    "state": "failed",
+                    "created_at": "2025-06-11T15:28:36.339668Z",
+                    "updated_at": "2025-07-11T15:28:36.956369Z",
+                    "capture_mode": "automatic",
+                    "amount": 9990,
+                    "outstanding_amount": 9990,
+                    "currency": "EUR",
+                    "enforce_challenge": "automatic"
+                }
+            ))
+            .is_ok()
+        )
+    }
+}
