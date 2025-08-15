@@ -1011,6 +1011,29 @@ mod tests {
     }
 
     #[test]
+    fn check_list_query_parameters_casing() {
+        assert_eq!(
+            "?state=PENDING",
+            v10::ListParams {
+                state: Some(vec![v10::OrderStateListItem::Pending]),
+                ..Default::default()
+            }
+            .to_string()
+        );
+        assert_eq!(
+            "?state=COMPLETED&state=FAILED",
+            v10::ListParams {
+                state: Some(vec![
+                    v10::OrderStateListItem::Completed,
+                    v10::OrderStateListItem::Failed,
+                ]),
+                ..Default::default()
+            }
+            .to_string()
+        );
+    }
+
+    #[test]
     fn check_get_order_casing() {
         assert!(
             serde_json::from_value::<v10::Order>(serde_json::json!(
