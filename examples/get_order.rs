@@ -26,19 +26,15 @@ use clap::Parser;
 
 use revolut::{
     errors::ApiResult,
-    merchant::{
-        self,
-        client::{MerchantAuthenticationBuilder, merchant_client},
-    },
+    merchant::client::{MerchantAuthenticationBuilder, merchant_client},
 };
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
+    /// Order ID
     #[arg(long)]
-    url: String,
-    #[arg(long)]
-    events: Vec<merchant::webhooks::v10::WebhookEvent>,
+    order_id: String,
 }
 
 #[tokio::main]
@@ -56,18 +52,7 @@ async fn main() -> ApiResult<()> {
 
     println!(
         "{}",
-        serde_json::to_string(
-            &client
-                .create_webhook(&merchant::webhooks::v10::WebhookRequest {
-                    url: args.url,
-                    events: args
-                        .events
-                        .into_iter()
-                        .map(merchant::webhooks::v10::WebhookEvent::from)
-                        .collect(),
-                })
-                .await?
-        )?
+        serde_json::to_string(&client.order(&args.order_id).await?)?
     );
 
     Ok(())

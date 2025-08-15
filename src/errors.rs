@@ -49,8 +49,8 @@ pub enum ClientError {
 
 #[derive(Debug, Deserialize)]
 pub struct BackendError {
-    pub code: Option<String>,
-    pub error_code: Option<String>,
+    pub code: Option<u32>,
+    pub error_code: Option<u32>,
     #[serde(rename = "errorId")]
     pub error_id: Option<String>,
     pub errors: Option<Vec<ErrorItem>>,

@@ -337,7 +337,7 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {
     pub async fn create_webhook(
         &self,
         webhook: &webhooks::v2::WebhookRequest,
-    ) -> ApiResult<webhooks::v2::WebhookCreationResponse> {
+    ) -> ApiResult<webhooks::v2::WebhookWithSigningSecret> {
         webhooks::v2::create(self, webhook).await
     }
 
@@ -365,7 +365,7 @@ impl<E: Environment> Client<E, client::BusinessAuthentication> {
         &self,
         webhook_id: &str,
         rotate_webhook_signing_secret: &webhooks::v2::RotateWebhookSigningSecretRequest,
-    ) -> ApiResult<webhooks::v2::Webhook> {
+    ) -> ApiResult<webhooks::v2::WebhookWithSigningSecret> {
         webhooks::v2::rotate_signing_secret(self, webhook_id, rotate_webhook_signing_secret).await
     }
 

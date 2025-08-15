@@ -68,12 +68,9 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum CounterpartyProfileType {
-        #[serde(alias = "personal")]
         Personal,
-        #[serde(alias = "business")]
         Business,
     }
 
@@ -108,14 +105,10 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum CounterpartyState {
-        #[serde(alias = "created")]
         Created,
-        #[serde(alias = "draft")]
         Draft,
-        #[serde(alias = "deleted")]
         Deleted,
     }
 
@@ -138,12 +131,9 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum CounterpartyAccountRecipientCharges {
-        #[serde(alias = "no")]
         No,
-        #[serde(alias = "expected")]
         Expected,
     }
 
@@ -158,22 +148,16 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum CounterpartyCardScheme {
-        #[serde(alias = "visa")]
         Visa,
-        #[serde(alias = "mastercard")]
         Mastercard,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum CounterpartyAccountType {
-        #[serde(alias = "revolut")]
         Revolut,
-        #[serde(alias = "external")]
         External,
     }
 
@@ -196,30 +180,26 @@ pub mod v10 {
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct AccountNameReason {
         pub r#type: Option<AccountNameReasonType>,
-        pub code: Option<String>,
+        pub code: Option<AccountNameReasonCode>,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum AccountNameReasonType {
-        #[serde(alias = "close_match")]
+        UkCop,
+    }
+
+    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum AccountNameReasonCode {
         CloseMatch,
-        #[serde(alias = "individual_account_name_matched")]
         IndividualAccountNameMatched,
-        #[serde(alias = "company_account_name_matched")]
         CompanyAccountNameMatched,
-        #[serde(alias = "individual_account_close_match")]
         IndividualAccountCloseMatch,
-        #[serde(alias = "company_account_close_match")]
         CompanyAccountCloseMatch,
-        #[serde(alias = "not_matched")]
         NotMatched,
-        #[serde(alias = "account_does_not_exist")]
         AccountDoesNotExist,
-        #[serde(alias = "account_switched")]
         AccountSwitched,
-        #[serde(alias = "cannot_be_checked")]
         CannotBeChecked,
     }
 }

@@ -51,8 +51,8 @@ pub mod unversioned {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum PayoutState {
         Processing,
         Completed,
@@ -60,12 +60,9 @@ pub mod unversioned {
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum PayoutDestinationType {
-        #[serde(alias = "current_pocket")]
         CurrentPocket,
-        #[serde(alias = "external_beneficiary")]
         ExternalBeneficiary,
     }
 }

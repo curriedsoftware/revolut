@@ -82,44 +82,22 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct PaymentDraftDetailsPayment {
-        pub id: String,
-        pub amount: Amount,
-        pub currency: Option<String>,
-        pub account_id: String,
-        pub receiver: PaymentReceiver,
-        pub state: PaymentState,
-        pub reason: Option<String>,
-        pub error_message: Option<String>,
-        pub current_charge_options: CurrentChargeOptions,
-        pub reference: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Amount {
         pub amount: Option<f64>,
         pub currency: Option<String>,
     }
 
+    // SCREAMING_SNAKE_CASE
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum PaymentState {
-        #[serde(alias = "created")]
         Created,
-        #[serde(alias = "pending")]
         Pending,
-        #[serde(alias = "completed")]
         Completed,
-        #[serde(alias = "reverted")]
         Reverted,
-        #[serde(alias = "declined")]
         Declined,
-        #[serde(alias = "cancelled")]
         Cancelled,
-        #[serde(alias = "failed")]
         Failed,
-        #[serde(alias = "deleted")]
         Deleted,
     }
 

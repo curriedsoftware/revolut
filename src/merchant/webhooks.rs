@@ -37,40 +37,35 @@ pub mod v10 {
         pub events: Vec<WebhookEvent>,
     }
 
-    #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
+    // SCREAMING_SNAKE_CASE
+    #[derive(Clone, Debug, Deserialize, Serialize, strum::Display, strum::EnumString)]
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
     #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
     pub enum WebhookEvent {
-        #[serde(alias = "order_completed")]
         OrderCompleted,
-        #[serde(alias = "order_authorised")]
         OrderAuthorised,
-        #[serde(alias = "order_cancelled")]
         OrderCancelled,
-        #[serde(alias = "order_payment_authenticated")]
         OrderPaymentAuthenticated,
-        #[serde(alias = "order_payment_declined")]
         OrderPaymentDeclined,
-        #[serde(alias = "order_payment_failed")]
         OrderPaymentFailed,
-        #[serde(alias = "payout_initiated")]
         PayoutInitiated,
-        #[serde(alias = "payout_completed")]
         PayoutCompleted,
-        #[serde(alias = "payout_failed")]
         PayoutFailed,
-        #[serde(alias = "dispute_action_required")]
         DisputeActionRequired,
-        #[serde(alias = "dispute_under_review")]
         DisputeUnderReview,
-        #[serde(alias = "dispute_won")]
         DisputeWon,
-        #[serde(alias = "dispute_lost")]
         DisputeLost,
     }
 
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Webhook {
+        pub id: String,
+        pub url: Option<String>,
+        pub events: Option<Vec<WebhookEvent>>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct WebhookWithSigningSecret {
         pub id: String,
         pub url: Option<String>,
         pub events: Option<Vec<WebhookEvent>>,
@@ -86,7 +81,7 @@ pub mod v10 {
 pub async fn create<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
     webhook: &v10::WebhookRequest,
-) -> ApiResult<v10::Webhook> {
+) -> ApiResult<v10::WebhookWithSigningSecret> {
     client
         .request(
             HttpMethod::Post {
@@ -157,7 +152,7 @@ pub async fn rotate_signing_secret<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
     webhook_id: &str,
     rotate_webhook_signing_secret: &v10::RotateWebhookSigningSecretRequest,
-) -> ApiResult<v10::Webhook> {
+) -> ApiResult<v10::WebhookWithSigningSecret> {
     client
         .request(
             HttpMethod::Post {

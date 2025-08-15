@@ -38,7 +38,7 @@ struct Args {
     #[arg(long)]
     url: String,
     #[arg(long)]
-    events: Vec<String>,
+    events: Vec<business::webhooks::v2::WebhookEvent>,
 }
 
 #[tokio::main]
@@ -61,7 +61,12 @@ async fn main() -> ApiResult<()> {
             &client
                 .create_webhook(&business::webhooks::v2::WebhookRequest {
                     url: args.url,
-                    events: Some(args.events),
+                    events: Some(
+                        args.events
+                            .into_iter()
+                            .map(business::webhooks::v2::WebhookEvent::from)
+                            .collect()
+                    ),
                 })
                 .await?
         )?

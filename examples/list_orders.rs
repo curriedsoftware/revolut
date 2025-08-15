@@ -22,13 +22,28 @@
  * SOFTWARE.
  ***/
 
+use clap::Parser;
+use std::str::FromStr;
+
 use revolut::{
     errors::ApiResult,
-    merchant::client::{MerchantAuthenticationBuilder, merchant_client},
+    merchant::{
+        self,
+        client::{MerchantAuthenticationBuilder, merchant_client},
+    },
 };
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[arg(long)]
+    pub state: Vec<String>,
+}
 
 #[tokio::main]
 async fn main() -> ApiResult<()> {
+    let args = Args::parse();
+
     let client = merchant_client()
         .with_sandbox_environment()
         .with_authentication(
@@ -40,7 +55,22 @@ async fn main() -> ApiResult<()> {
 
     println!(
         "{}",
-        serde_json::to_string(&client.orders(&Default::default()).await?)?
+        serde_json::to_string(
+            &client
+                .orders(&merchant::orders::v10::ListParams {
+                    state: Some(
+                        args.state
+                            .into_iter()
+                            .map(|state| merchant::orders::v10::OrderStateListItem::from_str(
+                                &state
+                            )
+                            .expect(&format!("invalid state {state}")))
+                            .collect()
+                    ),
+                    ..Default::default()
+                })
+                .await?
+        )?
     );
 
     Ok(())

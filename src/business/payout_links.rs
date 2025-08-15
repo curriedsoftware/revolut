@@ -41,24 +41,16 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
+    #[strum(serialize_all = "snake_case")]
     pub enum PayoutLinkState {
-        #[serde(alias = "created")]
         Created,
-        #[serde(alias = "failed")]
         Failed,
-        #[serde(alias = "awaiting")]
         Awaiting,
-        #[serde(alias = "active")]
         Active,
-        #[serde(alias = "expired")]
         Expired,
-        #[serde(alias = "cancelled")]
         Cancelled,
-        #[serde(alias = "processing")]
         Processing,
-        #[serde(alias = "processed")]
         Processed,
     }
 
@@ -85,22 +77,16 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum PayoutMethod {
-        #[serde(alias = "revolut")]
         Revolut,
-        #[serde(alias = "bank_account")]
         BankAccount,
-        #[serde(alias = "card")]
         Card,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
+    #[serde(rename_all = "snake_case")]
     pub enum CancellationReason {
-        #[serde(alias = "too_many_name_check_attempts")]
         TooManyNameCheckAttempts,
     }
 
@@ -218,7 +204,7 @@ mod tests {
     #[test]
     fn check_list_query_parameters() {
         assert_eq!(
-            "?state=CREATED",
+            "?state=created",
             v10::ListParams {
                 state: Some(vec![v10::PayoutLinkState::Created]),
                 ..Default::default()
@@ -226,7 +212,7 @@ mod tests {
             .to_string()
         );
         assert_eq!(
-            "?state=CREATED&state=ACTIVE",
+            "?state=created&state=active",
             v10::ListParams {
                 state: Some(vec![
                     v10::PayoutLinkState::Created,

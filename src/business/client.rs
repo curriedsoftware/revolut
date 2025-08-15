@@ -23,6 +23,7 @@
  ***/
 
 use chrono::{Duration, Utc};
+use reqwest::StatusCode;
 use reqwest_retry::{RetryTransientMiddleware, policies::ExponentialBackoff};
 use serde::{Serialize, de::DeserializeOwned};
 use std::sync::RwLock;
@@ -423,6 +424,9 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             })?;
 
         if response.status().is_success() {
+            if response.status() == StatusCode::NO_CONTENT {
+                return Ok(serde_json::from_value(serde_json::Value::Null).unwrap());
+            }
             let response_ = format!("{response:?}");
             Ok(response.json().await.map_err(|err| {
                 errors::Error::ClientError(errors::ClientError::RequestError(format!(

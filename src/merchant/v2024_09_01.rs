@@ -63,7 +63,7 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
     pub async fn orders(
         &self,
         list_params: &orders::v10::ListParams,
-    ) -> ApiResult<Vec<orders::v10::Order>> {
+    ) -> ApiResult<Vec<orders::v10::OrderListItem>> {
         orders::list(self, list_params).await
     }
 
@@ -248,7 +248,7 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
     pub async fn create_webhook(
         &self,
         webhook: &webhooks::v10::WebhookRequest,
-    ) -> ApiResult<webhooks::v10::Webhook> {
+    ) -> ApiResult<webhooks::v10::WebhookWithSigningSecret> {
         webhooks::create(self, webhook).await
     }
 
@@ -268,7 +268,7 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
         &self,
         webhook_id: &str,
         rotate_webhook_signing_secret: &webhooks::v10::RotateWebhookSigningSecretRequest,
-    ) -> ApiResult<webhooks::v10::Webhook> {
+    ) -> ApiResult<webhooks::v10::WebhookWithSigningSecret> {
         webhooks::rotate_signing_secret(self, webhook_id, rotate_webhook_signing_secret).await
     }
 }
