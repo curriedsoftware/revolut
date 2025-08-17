@@ -33,7 +33,7 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct PayRequest {
         pub request_id: String,
         pub account_id: String,
@@ -54,7 +54,19 @@ pub mod v10 {
         pub completed_at: Option<String>,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[cfg(test)]
+    impl Default for Pay {
+        fn default() -> Self {
+            Self {
+                id: "some-pay-id".to_string(),
+                state: Default::default(),
+                created_at: "some-created-at".to_string(),
+                completed_at: None,
+            }
+        }
+    }
+
+    #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct TransferReceiver {
         pub counterparty_id: String,
         pub account_id: Option<String>,
@@ -69,13 +81,35 @@ pub mod v10 {
         pub description: String,
     }
 
+    #[cfg(test)]
+    impl Default for TransferReason {
+        fn default() -> Self {
+            Self {
+                country: "ES".to_string(),
+                currency: "EUR".to_string(),
+                code: "some-transfer-code".to_string(),
+                description: "some-transfer-description".to_string(),
+            }
+        }
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct ExchangeReason {
         pub code: String,
         pub name: String,
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[cfg(test)]
+    impl Default for ExchangeReason {
+        fn default() -> Self {
+            Self {
+                code: "some-exchange-reason-code".to_string(),
+                name: "some-exchange-reason-name".to_string(),
+            }
+        }
+    }
+
+    #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct TransferRequest {
         pub request_id: String,
         pub source_account_id: String,
@@ -93,6 +127,18 @@ pub mod v10 {
         pub completed_at: Option<String>,
     }
 
+    #[cfg(test)]
+    impl Default for Transfer {
+        fn default() -> Self {
+            Self {
+                id: "some-transfer-id".to_string(),
+                state: Default::default(),
+                created_at: "some-created-at".to_string(),
+                completed_at: None,
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum TransferState {
@@ -102,6 +148,13 @@ pub mod v10 {
         Declined,
         Failed,
         Reverted,
+    }
+
+    #[cfg(test)]
+    impl Default for TransferState {
+        fn default() -> Self {
+            Self::Completed
+        }
     }
 }
 

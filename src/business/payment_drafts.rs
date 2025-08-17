@@ -38,6 +38,15 @@ pub mod v10 {
         pub payment_orders: Vec<PaymentOrder>,
     }
 
+    #[cfg(test)]
+    impl Default for PaymentDraft {
+        fn default() -> Self {
+            Self {
+                payment_orders: Vec::new(),
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct PaymentOrder {
         pub id: String,
@@ -46,15 +55,59 @@ pub mod v10 {
         pub payments_count: u64,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct PaymentDraftRequest {
-        pub title: Option<String>,
-        pub schedule_for: Option<String>,
-        pub payments: Vec<Payment>,
+    #[cfg(test)]
+    impl Default for PaymentOrder {
+        fn default() -> Self {
+            Self {
+                id: "some-payment-order-id".to_string(),
+                scheduled_for: None,
+                title: None,
+                payments_count: 1,
+            }
+        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Payment {
+        pub id: String,
+        pub amount: Amount,
+        pub currency: Option<String>,
+        pub account_id: String,
+        pub receiver: String,
+        pub state: PaymentState,
+        pub reason: Option<String>,
+        pub error_message: Option<String>,
+        pub current_charge_options: CurrentChargeOptions,
+        pub reference: Option<String>,
+    }
+
+    #[cfg(test)]
+    impl Default for Payment {
+        fn default() -> Self {
+            Self {
+                id: "some-payment-id".to_string(),
+                amount: Default::default(),
+                currency: None,
+                account_id: "some-account-id".to_string(),
+                receiver: "some-receiver".to_string(),
+                state: Default::default(),
+                reason: None,
+                error_message: None,
+                current_charge_options: Default::default(),
+                reference: None,
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    pub struct PaymentDraftRequest {
+        pub title: Option<String>,
+        pub schedule_for: Option<String>,
+        pub payments: Vec<PaymentRequest>,
+    }
+
+    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+    pub struct PaymentRequest {
         pub account_id: String,
         pub receiver: PaymentReceiver,
         pub amount: f64,
@@ -62,7 +115,7 @@ pub mod v10 {
         pub reference: String,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
     pub struct PaymentReceiver {
         pub counterparty_id: Option<String>,
         pub account_id: Option<String>,
@@ -74,6 +127,15 @@ pub mod v10 {
         pub id: String,
     }
 
+    #[cfg(test)]
+    impl Default for CreatePaymentDraft {
+        fn default() -> Self {
+            Self {
+                id: "some-payment-draft".to_string(),
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct PaymentDraftDetails {
         pub scheduled_for: Option<String>,
@@ -81,10 +143,31 @@ pub mod v10 {
         pub payments: Vec<Payment>,
     }
 
+    #[cfg(test)]
+    impl Default for PaymentDraftDetails {
+        fn default() -> Self {
+            Self {
+                scheduled_for: None,
+                title: None,
+                payments: Vec::new(),
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Amount {
         pub amount: Option<f64>,
         pub currency: Option<String>,
+    }
+
+    #[cfg(test)]
+    impl Default for Amount {
+        fn default() -> Self {
+            Self {
+                amount: None,
+                currency: None,
+            }
+        }
     }
 
     // SCREAMING_SNAKE_CASE
@@ -101,6 +184,13 @@ pub mod v10 {
         Deleted,
     }
 
+    #[cfg(test)]
+    impl Default for PaymentState {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct CurrentChargeOptions {
         pub from: Amount,
@@ -109,10 +199,32 @@ pub mod v10 {
         pub fee: Option<Fee>,
     }
 
+    #[cfg(test)]
+    impl Default for CurrentChargeOptions {
+        fn default() -> Self {
+            Self {
+                from: Default::default(),
+                to: Default::default(),
+                rate: None,
+                fee: None,
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Fee {
         pub amount: Option<f64>,
         pub currency: Option<String>,
+    }
+
+    #[cfg(test)]
+    impl Default for Fee {
+        fn default() -> Self {
+            Self {
+                amount: None,
+                currency: None,
+            }
+        }
     }
 }
 

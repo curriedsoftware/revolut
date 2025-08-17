@@ -35,6 +35,7 @@ pub enum Error {
 #[derive(Debug, Deserialize)]
 pub enum ClientBuilderError {
     MissingEnvironmentVariable(String),
+    InvalidSecret,
     CannotInstantiateClient(String),
 }
 

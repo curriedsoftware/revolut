@@ -70,7 +70,7 @@ pub mod v10 {
         pub amount: Option<f64>,
     }
 
-    #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
+    #[derive(Debug, Deserialize, PartialEq, Serialize)]
     pub struct Exchange {
         pub id: Option<String>,
         pub r#type: Option<String>,
@@ -78,6 +78,20 @@ pub mod v10 {
         pub created_at: Option<String>,
         pub completed_at: Option<String>,
         pub state: Option<ExchangeState>,
+    }
+
+    #[cfg(test)]
+    impl Default for Exchange {
+        fn default() -> Self {
+            Self {
+                id: None,
+                r#type: None,
+                reason_code: None,
+                created_at: None,
+                completed_at: None,
+                state: None,
+            }
+        }
     }
 
     #[derive(Debug, Deserialize, strum::Display, PartialEq, Serialize)]
@@ -89,6 +103,13 @@ pub mod v10 {
         Declined,
         Failed,
         Reverted,
+    }
+
+    #[cfg(test)]
+    impl Default for ExchangeState {
+        fn default() -> Self {
+            Self::Completed
+        }
     }
 }
 

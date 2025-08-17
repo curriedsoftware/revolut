@@ -34,14 +34,14 @@ pub mod unversioned {
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(tag = "type", rename_all = "snake_case")]
     pub enum ReportRunRequest {
-        SettlementReport(SettlementReport),
-        CustomReport(CustomReport),
-        PayoutStatementReport(PayoutStatementReport),
-        IcppFeeBreakdownReport,
+        SettlementReport(SettlementReportRequest),
+        CustomReport(CustomReportRequest),
+        PayoutStatementReport(PayoutStatementReportRequest),
+        IcppFeeBreakdownReportRequest,
     }
 
     #[derive(Debug, Default, Deserialize, Serialize)]
-    pub struct SettlementReport {
+    pub struct SettlementReportRequest {
         pub filter: SettlementReportFilter,
         pub format: String,
         pub r#type: String,
@@ -65,7 +65,7 @@ pub mod unversioned {
     }
 
     #[derive(Debug, Default, Deserialize, Serialize)]
-    pub struct CustomReport {
+    pub struct CustomReportRequest {
         pub filter: CustomReportFilter,
         pub format: String,
         pub r#type: String,
@@ -89,7 +89,7 @@ pub mod unversioned {
     }
 
     #[derive(Debug, Default, Deserialize, Serialize)]
-    pub struct PayoutStatementReport {
+    pub struct PayoutStatementReportRequest {
         pub filter: PayoutStatementFilter,
         pub format: String,
         pub r#type: String,
@@ -114,6 +114,17 @@ pub mod unversioned {
         pub file_url: Option<String>,
     }
 
+    #[cfg(test)]
+    impl Default for ReportRun {
+        fn default() -> Self {
+            Self {
+                report_run_id: "some-report-run-id".to_string(),
+                status: Default::default(),
+                file_url: None,
+            }
+        }
+    }
+
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(tag = "type", rename_all = "snake_case")]
     pub enum ReportRunStatus {
@@ -121,6 +132,13 @@ pub mod unversioned {
         Completed,
         Failed,
         Expired,
+    }
+
+    #[cfg(test)]
+    impl Default for ReportRunStatus {
+        fn default() -> Self {
+            Self::Completed
+        }
     }
 }
 

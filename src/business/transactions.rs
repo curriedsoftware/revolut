@@ -62,6 +62,13 @@ pub mod v10 {
         TaxRefund,
     }
 
+    #[cfg(test)]
+    impl Default for TransactionType {
+        fn default() -> Self {
+            Self::CardCredit
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Transaction {
         pub id: String,
@@ -80,6 +87,28 @@ pub mod v10 {
         pub card: Option<TransactionCard>,
     }
 
+    #[cfg(test)]
+    impl Default for Transaction {
+        fn default() -> Self {
+            Self {
+                id: "some-transaction-id".to_string(),
+                r#type: Default::default(),
+                request_id: None,
+                state: Default::default(),
+                reason_code: None,
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+                completed_at: None,
+                scheduled_for: None,
+                related_transaction_id: None,
+                merchant: None,
+                reference: None,
+                legs: Vec::new(),
+                card: None,
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum TransactionState {
@@ -91,12 +120,31 @@ pub mod v10 {
         Reverted,
     }
 
+    #[cfg(test)]
+    impl Default for TransactionState {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct TransactionMerchant {
         pub name: Option<String>,
         pub city: Option<String>,
         pub category_code: Option<String>,
         pub country: Option<String>,
+    }
+
+    #[cfg(test)]
+    impl Default for TransactionMerchant {
+        fn default() -> Self {
+            Self {
+                name: None,
+                city: None,
+                category_code: None,
+                country: None,
+            }
+        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -113,11 +161,40 @@ pub mod v10 {
         pub balance: Option<f64>,
     }
 
+    #[cfg(test)]
+    impl Default for TransactionLeg {
+        fn default() -> Self {
+            Self {
+                leg_id: "some-leg-id".to_string(),
+                amount: 42.42,
+                fee: None,
+                currency: "EUR".to_string(),
+                bill_amount: None,
+                bill_currency: None,
+                account_id: "some-account-id".to_string(),
+                counterparty: None,
+                description: None,
+                balance: None,
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct TransactionCounterparty {
         pub account_id: Option<String>,
         pub account_type: TransactionCounterpartyAccountType,
         pub id: Option<String>,
+    }
+
+    #[cfg(test)]
+    impl Default for TransactionCounterparty {
+        fn default() -> Self {
+            Self {
+                account_id: None,
+                account_type: Default::default(),
+                id: None,
+            }
+        }
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
@@ -129,6 +206,13 @@ pub mod v10 {
         External,
     }
 
+    #[cfg(test)]
+    impl Default for TransactionCounterpartyAccountType {
+        fn default() -> Self {
+            Self::External
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct TransactionCard {
         pub id: String,
@@ -136,6 +220,19 @@ pub mod v10 {
         pub first_name: Option<String>,
         pub last_name: Option<String>,
         pub phone: Option<String>,
+    }
+
+    #[cfg(test)]
+    impl Default for TransactionCard {
+        fn default() -> Self {
+            Self {
+                id: "some-transaction-card-id".to_string(),
+                card_number: "some-card-number".to_string(),
+                first_name: None,
+                last_name: None,
+                phone: None,
+            }
+        }
     }
 }
 

@@ -82,7 +82,7 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
     pub async fn pay_order(
         &self,
         order_id: &str,
-        saved_payment_method: &orders::v10::SavedPaymentMethod,
+        saved_payment_method: &orders::v10::SavedPaymentMethodReq,
     ) -> ApiResult<orders::v10::OrderPayment> {
         orders::pay(self, order_id, saved_payment_method).await
     }

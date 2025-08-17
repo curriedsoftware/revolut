@@ -55,6 +55,22 @@ pub mod v10 {
         pub updated_at: String,
     }
 
+    #[cfg(test)]
+    impl Default for TeamMember {
+        fn default() -> Self {
+            Self {
+                id: "some-team-member-id".to_string(),
+                email: "some-team-member-email@example.com".to_string(),
+                first_name: None,
+                last_name: None,
+                state: Default::default(),
+                role_id: "some-role-id".to_string(),
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum TeamMemberState {
@@ -66,7 +82,14 @@ pub mod v10 {
         Disabled,
     }
 
-    #[derive(Clone, Debug, Deserialize, Serialize)]
+    #[cfg(test)]
+    impl Default for TeamMemberState {
+        fn default() -> Self {
+            Self::Active
+        }
+    }
+
+    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
     pub struct TeamMemberInviteRequest {
         pub email: String,
         pub role_id: String,
@@ -81,12 +104,37 @@ pub mod v10 {
         pub updated_at: String,
     }
 
+    #[cfg(test)]
+    impl Default for TeamMemberInvite {
+        fn default() -> Self {
+            Self {
+                email: "some-member@example.com".to_string(),
+                id: "some-member-id".to_string(),
+                role_id: "some-role-id".to_string(),
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+            }
+        }
+    }
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct TeamRole {
         pub id: String,
         pub name: String,
         pub created_at: String,
         pub updated_at: String,
+    }
+
+    #[cfg(test)]
+    impl Default for TeamRole {
+        fn default() -> Self {
+            Self {
+                id: "some-team-role-id".to_string(),
+                name: "some-team-role-name".to_string(),
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+            }
+        }
     }
 }
 
