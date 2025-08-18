@@ -54,124 +54,51 @@ pub mod v10 {
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Amount {
-        amount: Option<f64>,
-        currency: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for Amount {
-        fn default() -> Self {
-            Self {
-                amount: None,
-                currency: None,
-            }
-        }
+        pub amount: Option<f64>,
+        pub currency: Option<String>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Category {
-        name: String,
-        code: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for Category {
-        fn default() -> Self {
-            Self {
-                name: "some-category-name".to_string(),
-                code: None,
-            }
-        }
+        pub name: String,
+        pub code: Option<String>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct TaxRate {
-        name: String,
-        percentage: f64,
-    }
-
-    #[cfg(test)]
-    impl Default for TaxRate {
-        fn default() -> Self {
-            Self {
-                name: "some-tax-rate-name".to_string(),
-                percentage: 21.21,
-            }
-        }
+        pub name: String,
+        pub percentage: f64,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct ExpenseSplit {
-        amount: Amount,
-        category: Category,
-        tax_rate: TaxRate,
-    }
-
-    #[cfg(test)]
-    impl Default for ExpenseSplit {
-        fn default() -> Self {
-            Self {
-                amount: Default::default(),
-                category: Default::default(),
-                tax_rate: Default::default(),
-            }
-        }
+        pub amount: Amount,
+        pub category: Category,
+        pub tax_rate: TaxRate,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct ExpenseSpentAmount {
-        amount: f64,
-        currency: String,
-    }
-
-    #[cfg(test)]
-    impl Default for ExpenseSpentAmount {
-        fn default() -> Self {
-            Self {
-                amount: 21.21,
-                currency: "EUR".to_string(),
-            }
-        }
+        pub amount: f64,
+        pub currency: String,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Expense {
-        id: String,
-        state: ExpenseState,
-        transaction_type: TransactionType,
-        description: Option<String>,
-        submitted_at: Option<String>,
-        completed_at: Option<String>,
-        payer: Option<String>,
-        merchant: Option<String>,
-        transaction_id: Option<String>,
-        expense_date: String,
-        labels: HashMap<String, Vec<String>>,
-        splits: Vec<ExpenseSplit>,
-        receipt_ids: Vec<String>,
-        spent_amount: ExpenseSpentAmount,
-    }
-
-    #[cfg(test)]
-    impl Default for Expense {
-        fn default() -> Self {
-            Self {
-                id: "some-expense-id".to_string(),
-                state: Default::default(),
-                transaction_type: Default::default(),
-                description: None,
-                submitted_at: None,
-                completed_at: None,
-                payer: None,
-                merchant: None,
-                transaction_id: None,
-                expense_date: "some-expense-date".to_string(),
-                labels: HashMap::new(),
-                splits: Vec::new(),
-                receipt_ids: Vec::new(),
-                spent_amount: Default::default(),
-            }
-        }
+        pub id: String,
+        pub state: ExpenseState,
+        pub transaction_type: TransactionType,
+        pub description: Option<String>,
+        pub submitted_at: Option<String>,
+        pub completed_at: Option<String>,
+        pub payer: Option<String>,
+        pub merchant: Option<String>,
+        pub transaction_id: Option<String>,
+        pub expense_date: String,
+        pub labels: HashMap<String, Vec<String>>,
+        pub splits: Vec<ExpenseSplit>,
+        pub receipt_ids: Vec<String>,
+        pub spent_amount: ExpenseSpentAmount,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
@@ -188,13 +115,6 @@ pub mod v10 {
         Reverted,
     }
 
-    #[cfg(test)]
-    impl Default for ExpenseState {
-        fn default() -> Self {
-            Self::Approved
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     #[strum(serialize_all = "snake_case")]
@@ -204,13 +124,6 @@ pub mod v10 {
         Fee,
         Transfer,
         External,
-    }
-
-    #[cfg(test)]
-    impl Default for TransactionType {
-        fn default() -> Self {
-            Self::CardPayment
-        }
     }
 }
 
@@ -288,4 +201,89 @@ pub async fn expense_receipt(
             ),
         )
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::v10::*;
+    use std::collections::HashMap;
+
+    impl Default for Amount {
+        fn default() -> Self {
+            Self {
+                amount: None,
+                currency: None,
+            }
+        }
+    }
+
+    impl Default for Category {
+        fn default() -> Self {
+            Self {
+                name: "some-category-name".to_string(),
+                code: None,
+            }
+        }
+    }
+
+    impl Default for TaxRate {
+        fn default() -> Self {
+            Self {
+                name: "some-tax-rate-name".to_string(),
+                percentage: 21.21,
+            }
+        }
+    }
+
+    impl Default for ExpenseSplit {
+        fn default() -> Self {
+            Self {
+                amount: Default::default(),
+                category: Default::default(),
+                tax_rate: Default::default(),
+            }
+        }
+    }
+
+    impl Default for ExpenseSpentAmount {
+        fn default() -> Self {
+            Self {
+                amount: 21.21,
+                currency: "EUR".to_string(),
+            }
+        }
+    }
+
+    impl Default for Expense {
+        fn default() -> Self {
+            Self {
+                id: "some-expense-id".to_string(),
+                state: Default::default(),
+                transaction_type: Default::default(),
+                description: None,
+                submitted_at: None,
+                completed_at: None,
+                payer: None,
+                merchant: None,
+                transaction_id: None,
+                expense_date: "some-expense-date".to_string(),
+                labels: HashMap::new(),
+                splits: Vec::new(),
+                receipt_ids: Vec::new(),
+                spent_amount: Default::default(),
+            }
+        }
+    }
+
+    impl Default for ExpenseState {
+        fn default() -> Self {
+            Self::Approved
+        }
+    }
+
+    impl Default for TransactionType {
+        fn default() -> Self {
+            Self::CardPayment
+        }
+    }
 }

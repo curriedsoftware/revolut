@@ -80,16 +80,6 @@ pub mod v10 {
         pub last_name: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for IndividualName {
-        fn default() -> Self {
-            Self {
-                first_name: None,
-                last_name: None,
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Default, Deserialize, Serialize)]
     pub struct CounterpartyAddress {
         pub street_line1: Option<String>,
@@ -110,26 +100,8 @@ pub mod v10 {
         pub state: CounterpartyState,
         pub created_at: String,
         pub updated_at: String,
-        accounts: Vec<CounterpartyAccount>,
-        cards: Vec<CounterpartyCard>,
-    }
-
-    #[cfg(test)]
-    impl Default for Counterparty {
-        fn default() -> Self {
-            Self {
-                id: "some-counterparty-id".to_string(),
-                name: "some-name".to_string(),
-                revtag: None,
-                profile_type: None,
-                country: None,
-                state: Default::default(),
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
-                accounts: Vec::new(),
-                cards: Vec::new(),
-            }
-        }
+        pub accounts: Vec<CounterpartyAccount>,
+        pub cards: Vec<CounterpartyCard>,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
@@ -138,13 +110,6 @@ pub mod v10 {
         Created,
         Draft,
         Deleted,
-    }
-
-    #[cfg(test)]
-    impl Default for CounterpartyState {
-        fn default() -> Self {
-            Self::Created
-        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -165,40 +130,11 @@ pub mod v10 {
         pub recipient_charges: Option<CounterpartyAccountRecipientCharges>, // deprecated
     }
 
-    #[cfg(test)]
-    impl Default for CounterpartyAccount {
-        fn default() -> Self {
-            Self {
-                id: "some-counterparty-account-id".to_string(),
-                name: None,
-                bank_country: None,
-                currency: "EUR".to_string(),
-                r#type: Default::default(),
-                account_no: None,
-                iban: None,
-                sort_code: None,
-                routing_number: None,
-                bic: None,
-                clabe: None,
-                ifsc: None,
-                bsb_code: None,
-                recipient_charges: None,
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum CounterpartyAccountRecipientCharges {
         No,
         Expected,
-    }
-
-    #[cfg(test)]
-    impl Default for CounterpartyAccountRecipientCharges {
-        fn default() -> Self {
-            Self::No
-        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -211,20 +147,6 @@ pub mod v10 {
         pub currency: String,
     }
 
-    #[cfg(test)]
-    impl Default for CounterpartyCard {
-        fn default() -> Self {
-            Self {
-                id: "some-counterparty-card-id".to_string(),
-                name: "some-name".to_string(),
-                last_digits: "some-last-digits".to_string(),
-                scheme: Default::default(),
-                country: "ES".to_string(),
-                currency: "EUR".to_string(),
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum CounterpartyCardScheme {
@@ -232,25 +154,11 @@ pub mod v10 {
         Mastercard,
     }
 
-    #[cfg(test)]
-    impl Default for CounterpartyCardScheme {
-        fn default() -> Self {
-            Self::Visa
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum CounterpartyAccountType {
         Revolut,
         External,
-    }
-
-    #[cfg(test)]
-    impl Default for CounterpartyAccountType {
-        fn default() -> Self {
-            Self::External
-        }
     }
 
     #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -269,45 +177,16 @@ pub mod v10 {
         pub individual_name: Option<IndividualName>,
     }
 
-    #[cfg(test)]
-    impl Default for AccountName {
-        fn default() -> Self {
-            Self {
-                result_code: "some-result-code".to_string(),
-                reason: None,
-                company_name: None,
-                individual_name: None,
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct AccountNameReason {
         pub r#type: Option<AccountNameReasonType>,
         pub code: Option<AccountNameReasonCode>,
     }
 
-    #[cfg(test)]
-    impl Default for AccountNameReason {
-        fn default() -> Self {
-            Self {
-                r#type: None,
-                code: None,
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum AccountNameReasonType {
         UkCop,
-    }
-
-    #[cfg(test)]
-    impl Default for AccountNameReasonType {
-        fn default() -> Self {
-            Self::UkCop
-        }
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
@@ -322,13 +201,6 @@ pub mod v10 {
         AccountDoesNotExist,
         AccountSwitched,
         CannotBeChecked,
-    }
-
-    #[cfg(test)]
-    impl Default for AccountNameReasonCode {
-        fn default() -> Self {
-            Self::IndividualAccountNameMatched
-        }
     }
 }
 
@@ -428,4 +300,125 @@ pub async fn validate_account_name(
             &client.environment.uri("1.0", "/account-name-validation"),
         )
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::v10::*;
+
+    impl Default for IndividualName {
+        fn default() -> Self {
+            Self {
+                first_name: None,
+                last_name: None,
+            }
+        }
+    }
+
+    impl Default for Counterparty {
+        fn default() -> Self {
+            Self {
+                id: "some-counterparty-id".to_string(),
+                name: "some-name".to_string(),
+                revtag: None,
+                profile_type: None,
+                country: None,
+                state: Default::default(),
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+                accounts: Vec::new(),
+                cards: Vec::new(),
+            }
+        }
+    }
+
+    impl Default for CounterpartyState {
+        fn default() -> Self {
+            Self::Created
+        }
+    }
+
+    impl Default for CounterpartyAccount {
+        fn default() -> Self {
+            Self {
+                id: "some-counterparty-account-id".to_string(),
+                name: None,
+                bank_country: None,
+                currency: "EUR".to_string(),
+                r#type: Default::default(),
+                account_no: None,
+                iban: None,
+                sort_code: None,
+                routing_number: None,
+                bic: None,
+                clabe: None,
+                ifsc: None,
+                bsb_code: None,
+                recipient_charges: None,
+            }
+        }
+    }
+
+    impl Default for CounterpartyAccountRecipientCharges {
+        fn default() -> Self {
+            Self::No
+        }
+    }
+
+    impl Default for CounterpartyCard {
+        fn default() -> Self {
+            Self {
+                id: "some-counterparty-card-id".to_string(),
+                name: "some-name".to_string(),
+                last_digits: "some-last-digits".to_string(),
+                scheme: Default::default(),
+                country: "ES".to_string(),
+                currency: "EUR".to_string(),
+            }
+        }
+    }
+
+    impl Default for CounterpartyCardScheme {
+        fn default() -> Self {
+            Self::Visa
+        }
+    }
+
+    impl Default for CounterpartyAccountType {
+        fn default() -> Self {
+            Self::External
+        }
+    }
+
+    impl Default for AccountName {
+        fn default() -> Self {
+            Self {
+                result_code: "some-result-code".to_string(),
+                reason: None,
+                company_name: None,
+                individual_name: None,
+            }
+        }
+    }
+
+    impl Default for AccountNameReason {
+        fn default() -> Self {
+            Self {
+                r#type: None,
+                code: None,
+            }
+        }
+    }
+
+    impl Default for AccountNameReasonType {
+        fn default() -> Self {
+            Self::UkCop
+        }
+    }
+
+    impl Default for AccountNameReasonCode {
+        fn default() -> Self {
+            Self::IndividualAccountNameMatched
+        }
+    }
 }

@@ -54,13 +54,6 @@ pub mod v10 {
         Processed,
     }
 
-    #[cfg(test)]
-    impl Default for PayoutLinkState {
-        fn default() -> Self {
-            Self::Active
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct PayoutLink {
         pub id: String,
@@ -83,32 +76,6 @@ pub mod v10 {
         pub cancellation_reason: Option<CancellationReason>,
     }
 
-    #[cfg(test)]
-    impl Default for PayoutLink {
-        fn default() -> Self {
-            Self {
-                id: "some-payout-link-id".to_string(),
-                state: Default::default(),
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
-                counterparty_name: "some-counterparty-name".to_string(),
-                save_counterparty: false,
-                request_id: "some-payout-request-id".to_string(),
-                expiry_date: None,
-                payout_method: Vec::new(),
-                account_id: "some-account-id".to_string(),
-                amount: 42.42,
-                currency: "EUR".to_string(),
-                url: None,
-                reference: "some-payout-link-reference".to_string(),
-                transfer_reason_code: None,
-                counterparty_id: None,
-                transaction_id: None,
-                cancellation_reason: None,
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum PayoutMethod {
@@ -117,24 +84,10 @@ pub mod v10 {
         Card,
     }
 
-    #[cfg(test)]
-    impl Default for PayoutMethod {
-        fn default() -> Self {
-            PayoutMethod::Card
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum CancellationReason {
         TooManyNameCheckAttempts,
-    }
-
-    #[cfg(test)]
-    impl Default for CancellationReason {
-        fn default() -> Self {
-            Self::TooManyNameCheckAttempts
-        }
     }
 
     #[derive(Debug, Default, Deserialize, Serialize)]
@@ -246,7 +199,50 @@ pub async fn cancel<E: Environment>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{v10::*, *};
+
+    impl Default for PayoutLinkState {
+        fn default() -> Self {
+            Self::Active
+        }
+    }
+
+    impl Default for PayoutLink {
+        fn default() -> Self {
+            Self {
+                id: "some-payout-link-id".to_string(),
+                state: Default::default(),
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+                counterparty_name: "some-counterparty-name".to_string(),
+                save_counterparty: false,
+                request_id: "some-payout-request-id".to_string(),
+                expiry_date: None,
+                payout_method: Vec::new(),
+                account_id: "some-account-id".to_string(),
+                amount: 42.42,
+                currency: "EUR".to_string(),
+                url: None,
+                reference: "some-payout-link-reference".to_string(),
+                transfer_reason_code: None,
+                counterparty_id: None,
+                transaction_id: None,
+                cancellation_reason: None,
+            }
+        }
+    }
+
+    impl Default for PayoutMethod {
+        fn default() -> Self {
+            PayoutMethod::Card
+        }
+    }
+
+    impl Default for CancellationReason {
+        fn default() -> Self {
+            Self::TooManyNameCheckAttempts
+        }
+    }
 
     #[test]
     fn check_list_query_parameters() {

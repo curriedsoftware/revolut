@@ -80,20 +80,6 @@ pub mod v10 {
         pub state: Option<ExchangeState>,
     }
 
-    #[cfg(test)]
-    impl Default for Exchange {
-        fn default() -> Self {
-            Self {
-                id: None,
-                r#type: None,
-                reason_code: None,
-                created_at: None,
-                completed_at: None,
-                state: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, strum::Display, PartialEq, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum ExchangeState {
@@ -103,13 +89,6 @@ pub mod v10 {
         Declined,
         Failed,
         Reverted,
-    }
-
-    #[cfg(test)]
-    impl Default for ExchangeState {
-        fn default() -> Self {
-            Self::Completed
-        }
     }
 }
 
@@ -152,8 +131,27 @@ pub async fn exchange<E: Environment>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{v10::*, *};
     use serde_json::json;
+
+    impl Default for Exchange {
+        fn default() -> Self {
+            Self {
+                id: None,
+                r#type: None,
+                reason_code: None,
+                created_at: None,
+                completed_at: None,
+                state: None,
+            }
+        }
+    }
+
+    impl Default for ExchangeState {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
 
     #[test]
     fn check_documented_examples() -> Result<(), Box<dyn std::error::Error>> {

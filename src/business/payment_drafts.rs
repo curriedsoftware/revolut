@@ -38,33 +38,12 @@ pub mod v10 {
         pub payment_orders: Vec<PaymentOrder>,
     }
 
-    #[cfg(test)]
-    impl Default for PaymentDraft {
-        fn default() -> Self {
-            Self {
-                payment_orders: Vec::new(),
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct PaymentOrder {
         pub id: String,
         pub scheduled_for: Option<String>,
         pub title: Option<String>,
         pub payments_count: u64,
-    }
-
-    #[cfg(test)]
-    impl Default for PaymentOrder {
-        fn default() -> Self {
-            Self {
-                id: "some-payment-order-id".to_string(),
-                scheduled_for: None,
-                title: None,
-                payments_count: 1,
-            }
-        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -79,24 +58,6 @@ pub mod v10 {
         pub error_message: Option<String>,
         pub current_charge_options: CurrentChargeOptions,
         pub reference: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for Payment {
-        fn default() -> Self {
-            Self {
-                id: "some-payment-id".to_string(),
-                amount: Default::default(),
-                currency: None,
-                account_id: "some-account-id".to_string(),
-                receiver: "some-receiver".to_string(),
-                state: Default::default(),
-                reason: None,
-                error_message: None,
-                current_charge_options: Default::default(),
-                reference: None,
-            }
-        }
     }
 
     #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -127,15 +88,6 @@ pub mod v10 {
         pub id: String,
     }
 
-    #[cfg(test)]
-    impl Default for CreatePaymentDraft {
-        fn default() -> Self {
-            Self {
-                id: "some-payment-draft".to_string(),
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct PaymentDraftDetails {
         pub scheduled_for: Option<String>,
@@ -143,31 +95,10 @@ pub mod v10 {
         pub payments: Vec<Payment>,
     }
 
-    #[cfg(test)]
-    impl Default for PaymentDraftDetails {
-        fn default() -> Self {
-            Self {
-                scheduled_for: None,
-                title: None,
-                payments: Vec::new(),
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Amount {
         pub amount: Option<f64>,
         pub currency: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for Amount {
-        fn default() -> Self {
-            Self {
-                amount: None,
-                currency: None,
-            }
-        }
     }
 
     // SCREAMING_SNAKE_CASE
@@ -184,13 +115,6 @@ pub mod v10 {
         Deleted,
     }
 
-    #[cfg(test)]
-    impl Default for PaymentState {
-        fn default() -> Self {
-            Self::Completed
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct CurrentChargeOptions {
         pub from: Amount,
@@ -199,32 +123,10 @@ pub mod v10 {
         pub fee: Option<Fee>,
     }
 
-    #[cfg(test)]
-    impl Default for CurrentChargeOptions {
-        fn default() -> Self {
-            Self {
-                from: Default::default(),
-                to: Default::default(),
-                rate: None,
-                fee: None,
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Fee {
         pub amount: Option<f64>,
         pub currency: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for Fee {
-        fn default() -> Self {
-            Self {
-                amount: None,
-                currency: None,
-            }
-        }
     }
 }
 
@@ -279,4 +181,98 @@ pub async fn delete<E: Environment>(
                 .uri("1.0", &format!("/payment-drafts/{payment_draft_id}")),
         )
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::v10::*;
+
+    impl Default for PaymentDraft {
+        fn default() -> Self {
+            Self {
+                payment_orders: Vec::new(),
+            }
+        }
+    }
+
+    impl Default for PaymentOrder {
+        fn default() -> Self {
+            Self {
+                id: "some-payment-order-id".to_string(),
+                scheduled_for: None,
+                title: None,
+                payments_count: 1,
+            }
+        }
+    }
+
+    impl Default for Payment {
+        fn default() -> Self {
+            Self {
+                id: "some-payment-id".to_string(),
+                amount: Default::default(),
+                currency: None,
+                account_id: "some-account-id".to_string(),
+                receiver: "some-receiver".to_string(),
+                state: Default::default(),
+                reason: None,
+                error_message: None,
+                current_charge_options: Default::default(),
+                reference: None,
+            }
+        }
+    }
+
+    impl Default for CreatePaymentDraft {
+        fn default() -> Self {
+            Self {
+                id: "some-payment-draft".to_string(),
+            }
+        }
+    }
+
+    impl Default for PaymentDraftDetails {
+        fn default() -> Self {
+            Self {
+                scheduled_for: None,
+                title: None,
+                payments: Vec::new(),
+            }
+        }
+    }
+
+    impl Default for Amount {
+        fn default() -> Self {
+            Self {
+                amount: None,
+                currency: None,
+            }
+        }
+    }
+
+    impl Default for PaymentState {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
+    impl Default for CurrentChargeOptions {
+        fn default() -> Self {
+            Self {
+                from: Default::default(),
+                to: Default::default(),
+                rate: None,
+                fee: None,
+            }
+        }
+    }
+
+    impl Default for Fee {
+        fn default() -> Self {
+            Self {
+                amount: None,
+                currency: None,
+            }
+        }
+    }
 }

@@ -60,19 +60,6 @@ pub mod v10 {
         pub date_of_birth: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for Customer {
-        fn default() -> Self {
-            Self {
-                id: None,
-                full_name: None,
-                phone: None,
-                email: None,
-                date_of_birth: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum LineItemType {
@@ -80,27 +67,10 @@ pub mod v10 {
         Service,
     }
 
-    #[cfg(test)]
-    impl Default for LineItemType {
-        fn default() -> Self {
-            Self::Physical
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Quantity {
         pub value: f64,
         pub unit: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for Quantity {
-        fn default() -> Self {
-            Self {
-                value: 1.0,
-                unit: None,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -118,39 +88,10 @@ pub mod v10 {
         pub url: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for LineItem {
-        fn default() -> Self {
-            Self {
-                name: "some-line-item".to_string(),
-                r#type: Default::default(),
-                quantity: Default::default(),
-                unit_price_amount: 4242,
-                total_amount: 4242,
-                external_id: None,
-                discounts: None,
-                taxes: None,
-                image_urls: None,
-                description: None,
-                url: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Discount {
         pub name: String,
         pub amount: u64,
-    }
-
-    #[cfg(test)]
-    impl Default for Discount {
-        fn default() -> Self {
-            Self {
-                name: "some-discount".to_string(),
-                amount: 2121,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -159,30 +100,10 @@ pub mod v10 {
         pub amount: u64,
     }
 
-    #[cfg(test)]
-    impl Default for Tax {
-        fn default() -> Self {
-            Self {
-                name: "some-tax".to_string(),
-                amount: 2121,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Passenger {
         pub first_name: String,
         pub last_name: String,
-    }
-
-    #[cfg(test)]
-    impl Default for Passenger {
-        fn default() -> Self {
-            Self {
-                first_name: "some-passenger-first-name".to_string(),
-                last_name: "some-passenger-last-name".to_string(),
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -197,22 +118,6 @@ pub mod v10 {
         pub airline_code: String,
     }
 
-    #[cfg(test)]
-    impl Default for JourneyLeg {
-        fn default() -> Self {
-            Self {
-                sequence: "some-journey".to_string(),
-                departure_airport_code: "MAD".to_string(),
-                arrival_airport_code: "JFK".to_string(),
-                flight_number: None,
-                fare_base_code: None,
-                travel_date: "some-travel-date".to_string(),
-                airline_name: "some-airline-name".to_string(),
-                airline_code: "some-airline-code".to_string(),
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Transaction {
         pub id: String,
@@ -223,18 +128,6 @@ pub mod v10 {
         pub recipient_user_id: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for Transaction {
-        fn default() -> Self {
-            Self {
-                id: "some-transaction".to_string(),
-                status: Default::default(),
-                recipient_wallet_id: None,
-                recipient_user_id: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum TransactionStatus {
@@ -242,13 +135,6 @@ pub mod v10 {
         Failed,
         Cancelled,
         Completed,
-    }
-
-    #[cfg(test)]
-    impl Default for TransactionStatus {
-        fn default() -> Self {
-            Self::Completed
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -265,21 +151,6 @@ pub mod v10 {
         pub postcode: String,
     }
 
-    #[cfg(test)]
-    impl Default for Address {
-        fn default() -> Self {
-            Self {
-                street_line_1: "some-street-line".to_string(),
-                street_line_2: None,
-                region: None,
-                city: "some-city".to_string(),
-                country_code: "ES".to_string(),
-                country_subdivision_code: None,
-                postcode: "28830".to_string(),
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Subseller {
         pub id: String,
@@ -287,19 +158,6 @@ pub mod v10 {
         pub website: String,
         pub phone: String,
         pub address: Address,
-    }
-
-    #[cfg(test)]
-    impl Default for Subseller {
-        fn default() -> Self {
-            Self {
-                id: "some-subseller-id".to_string(),
-                name: "some-subseller-name".to_string(),
-                website: "some-subseller-website".to_string(),
-                phone: "some-subseller-phone".to_string(),
-                address: Default::default(),
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -314,20 +172,6 @@ pub mod v10 {
         pub postcode: String,
     }
 
-    #[cfg(test)]
-    impl Default for Location {
-        fn default() -> Self {
-            Self {
-                street_line_1: "some-street-line".to_string(),
-                street_line_2: None,
-                region: None,
-                city: "some-city".to_string(),
-                country_code: "ES".to_string(),
-                postcode: "28830".to_string(),
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Ticket {
         pub id: String,
@@ -335,17 +179,6 @@ pub mod v10 {
         pub transferable: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub refundability: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for Ticket {
-        fn default() -> Self {
-            Self {
-                id: "some-ticket-id".to_string(),
-                transferable: None,
-                refundability: None,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -367,37 +200,10 @@ pub mod v10 {
         pub tickets: Vec<Ticket>,
     }
 
-    #[cfg(test)]
-    impl Default for Event {
-        fn default() -> Self {
-            Self {
-                start_date: None,
-                end_date: None,
-                supplier: None,
-                supplier_payment_date: None,
-                name: None,
-                location: None,
-                category: "some-category".to_string(),
-                market: "some-market".to_string(),
-                tickets: Vec::new(),
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Guest {
         pub first_name: String,
         pub last_name: String,
-    }
-
-    #[cfg(test)]
-    impl Default for Guest {
-        fn default() -> Self {
-            Self {
-                first_name: "some-guest-first-name".to_string(),
-                last_name: "some-guest-last-name".to_string(),
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -410,17 +216,6 @@ pub mod v10 {
         pub phone: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for Contact {
-        fn default() -> Self {
-            Self {
-                name: None,
-                email: None,
-                phone: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Shipment {
         pub shipping_company_name: String,
@@ -431,18 +226,6 @@ pub mod v10 {
         pub tracking_url: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for Shipment {
-        fn default() -> Self {
-            Self {
-                shipping_company_name: "some-shipping-company-name".to_string(),
-                tracking_number: "some-tracking-number".to_string(),
-                estimated_delivery_date: None,
-                tracking_url: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Shipping {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -451,17 +234,6 @@ pub mod v10 {
         pub contact: Option<Contact>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub shipments: Option<Vec<Shipment>>,
-    }
-
-    #[cfg(test)]
-    impl Default for Shipping {
-        fn default() -> Self {
-            Self {
-                address: None,
-                contact: None,
-                shipments: None,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
@@ -523,48 +295,10 @@ pub mod v10 {
         },
     }
 
-    #[cfg(test)]
-    impl Default for IndustryData {
-        fn default() -> Self {
-            Self::Event {
-                booking_id: Default::default(),
-                events: Default::default(),
-            }
-        }
-    }
-
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct MerchantOrderData {
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub url: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub reference: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for MerchantOrderData {
-        fn default() -> Self {
-            Self {
-                url: None,
-                reference: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct UpcomingPaymentData {
         pub date: String,
         pub payment_method_id: String,
-    }
-
-    #[cfg(test)]
-    impl Default for UpcomingPaymentData {
-        fn default() -> Self {
-            Self {
-                date: "some-date".to_string(),
-                payment_method_id: "some-payment-method-id".to_string(),
-            }
-        }
     }
 
     #[derive(Debug, Default, Deserialize, Serialize)]
@@ -603,6 +337,14 @@ pub mod v10 {
         pub statement_descriptor_suffix: Option<String>,
     }
 
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct MerchantOrderData {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub url: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub reference: Option<String>,
+    }
+
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum SavedPaymentMethodType {
@@ -621,13 +363,6 @@ pub mod v10 {
     #[serde(rename_all = "snake_case")]
     pub enum SavedPaymentMethodEnvironment {
         Browser,
-    }
-
-    #[cfg(test)]
-    impl Default for SavedPaymentMethodEnvironment {
-        fn default() -> Self {
-            Self::Browser
-        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -650,13 +385,6 @@ pub mod v10 {
         CreditReimbursement,
     }
 
-    #[cfg(test)]
-    impl Default for OrderType {
-        fn default() -> Self {
-            Self::Payment
-        }
-    }
-
     // SCREAMING_SNAKE_CASE
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -667,13 +395,6 @@ pub mod v10 {
         Chargeback,
         ChargebackReversal,
         CreditReimbursement,
-    }
-
-    #[cfg(test)]
-    impl Default for OrderTypeListItem {
-        fn default() -> Self {
-            Self::Payment
-        }
     }
 
     // snake_case
@@ -689,13 +410,6 @@ pub mod v10 {
         Failed,
     }
 
-    #[cfg(test)]
-    impl Default for State {
-        fn default() -> Self {
-            Self::Completed
-        }
-    }
-
     // SCREAMING_SNAKE_CASE
     #[derive(Clone, Debug, Deserialize, strum::Display, strum::EnumString, Serialize)]
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -709,13 +423,6 @@ pub mod v10 {
         Failed,
     }
 
-    #[cfg(test)]
-    impl Default for OrderStateListItem {
-        fn default() -> Self {
-            Self::Completed
-        }
-    }
-
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum PaymentType {
@@ -726,29 +433,11 @@ pub mod v10 {
         RevolutPayAccount,
     }
 
-    #[cfg(test)]
-    impl Default for PaymentType {
-        fn default() -> Self {
-            Self::Card
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct ThreeDs {
         pub eci: Option<String>,
         pub state: Option<ThreeDsState>,
         pub version: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for ThreeDs {
-        fn default() -> Self {
-            Self {
-                eci: None,
-                state: None,
-                version: None,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
@@ -757,13 +446,6 @@ pub mod v10 {
         Verified,
         Failed,
         Challenge,
-    }
-
-    #[cfg(test)]
-    impl Default for ThreeDsState {
-        fn default() -> Self {
-            Self::Verified
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -775,19 +457,6 @@ pub mod v10 {
         pub cardholder: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for Checks {
-        fn default() -> Self {
-            Self {
-                three_ds: None,
-                cvv_verification: None,
-                address: None,
-                postcode: None,
-                cardholder: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     #[serde(rename_all = "snake_case", tag = "type")]
     pub enum PaymentMethod {
@@ -796,13 +465,6 @@ pub mod v10 {
         GooglePay(PaymentMethodGooglePay),
         RevolutPayCard(PaymentMethodRevolutPayCard),
         RevolutPayAccount(PaymentMethodRevolutPayAccount),
-    }
-
-    #[cfg(test)]
-    impl Default for PaymentMethod {
-        fn default() -> Self {
-            Self::Card(Default::default())
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -819,24 +481,6 @@ pub mod v10 {
         pub fingerprint: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for PaymentMethodApplePay {
-        fn default() -> Self {
-            Self {
-                id: None,
-                card_brand: None,
-                funding: None,
-                card_country_code: None,
-                card_bin: None,
-                card_last_four: None,
-                card_expiry: None,
-                cardholder_name: None,
-                checks: None,
-                fingerprint: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct PaymentMethodCard {
         pub id: Option<String>,
@@ -849,24 +493,6 @@ pub mod v10 {
         pub cardholder_name: Option<String>,
         pub checks: Option<Checks>,
         pub fingerprint: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for PaymentMethodCard {
-        fn default() -> Self {
-            Self {
-                id: None,
-                card_brand: None,
-                funding: None,
-                card_country_code: None,
-                card_bin: None,
-                card_last_four: None,
-                card_expiry: None,
-                cardholder_name: None,
-                checks: None,
-                fingerprint: None,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -883,24 +509,6 @@ pub mod v10 {
         pub fingerprint: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for PaymentMethodGooglePay {
-        fn default() -> Self {
-            Self {
-                id: None,
-                card_brand: None,
-                funding: None,
-                card_country_code: None,
-                card_bin: None,
-                card_last_four: None,
-                card_expiry: None,
-                cardholder_name: None,
-                checks: None,
-                fingerprint: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct PaymentMethodRevolutPayCard {
         pub id: Option<String>,
@@ -915,38 +523,10 @@ pub mod v10 {
         pub fingerprint: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for PaymentMethodRevolutPayCard {
-        fn default() -> Self {
-            Self {
-                id: None,
-                card_brand: None,
-                funding: None,
-                card_country_code: None,
-                card_bin: None,
-                card_last_four: None,
-                card_expiry: None,
-                cardholder_name: None,
-                checks: None,
-                fingerprint: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct PaymentMethodRevolutPayAccount {
         pub id: Option<String>,
         pub fingerprint: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for PaymentMethodRevolutPayAccount {
-        fn default() -> Self {
-            Self {
-                id: None,
-                fingerprint: None,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -955,32 +535,11 @@ pub mod v10 {
         pub acs_url: String,
     }
 
-    #[cfg(test)]
-    impl Default for AuthenticationChallenge {
-        fn default() -> Self {
-            Self {
-                r#type: "some-authentication-challenge-type".to_string(),
-                acs_url: "some-acs-url".to_string(),
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Fee {
         pub r#type: Option<String>,
         pub amount: Option<u64>,
         pub currency: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for Fee {
-        fn default() -> Self {
-            Self {
-                r#type: None,
-                amount: None,
-                currency: None,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -1001,30 +560,6 @@ pub mod v10 {
         pub billing_address: Option<Address>,
         pub risk_level: Option<String>,
         pub fees: Option<Vec<Fee>>,
-    }
-
-    #[cfg(test)]
-    impl Default for Payment {
-        fn default() -> Self {
-            Self {
-                id: "some-payment-id".to_string(),
-                state: Default::default(),
-                decline_reason: None,
-                bank_message: None,
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
-                token: None,
-                amount: 4242,
-                currency: None,
-                settled_amount: None,
-                settled_currency: None,
-                payment_method: None,
-                authentication_challenge: None,
-                billing_address: None,
-                risk_level: None,
-                fees: None,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
@@ -1050,13 +585,6 @@ pub mod v10 {
         SoftDeclined,
         Cancelled,
         Failed,
-    }
-
-    #[cfg(test)]
-    impl Default for PaymentState {
-        fn default() -> Self {
-            Self::Completed
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -1116,41 +644,6 @@ pub mod v10 {
         pub statement_descriptor_suffix: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for Order {
-        fn default() -> Self {
-            Self {
-                id: "some-order-id".to_string(),
-                token: None,
-                r#type: None,
-                state: None,
-                created_at: None,
-                updated_at: None,
-                description: None,
-                capture_mode: None,
-                cancel_authorised_after: None,
-                amount: None,
-                outstanding_amount: None,
-                refunded_amount: None,
-                currency: None,
-                settlement_currency: None,
-                customer: None,
-                payments: None,
-                location_id: None,
-                metadata: None,
-                industry_data: None,
-                merchant_order_data: None,
-                upcoming_payment_data: None,
-                checkout_url: None,
-                redirect_url: None,
-                shipping: None,
-                enforce_challenge: None,
-                line_items: None,
-                statement_descriptor_suffix: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct OrderListItem {
         pub id: String,
@@ -1208,55 +701,10 @@ pub mod v10 {
         pub statement_descriptor_suffix: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for OrderListItem {
-        fn default() -> Self {
-            Self {
-                id: "some-order-list-item".to_string(),
-                token: None,
-                r#type: None,
-                state: None,
-                created_at: None,
-                updated_at: None,
-                description: None,
-                capture_mode: None,
-                cancel_authorised_after: None,
-                amount: None,
-                outstanding_amount: None,
-                refunded_amount: None,
-                currency: None,
-                settlement_currency: None,
-                customer: None,
-                payments: None,
-                location_id: None,
-                metadata: None,
-                industry_data: None,
-                merchant_order_data: None,
-                upcoming_payment_data: None,
-                checkout_url: None,
-                redirect_url: None,
-                shipping: None,
-                enforce_challenge: None,
-                line_items: None,
-                statement_descriptor_suffix: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct OrderAuthenticationChallengeThreeDs {
         pub r#type: String,
         pub acs_url: String,
-    }
-
-    #[cfg(test)]
-    impl Default for OrderAuthenticationChallengeThreeDs {
-        fn default() -> Self {
-            Self {
-                r#type: "some-order-authentication-challenge-three-ds".to_string(),
-                acs_url: "some-acs-url".to_string(),
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -1266,29 +714,11 @@ pub mod v10 {
         pub fingerprint_data: String,
     }
 
-    #[cfg(test)]
-    impl Default for OrderAuthenticationChallengeThreeDsFingerprint {
-        fn default() -> Self {
-            Self {
-                r#type: "some-order-authentication-challenge-three-ds-fingerprint".to_string(),
-                fingerprint_url: "some-fingerprint-url".to_string(),
-                fingerprint_data: "some-fingerprint-data".to_string(),
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum OrderAuthenticationChallenge {
         ThreeDs(OrderAuthenticationChallengeThreeDs),
         ThreeDsFingerprint(OrderAuthenticationChallengeThreeDsFingerprint),
-    }
-
-    #[cfg(test)]
-    impl Default for OrderAuthenticationChallenge {
-        fn default() -> Self {
-            Self::ThreeDs(Default::default())
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -1298,19 +728,6 @@ pub mod v10 {
         pub payment_method: Option<OrderPaymentMethod>,
         pub state: Option<OrderPaymentState>,
         pub authentication_challenge: Option<OrderAuthenticationChallenge>,
-    }
-
-    #[cfg(test)]
-    impl Default for OrderPayment {
-        fn default() -> Self {
-            Self {
-                id: "some-order-payment-id".to_string(),
-                order_id: "some-order-payment-order-id".to_string(),
-                payment_method: None,
-                state: None,
-                authentication_challenge: None,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
@@ -1338,25 +755,11 @@ pub mod v10 {
         Failed,
     }
 
-    #[cfg(test)]
-    impl Default for OrderPaymentState {
-        fn default() -> Self {
-            Self::Completed
-        }
-    }
-
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case", tag = "type")]
     pub enum OrderPaymentMethod {
         RevolutPay(OrderPaymentMethodRevolutPay),
         Card(OrderPaymentMethodCard),
-    }
-
-    #[cfg(test)]
-    impl Default for OrderPaymentMethod {
-        fn default() -> Self {
-            Self::Card(Default::default())
-        }
     }
 
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
@@ -1366,13 +769,6 @@ pub mod v10 {
         Card(OrderPaymentMethodRevolutPayCard),
     }
 
-    #[cfg(test)]
-    impl Default for OrderPaymentMethodRevolutPay {
-        fn default() -> Self {
-            Self::Card(Default::default())
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct OrderPaymentMethodCard {
         pub id: Option<String>,
@@ -1380,27 +776,9 @@ pub mod v10 {
         pub last_four: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for OrderPaymentMethodCard {
-        fn default() -> Self {
-            Self {
-                id: None,
-                brand: None,
-                last_four: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct OrderPaymentMethodRevolutPayAccount {
         pub id: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for OrderPaymentMethodRevolutPayAccount {
-        fn default() -> Self {
-            Self { id: None }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -1410,31 +788,10 @@ pub mod v10 {
         pub last_four: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for OrderPaymentMethodRevolutPayCard {
-        fn default() -> Self {
-            Self {
-                id: None,
-                brand: None,
-                last_four: None,
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct RefundRequest {
         pub amount: u64,
         pub currency: String,
-    }
-
-    #[cfg(test)]
-    impl Default for RefundRequest {
-        fn default() -> Self {
-            Self {
-                amount: 4242,
-                currency: "EUR".to_string(),
-            }
-        }
     }
 }
 
@@ -1633,9 +990,571 @@ pub async fn payment_list<E: Environment>(
 
 #[cfg(test)]
 mod tests {
+    use super::{v10::*, *};
     use crate::merchant::client::{MerchantAuthenticationBuilder, merchant_client};
 
-    use super::*;
+    impl Default for Customer {
+        fn default() -> Self {
+            Self {
+                id: None,
+                full_name: None,
+                phone: None,
+                email: None,
+                date_of_birth: None,
+            }
+        }
+    }
+
+    impl Default for LineItemType {
+        fn default() -> Self {
+            Self::Physical
+        }
+    }
+
+    impl Default for Quantity {
+        fn default() -> Self {
+            Self {
+                value: 1.0,
+                unit: None,
+            }
+        }
+    }
+
+    impl Default for LineItem {
+        fn default() -> Self {
+            Self {
+                name: "some-line-item".to_string(),
+                r#type: Default::default(),
+                quantity: Default::default(),
+                unit_price_amount: 4242,
+                total_amount: 4242,
+                external_id: None,
+                discounts: None,
+                taxes: None,
+                image_urls: None,
+                description: None,
+                url: None,
+            }
+        }
+    }
+
+    impl Default for Discount {
+        fn default() -> Self {
+            Self {
+                name: "some-discount".to_string(),
+                amount: 2121,
+            }
+        }
+    }
+
+    impl Default for Tax {
+        fn default() -> Self {
+            Self {
+                name: "some-tax".to_string(),
+                amount: 2121,
+            }
+        }
+    }
+
+    impl Default for Passenger {
+        fn default() -> Self {
+            Self {
+                first_name: "some-passenger-first-name".to_string(),
+                last_name: "some-passenger-last-name".to_string(),
+            }
+        }
+    }
+
+    impl Default for JourneyLeg {
+        fn default() -> Self {
+            Self {
+                sequence: "some-journey".to_string(),
+                departure_airport_code: "MAD".to_string(),
+                arrival_airport_code: "JFK".to_string(),
+                flight_number: None,
+                fare_base_code: None,
+                travel_date: "some-travel-date".to_string(),
+                airline_name: "some-airline-name".to_string(),
+                airline_code: "some-airline-code".to_string(),
+            }
+        }
+    }
+
+    impl Default for Transaction {
+        fn default() -> Self {
+            Self {
+                id: "some-transaction".to_string(),
+                status: Default::default(),
+                recipient_wallet_id: None,
+                recipient_user_id: None,
+            }
+        }
+    }
+
+    impl Default for TransactionStatus {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
+    impl Default for Address {
+        fn default() -> Self {
+            Self {
+                street_line_1: "some-street-line".to_string(),
+                street_line_2: None,
+                region: None,
+                city: "some-city".to_string(),
+                country_code: "ES".to_string(),
+                country_subdivision_code: None,
+                postcode: "28830".to_string(),
+            }
+        }
+    }
+
+    impl Default for Subseller {
+        fn default() -> Self {
+            Self {
+                id: "some-subseller-id".to_string(),
+                name: "some-subseller-name".to_string(),
+                website: "some-subseller-website".to_string(),
+                phone: "some-subseller-phone".to_string(),
+                address: Default::default(),
+            }
+        }
+    }
+
+    impl Default for Location {
+        fn default() -> Self {
+            Self {
+                street_line_1: "some-street-line".to_string(),
+                street_line_2: None,
+                region: None,
+                city: "some-city".to_string(),
+                country_code: "ES".to_string(),
+                postcode: "28830".to_string(),
+            }
+        }
+    }
+
+    impl Default for Ticket {
+        fn default() -> Self {
+            Self {
+                id: "some-ticket-id".to_string(),
+                transferable: None,
+                refundability: None,
+            }
+        }
+    }
+
+    impl Default for Event {
+        fn default() -> Self {
+            Self {
+                start_date: None,
+                end_date: None,
+                supplier: None,
+                supplier_payment_date: None,
+                name: None,
+                location: None,
+                category: "some-category".to_string(),
+                market: "some-market".to_string(),
+                tickets: Vec::new(),
+            }
+        }
+    }
+
+    impl Default for Guest {
+        fn default() -> Self {
+            Self {
+                first_name: "some-guest-first-name".to_string(),
+                last_name: "some-guest-last-name".to_string(),
+            }
+        }
+    }
+
+    impl Default for Contact {
+        fn default() -> Self {
+            Self {
+                name: None,
+                email: None,
+                phone: None,
+            }
+        }
+    }
+
+    impl Default for Shipment {
+        fn default() -> Self {
+            Self {
+                shipping_company_name: "some-shipping-company-name".to_string(),
+                tracking_number: "some-tracking-number".to_string(),
+                estimated_delivery_date: None,
+                tracking_url: None,
+            }
+        }
+    }
+
+    impl Default for Shipping {
+        fn default() -> Self {
+            Self {
+                address: None,
+                contact: None,
+                shipments: None,
+            }
+        }
+    }
+
+    impl Default for IndustryData {
+        fn default() -> Self {
+            Self::Event {
+                booking_id: Default::default(),
+                events: Default::default(),
+            }
+        }
+    }
+
+    impl Default for UpcomingPaymentData {
+        fn default() -> Self {
+            Self {
+                date: "some-date".to_string(),
+                payment_method_id: "some-payment-method-id".to_string(),
+            }
+        }
+    }
+
+    impl Default for SavedPaymentMethodEnvironment {
+        fn default() -> Self {
+            Self::Browser
+        }
+    }
+
+    impl Default for OrderType {
+        fn default() -> Self {
+            Self::Payment
+        }
+    }
+
+    impl Default for OrderTypeListItem {
+        fn default() -> Self {
+            Self::Payment
+        }
+    }
+
+    impl Default for State {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
+    impl Default for OrderStateListItem {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
+    impl Default for PaymentType {
+        fn default() -> Self {
+            Self::Card
+        }
+    }
+
+    impl Default for ThreeDs {
+        fn default() -> Self {
+            Self {
+                eci: None,
+                state: None,
+                version: None,
+            }
+        }
+    }
+
+    impl Default for ThreeDsState {
+        fn default() -> Self {
+            Self::Verified
+        }
+    }
+
+    impl Default for Checks {
+        fn default() -> Self {
+            Self {
+                three_ds: None,
+                cvv_verification: None,
+                address: None,
+                postcode: None,
+                cardholder: None,
+            }
+        }
+    }
+
+    impl Default for PaymentMethod {
+        fn default() -> Self {
+            Self::Card(Default::default())
+        }
+    }
+
+    impl Default for PaymentMethodApplePay {
+        fn default() -> Self {
+            Self {
+                id: None,
+                card_brand: None,
+                funding: None,
+                card_country_code: None,
+                card_bin: None,
+                card_last_four: None,
+                card_expiry: None,
+                cardholder_name: None,
+                checks: None,
+                fingerprint: None,
+            }
+        }
+    }
+
+    impl Default for PaymentMethodCard {
+        fn default() -> Self {
+            Self {
+                id: None,
+                card_brand: None,
+                funding: None,
+                card_country_code: None,
+                card_bin: None,
+                card_last_four: None,
+                card_expiry: None,
+                cardholder_name: None,
+                checks: None,
+                fingerprint: None,
+            }
+        }
+    }
+
+    impl Default for PaymentMethodRevolutPayCard {
+        fn default() -> Self {
+            Self {
+                id: None,
+                card_brand: None,
+                funding: None,
+                card_country_code: None,
+                card_bin: None,
+                card_last_four: None,
+                card_expiry: None,
+                cardholder_name: None,
+                checks: None,
+                fingerprint: None,
+            }
+        }
+    }
+
+    impl Default for PaymentMethodRevolutPayAccount {
+        fn default() -> Self {
+            Self {
+                id: None,
+                fingerprint: None,
+            }
+        }
+    }
+
+    impl Default for AuthenticationChallenge {
+        fn default() -> Self {
+            Self {
+                r#type: "some-authentication-challenge-type".to_string(),
+                acs_url: "some-acs-url".to_string(),
+            }
+        }
+    }
+
+    impl Default for Fee {
+        fn default() -> Self {
+            Self {
+                r#type: None,
+                amount: None,
+                currency: None,
+            }
+        }
+    }
+
+    impl Default for Payment {
+        fn default() -> Self {
+            Self {
+                id: "some-payment-id".to_string(),
+                state: Default::default(),
+                decline_reason: None,
+                bank_message: None,
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+                token: None,
+                amount: 4242,
+                currency: None,
+                settled_amount: None,
+                settled_currency: None,
+                payment_method: None,
+                authentication_challenge: None,
+                billing_address: None,
+                risk_level: None,
+                fees: None,
+            }
+        }
+    }
+
+    impl Default for PaymentState {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
+    impl Default for Order {
+        fn default() -> Self {
+            Self {
+                id: "some-order-id".to_string(),
+                token: None,
+                r#type: None,
+                state: None,
+                created_at: None,
+                updated_at: None,
+                description: None,
+                capture_mode: None,
+                cancel_authorised_after: None,
+                amount: None,
+                outstanding_amount: None,
+                refunded_amount: None,
+                currency: None,
+                settlement_currency: None,
+                customer: None,
+                payments: None,
+                location_id: None,
+                metadata: None,
+                industry_data: None,
+                merchant_order_data: None,
+                upcoming_payment_data: None,
+                checkout_url: None,
+                redirect_url: None,
+                shipping: None,
+                enforce_challenge: None,
+                line_items: None,
+                statement_descriptor_suffix: None,
+            }
+        }
+    }
+
+    impl Default for OrderListItem {
+        fn default() -> Self {
+            Self {
+                id: "some-order-list-item".to_string(),
+                token: None,
+                r#type: None,
+                state: None,
+                created_at: None,
+                updated_at: None,
+                description: None,
+                capture_mode: None,
+                cancel_authorised_after: None,
+                amount: None,
+                outstanding_amount: None,
+                refunded_amount: None,
+                currency: None,
+                settlement_currency: None,
+                customer: None,
+                payments: None,
+                location_id: None,
+                metadata: None,
+                industry_data: None,
+                merchant_order_data: None,
+                upcoming_payment_data: None,
+                checkout_url: None,
+                redirect_url: None,
+                shipping: None,
+                enforce_challenge: None,
+                line_items: None,
+                statement_descriptor_suffix: None,
+            }
+        }
+    }
+
+    impl Default for OrderAuthenticationChallengeThreeDs {
+        fn default() -> Self {
+            Self {
+                r#type: "some-order-authentication-challenge-three-ds".to_string(),
+                acs_url: "some-acs-url".to_string(),
+            }
+        }
+    }
+
+    impl Default for OrderAuthenticationChallengeThreeDsFingerprint {
+        fn default() -> Self {
+            Self {
+                r#type: "some-order-authentication-challenge-three-ds-fingerprint".to_string(),
+                fingerprint_url: "some-fingerprint-url".to_string(),
+                fingerprint_data: "some-fingerprint-data".to_string(),
+            }
+        }
+    }
+
+    impl Default for OrderAuthenticationChallenge {
+        fn default() -> Self {
+            Self::ThreeDs(Default::default())
+        }
+    }
+
+    impl Default for OrderPayment {
+        fn default() -> Self {
+            Self {
+                id: "some-order-payment-id".to_string(),
+                order_id: "some-order-payment-order-id".to_string(),
+                payment_method: None,
+                state: None,
+                authentication_challenge: None,
+            }
+        }
+    }
+
+    impl Default for OrderPaymentState {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
+    impl Default for OrderPaymentMethod {
+        fn default() -> Self {
+            Self::Card(Default::default())
+        }
+    }
+
+    impl Default for OrderPaymentMethodRevolutPay {
+        fn default() -> Self {
+            Self::Card(Default::default())
+        }
+    }
+
+    impl Default for OrderPaymentMethodCard {
+        fn default() -> Self {
+            Self {
+                id: None,
+                brand: None,
+                last_four: None,
+            }
+        }
+    }
+
+    impl Default for OrderPaymentMethodRevolutPayAccount {
+        fn default() -> Self {
+            Self { id: None }
+        }
+    }
+
+    impl Default for OrderPaymentMethodRevolutPayCard {
+        fn default() -> Self {
+            Self {
+                id: None,
+                brand: None,
+                last_four: None,
+            }
+        }
+    }
+
+    impl Default for RefundRequest {
+        fn default() -> Self {
+            Self {
+                amount: 4242,
+                currency: "EUR".to_string(),
+            }
+        }
+    }
 
     #[test]
     fn check_list_orders_casing() {

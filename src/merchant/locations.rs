@@ -49,7 +49,19 @@ pub mod unversioned {
         pub domain: String,
     }
 
-    #[cfg(test)]
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct Location {
+        pub id: String,
+        pub name: String,
+        pub r#type: String,
+        pub details: LocationDetails,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::unversioned::*;
+
     impl Default for LocationDetails {
         fn default() -> Self {
             Self {
@@ -58,15 +70,6 @@ pub mod unversioned {
         }
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct Location {
-        pub id: String,
-        pub name: String,
-        pub r#type: String,
-        pub details: LocationDetails,
-    }
-
-    #[cfg(test)]
     impl Default for Location {
         fn default() -> Self {
             Self {

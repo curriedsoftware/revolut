@@ -45,22 +45,6 @@ pub mod v10 {
         pub updated_at: String,
     }
 
-    #[cfg(test)]
-    impl Default for Account {
-        fn default() -> Self {
-            Self {
-                id: "some-account-id".to_string(),
-                name: None,
-                balance: 42.42,
-                currency: "EUR".to_string(),
-                state: Default::default(),
-                public: true,
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum AccountState {
@@ -68,29 +52,11 @@ pub mod v10 {
         Inactive,
     }
 
-    #[cfg(test)]
-    impl Default for AccountState {
-        fn default() -> Self {
-            Self::Active
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct AccountEstimatedTime {
-        unit: String,
-        min: Option<u16>,
-        max: Option<u16>,
-    }
-
-    #[cfg(test)]
-    impl Default for AccountEstimatedTime {
-        fn default() -> Self {
-            Self {
-                unit: "some-account-estimated-time-unit".to_string(),
-                min: None,
-                max: None,
-            }
-        }
+        pub unit: String,
+        pub min: Option<u16>,
+        pub max: Option<u16>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -101,20 +67,6 @@ pub mod v10 {
         pub city: Option<String>,
         pub country: String,
         pub postcode: String,
-    }
-
-    #[cfg(test)]
-    impl Default for AccountAddress {
-        fn default() -> Self {
-            Self {
-                street_line1: None,
-                street_line2: None,
-                region: None,
-                city: None,
-                country: "ES".to_string(),
-                postcode: "28810".to_string(),
-            }
-        }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -131,26 +83,6 @@ pub mod v10 {
         pub unique_reference: Option<String>,
         pub schemes: Vec<String>,
         pub estimated_time: AccountEstimatedTime,
-    }
-
-    #[cfg(test)]
-    impl Default for BankDetails {
-        fn default() -> Self {
-            Self {
-                iban: None,
-                bic: None,
-                account_no: None,
-                sort_code: None,
-                routing_number: None,
-                beneficiary: "some-beneficiary".to_string(),
-                beneficiary_address: Default::default(),
-                bank_country: None,
-                pooled: None,
-                unique_reference: None,
-                schemes: Vec::new(),
-                estimated_time: Default::default(),
-            }
-        }
     }
 }
 
@@ -202,7 +134,70 @@ pub async fn bank_details<E: Environment>(
 mod tests {
     use crate::business::client::{BusinessAuthenticationBuilder, business_client};
 
-    use super::*;
+    use super::{v10::*, *};
+
+    impl Default for Account {
+        fn default() -> Self {
+            Self {
+                id: "some-account-id".to_string(),
+                name: None,
+                balance: 42.42,
+                currency: "EUR".to_string(),
+                state: Default::default(),
+                public: true,
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+            }
+        }
+    }
+
+    impl Default for AccountState {
+        fn default() -> Self {
+            Self::Active
+        }
+    }
+
+    impl Default for AccountEstimatedTime {
+        fn default() -> Self {
+            Self {
+                unit: "some-account-estimated-time-unit".to_string(),
+                min: None,
+                max: None,
+            }
+        }
+    }
+
+    impl Default for AccountAddress {
+        fn default() -> Self {
+            Self {
+                street_line1: None,
+                street_line2: None,
+                region: None,
+                city: None,
+                country: "ES".to_string(),
+                postcode: "28810".to_string(),
+            }
+        }
+    }
+
+    impl Default for BankDetails {
+        fn default() -> Self {
+            Self {
+                iban: None,
+                bic: None,
+                account_no: None,
+                sort_code: None,
+                routing_number: None,
+                beneficiary: "some-beneficiary".to_string(),
+                beneficiary_address: Default::default(),
+                bank_country: None,
+                pooled: None,
+                unique_reference: None,
+                schemes: Vec::new(),
+                estimated_time: Default::default(),
+            }
+        }
+    }
 
     #[tokio::test]
     async fn check_list_accounts_type() {

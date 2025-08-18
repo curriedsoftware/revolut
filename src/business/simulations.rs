@@ -53,18 +53,6 @@ pub mod v10 {
         pub completed_at: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for TransferStateUpdate {
-        fn default() -> Self {
-            Self {
-                id: "some-transfer-state-update-id".to_string(),
-                state: Default::default(),
-                created_at: "some-created-at".to_string(),
-                completed_at: None,
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum TransferState {
@@ -72,13 +60,6 @@ pub mod v10 {
         Reverted,
         Declined,
         Failed,
-    }
-
-    #[cfg(test)]
-    impl Default for TransferState {
-        fn default() -> Self {
-            Self::Completed
-        }
     }
 
     #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -98,18 +79,6 @@ pub mod v10 {
         pub completed_at: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for TopUp {
-        fn default() -> Self {
-            Self {
-                id: "some-top-up-id".to_string(),
-                state: Default::default(),
-                created_at: "some-created-at".to_string(),
-                completed_at: None,
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum TopUpState {
@@ -117,13 +86,6 @@ pub mod v10 {
         Completed,
         Reverted,
         Failed,
-    }
-
-    #[cfg(test)]
-    impl Default for TopUpState {
-        fn default() -> Self {
-            Self::Completed
-        }
     }
 }
 
@@ -154,4 +116,43 @@ pub async fn account_top_up(
             &client.environment.uri("1.0", "/sandbox/topup"),
         )
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::v10::*;
+
+    impl Default for TransferStateUpdate {
+        fn default() -> Self {
+            Self {
+                id: "some-transfer-state-update-id".to_string(),
+                state: Default::default(),
+                created_at: "some-created-at".to_string(),
+                completed_at: None,
+            }
+        }
+    }
+
+    impl Default for TransferState {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
+    impl Default for TopUp {
+        fn default() -> Self {
+            Self {
+                id: "some-top-up-id".to_string(),
+                state: Default::default(),
+                created_at: "some-created-at".to_string(),
+                completed_at: None,
+            }
+        }
+    }
+
+    impl Default for TopUpState {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
 }

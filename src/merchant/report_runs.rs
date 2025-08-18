@@ -114,7 +114,20 @@ pub mod unversioned {
         pub file_url: Option<String>,
     }
 
-    #[cfg(test)]
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
+    #[serde(tag = "type", rename_all = "snake_case")]
+    pub enum ReportRunStatus {
+        Processing,
+        Completed,
+        Failed,
+        Expired,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::unversioned::*;
+
     impl Default for ReportRun {
         fn default() -> Self {
             Self {
@@ -125,16 +138,6 @@ pub mod unversioned {
         }
     }
 
-    #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(tag = "type", rename_all = "snake_case")]
-    pub enum ReportRunStatus {
-        Processing,
-        Completed,
-        Failed,
-        Expired,
-    }
-
-    #[cfg(test)]
     impl Default for ReportRunStatus {
         fn default() -> Self {
             Self::Completed

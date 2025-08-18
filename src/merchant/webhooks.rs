@@ -57,29 +57,11 @@ pub mod v10 {
         DisputeLost,
     }
 
-    #[cfg(test)]
-    impl Default for WebhookEvent {
-        fn default() -> Self {
-            Self::OrderCompleted
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Webhook {
         pub id: String,
         pub url: Option<String>,
         pub events: Option<Vec<WebhookEvent>>,
-    }
-
-    #[cfg(test)]
-    impl Default for Webhook {
-        fn default() -> Self {
-            Self {
-                id: "some-webhook-id".to_string(),
-                url: None,
-                events: None,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -88,18 +70,6 @@ pub mod v10 {
         pub url: Option<String>,
         pub events: Option<Vec<WebhookEvent>>,
         pub signing_secret: String,
-    }
-
-    #[cfg(test)]
-    impl Default for WebhookWithSigningSecret {
-        fn default() -> Self {
-            Self {
-                id: "some-webhook-id".to_string(),
-                url: None,
-                events: None,
-                signing_secret: "some-signing-secret".to_string(),
-            }
-        }
     }
 
     #[derive(Debug, Default, Deserialize, Serialize)]
@@ -194,4 +164,36 @@ pub async fn rotate_signing_secret<E: Environment>(
             ),
         )
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::v10::*;
+
+    impl Default for WebhookEvent {
+        fn default() -> Self {
+            Self::OrderCompleted
+        }
+    }
+
+    impl Default for Webhook {
+        fn default() -> Self {
+            Self {
+                id: "some-webhook-id".to_string(),
+                url: None,
+                events: None,
+            }
+        }
+    }
+
+    impl Default for WebhookWithSigningSecret {
+        fn default() -> Self {
+            Self {
+                id: "some-webhook-id".to_string(),
+                url: None,
+                events: None,
+                signing_secret: "some-signing-secret".to_string(),
+            }
+        }
+    }
 }
