@@ -50,20 +50,6 @@ pub mod unversioned {
         pub currency: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for Payout {
-        fn default() -> Self {
-            Self {
-                id: "some-payout-id".to_string(),
-                state: Default::default(),
-                created_at: "some-date".to_string(),
-                destination_type: Default::default(),
-                amount: None,
-                currency: None,
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     #[strum(serialize_all = "snake_case")]
@@ -73,25 +59,11 @@ pub mod unversioned {
         Failed,
     }
 
-    #[cfg(test)]
-    impl Default for PayoutState {
-        fn default() -> Self {
-            Self::Completed
-        }
-    }
-
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum PayoutDestinationType {
         CurrentPocket,
         ExternalBeneficiary,
-    }
-
-    #[cfg(test)]
-    impl Default for PayoutDestinationType {
-        fn default() -> Self {
-            Self::ExternalBeneficiary
-        }
     }
 }
 
@@ -158,4 +130,34 @@ pub async fn retrieve<E: Environment>(
                 .unversioned_uri(&format!("/payouts/{payout_id}")),
         )
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::unversioned::*;
+
+    impl Default for Payout {
+        fn default() -> Self {
+            Self {
+                id: "some-payout-id".to_string(),
+                state: Default::default(),
+                created_at: "some-date".to_string(),
+                destination_type: Default::default(),
+                amount: None,
+                currency: None,
+            }
+        }
+    }
+
+    impl Default for PayoutState {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
+    impl Default for PayoutDestinationType {
+        fn default() -> Self {
+            Self::ExternalBeneficiary
+        }
+    }
 }

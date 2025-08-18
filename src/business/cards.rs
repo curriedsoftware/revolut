@@ -45,112 +45,47 @@ pub mod v10 {
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct CardProduct {
-        code: String,
-    }
-
-    #[cfg(test)]
-    impl Default for CardProduct {
-        fn default() -> Self {
-            Self {
-                code: "some-card-product-code".to_string(),
-            }
-        }
+        pub code: String,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct CardSpendProgram {
-        label: String,
-    }
-
-    #[cfg(test)]
-    impl Default for CardSpendProgram {
-        fn default() -> Self {
-            Self {
-                label: "some-card-spend-program-label".to_string(),
-            }
-        }
+        pub label: String,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Amount {
-        amount: f64,
-        currency: String,
-    }
-
-    #[cfg(test)]
-    impl Default for Amount {
-        fn default() -> Self {
-            Self {
-                amount: 42.42,
-                currency: "EUR".to_string(),
-            }
-        }
+        pub amount: f64,
+        pub currency: String,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct CardSpendingLimits {
-        single: Option<Amount>,
-        day: Option<Amount>,
-        week: Option<Amount>,
-        month: Option<Amount>,
-        quarter: Option<Amount>,
-        year: Option<Amount>,
-        all_time: Option<Amount>,
-    }
-
-    #[cfg(test)]
-    impl Default for CardSpendingLimits {
-        fn default() -> Self {
-            Self {
-                single: None,
-                day: None,
-                week: None,
-                month: None,
-                quarter: None,
-                year: None,
-                all_time: None,
-            }
-        }
+        pub single: Option<Amount>,
+        pub day: Option<Amount>,
+        pub week: Option<Amount>,
+        pub month: Option<Amount>,
+        pub quarter: Option<Amount>,
+        pub year: Option<Amount>,
+        pub all_time: Option<Amount>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Card {
-        id: String,
-        last_digits: String,
-        expiry: String,
-        state: CardState,
-        label: Option<String>,
-        r#virtual: bool,
-        product: Option<CardProduct>,
-        accounts: Vec<String>,
-        categories: Option<Vec<String>>,
-        spend_program: Option<CardSpendProgram>,
-        spending_limits: Option<CardSpendingLimits>,
-        holder_id: Option<String>,
-        created_at: String,
-        updated_at: String,
-    }
-
-    #[cfg(test)]
-    impl Default for Card {
-        fn default() -> Self {
-            Self {
-                id: "some-card-id".to_string(),
-                last_digits: "some-last-digits".to_string(),
-                expiry: "some-expiry".to_string(),
-                state: Default::default(),
-                label: None,
-                r#virtual: true,
-                product: None,
-                accounts: Vec::new(),
-                categories: None,
-                spend_program: None,
-                spending_limits: None,
-                holder_id: None,
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
-            }
-        }
+        pub id: String,
+        pub last_digits: String,
+        pub expiry: String,
+        pub state: CardState,
+        pub label: Option<String>,
+        pub r#virtual: bool,
+        pub product: Option<CardProduct>,
+        pub accounts: Vec<String>,
+        pub categories: Option<Vec<String>>,
+        pub spend_program: Option<CardSpendProgram>,
+        pub spending_limits: Option<CardSpendingLimits>,
+        pub holder_id: Option<String>,
+        pub created_at: String,
+        pub updated_at: String,
     }
 
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
@@ -163,29 +98,11 @@ pub mod v10 {
         Locked,
     }
 
-    #[cfg(test)]
-    impl Default for CardState {
-        fn default() -> Self {
-            Self::Active
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct CardSensitiveDetails {
-        pan: String,
-        cvv: String,
-        expiry: String,
-    }
-
-    #[cfg(test)]
-    impl Default for CardSensitiveDetails {
-        fn default() -> Self {
-            Self {
-                pan: "some-pan".to_string(),
-                cvv: "some-cvv".to_string(),
-                expiry: "some-expiry".to_string(),
-            }
-        }
+        pub pan: String,
+        pub cvv: String,
+        pub expiry: String,
     }
 
     #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -337,4 +254,85 @@ pub async fn sensitive_details(
                 .uri("1.0", &format!("/cards/{card_id}/sensitive-details")),
         )
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::v10::*;
+
+    impl Default for CardProduct {
+        fn default() -> Self {
+            Self {
+                code: "some-card-product-code".to_string(),
+            }
+        }
+    }
+
+    impl Default for CardSpendProgram {
+        fn default() -> Self {
+            Self {
+                label: "some-card-spend-program-label".to_string(),
+            }
+        }
+    }
+
+    impl Default for Amount {
+        fn default() -> Self {
+            Self {
+                amount: 42.42,
+                currency: "EUR".to_string(),
+            }
+        }
+    }
+
+    impl Default for CardSpendingLimits {
+        fn default() -> Self {
+            Self {
+                single: None,
+                day: None,
+                week: None,
+                month: None,
+                quarter: None,
+                year: None,
+                all_time: None,
+            }
+        }
+    }
+
+    impl Default for Card {
+        fn default() -> Self {
+            Self {
+                id: "some-card-id".to_string(),
+                last_digits: "some-last-digits".to_string(),
+                expiry: "some-expiry".to_string(),
+                state: Default::default(),
+                label: None,
+                r#virtual: true,
+                product: None,
+                accounts: Vec::new(),
+                categories: None,
+                spend_program: None,
+                spending_limits: None,
+                holder_id: None,
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+            }
+        }
+    }
+
+    impl Default for CardState {
+        fn default() -> Self {
+            Self::Active
+        }
+    }
+
+    impl Default for CardSensitiveDetails {
+        fn default() -> Self {
+            Self {
+                pan: "some-pan".to_string(),
+                cvv: "some-cvv".to_string(),
+                expiry: "some-expiry".to_string(),
+            }
+        }
+    }
 }

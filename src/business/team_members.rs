@@ -55,22 +55,6 @@ pub mod v10 {
         pub updated_at: String,
     }
 
-    #[cfg(test)]
-    impl Default for TeamMember {
-        fn default() -> Self {
-            Self {
-                id: "some-team-member-id".to_string(),
-                email: "some-team-member-email@example.com".to_string(),
-                first_name: None,
-                last_name: None,
-                state: Default::default(),
-                role_id: "some-role-id".to_string(),
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum TeamMemberState {
@@ -80,13 +64,6 @@ pub mod v10 {
         Active,
         Locked,
         Disabled,
-    }
-
-    #[cfg(test)]
-    impl Default for TeamMemberState {
-        fn default() -> Self {
-            Self::Active
-        }
     }
 
     #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -104,37 +81,12 @@ pub mod v10 {
         pub updated_at: String,
     }
 
-    #[cfg(test)]
-    impl Default for TeamMemberInvite {
-        fn default() -> Self {
-            Self {
-                email: "some-member@example.com".to_string(),
-                id: "some-member-id".to_string(),
-                role_id: "some-role-id".to_string(),
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
-            }
-        }
-    }
-
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct TeamRole {
         pub id: String,
         pub name: String,
         pub created_at: String,
         pub updated_at: String,
-    }
-
-    #[cfg(test)]
-    impl Default for TeamRole {
-        fn default() -> Self {
-            Self {
-                id: "some-team-role-id".to_string(),
-                name: "some-team-role-name".to_string(),
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
-            }
-        }
     }
 }
 
@@ -201,4 +153,53 @@ pub async fn list_team_roles(
                 .uri("1.0", &format!("/roles{list_params}")),
         )
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::v10::*;
+
+    impl Default for TeamMember {
+        fn default() -> Self {
+            Self {
+                id: "some-team-member-id".to_string(),
+                email: "some-team-member-email@example.com".to_string(),
+                first_name: None,
+                last_name: None,
+                state: Default::default(),
+                role_id: "some-role-id".to_string(),
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+            }
+        }
+    }
+
+    impl Default for TeamMemberState {
+        fn default() -> Self {
+            Self::Active
+        }
+    }
+
+    impl Default for TeamMemberInvite {
+        fn default() -> Self {
+            Self {
+                email: "some-member@example.com".to_string(),
+                id: "some-member-id".to_string(),
+                role_id: "some-role-id".to_string(),
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+            }
+        }
+    }
+
+    impl Default for TeamRole {
+        fn default() -> Self {
+            Self {
+                id: "some-team-role-id".to_string(),
+                name: "some-team-role-name".to_string(),
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+            }
+        }
+    }
 }

@@ -72,22 +72,6 @@ pub mod v10 {
         pub date_of_birth: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for Customer {
-        fn default() -> Self {
-            Self {
-                id: "some-customer-id".to_string(),
-                full_name: None,
-                business_name: None,
-                phone: None,
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
-                email: "some-email@example.com".to_string(),
-                date_of_birth: None,
-            }
-        }
-    }
-
     // SCREAMING_SNAKE_CASE
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -96,31 +80,12 @@ pub mod v10 {
         RevolutPay,
     }
 
-    #[cfg(test)]
-    impl Default for PaymentMethodType {
-        fn default() -> Self {
-            Self::Card
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct PaymentMethod {
         pub id: String,
         pub r#type: PaymentMethodType,
         pub saved_for: Option<String>,
         pub method_details: Option<PaymentMethodDetails>,
-    }
-
-    #[cfg(test)]
-    impl Default for PaymentMethod {
-        fn default() -> Self {
-            Self {
-                id: "some-payment-method-id".to_string(),
-                r#type: Default::default(),
-                saved_for: None,
-                method_details: None,
-            }
-        }
     }
 
     #[derive(Debug, Deserialize, Serialize)]
@@ -138,25 +103,6 @@ pub mod v10 {
         pub created_at: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for PaymentMethodDetails {
-        fn default() -> Self {
-            Self {
-                bin: None,
-                last4: None,
-                expiry_month: None,
-                expiry_year: None,
-                cardholder_name: None,
-                billing_address: None,
-                brand: None,
-                funding: None,
-                issuer: None,
-                issuer_country: None,
-                created_at: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct BillingAddress {
         pub street_line_1: Option<String>,
@@ -165,20 +111,6 @@ pub mod v10 {
         pub city: Option<String>,
         pub region: Option<String>,
         pub country_code: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for BillingAddress {
-        fn default() -> Self {
-            Self {
-                street_line_1: None,
-                street_line_2: None,
-                post_code: None,
-                city: None,
-                region: None,
-                country_code: None,
-            }
-        }
     }
 
     // SCREAMING_SNAKE_CASE
@@ -382,4 +314,72 @@ pub async fn delete_payment_method<E: Environment>(
             ),
         )
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::v10::*;
+
+    impl Default for Customer {
+        fn default() -> Self {
+            Self {
+                id: "some-customer-id".to_string(),
+                full_name: None,
+                business_name: None,
+                phone: None,
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+                email: "some-email@example.com".to_string(),
+                date_of_birth: None,
+            }
+        }
+    }
+
+    impl Default for PaymentMethodType {
+        fn default() -> Self {
+            Self::Card
+        }
+    }
+
+    impl Default for PaymentMethod {
+        fn default() -> Self {
+            Self {
+                id: "some-payment-method-id".to_string(),
+                r#type: Default::default(),
+                saved_for: None,
+                method_details: None,
+            }
+        }
+    }
+
+    impl Default for PaymentMethodDetails {
+        fn default() -> Self {
+            Self {
+                bin: None,
+                last4: None,
+                expiry_month: None,
+                expiry_year: None,
+                cardholder_name: None,
+                billing_address: None,
+                brand: None,
+                funding: None,
+                issuer: None,
+                issuer_country: None,
+                created_at: None,
+            }
+        }
+    }
+
+    impl Default for BillingAddress {
+        fn default() -> Self {
+            Self {
+                street_line_1: None,
+                street_line_2: None,
+                post_code: None,
+                city: None,
+                region: None,
+                country_code: None,
+            }
+        }
+    }
 }

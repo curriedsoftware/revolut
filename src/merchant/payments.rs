@@ -51,30 +51,6 @@ pub mod unversioned {
         pub order_id: Option<String>,
     }
 
-    #[cfg(test)]
-    impl Default for Payment {
-        fn default() -> Self {
-            Self {
-                id: "some-payment-id".to_string(),
-                state: Default::default(),
-                decline_reason: None,
-                bank_message: None,
-                created_at: "some-date".to_string(),
-                updated_at: "some-date".to_string(),
-                token: None,
-                amount: 4242,
-                currency: None,
-                settled_amount: None,
-                payment_method: None,
-                authentication_challenge: None,
-                billing_address: None,
-                risk_level: None,
-                fees: None,
-                order_id: None,
-            }
-        }
-    }
-
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "snake_case")]
     pub enum PaymentState {
@@ -99,13 +75,6 @@ pub mod unversioned {
         Failed,
     }
 
-    #[cfg(test)]
-    impl Default for PaymentState {
-        fn default() -> Self {
-            Self::Completed
-        }
-    }
-
     #[derive(Debug, Deserialize, strum::Display, Serialize)]
     #[serde(tag = "type", rename_all = "snake_case")]
     pub enum PaymentMethod {
@@ -116,28 +85,127 @@ pub mod unversioned {
         RevolutPayAccount(RevolutPayAccount),
     }
 
-    #[cfg(test)]
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct Card {
+        pub id: Option<String>,
+        pub card_brand: Option<String>,
+        pub funding: Option<String>,
+        pub card_country_code: Option<String>,
+        pub card_bin: Option<String>,
+        pub card_last_four: Option<String>,
+        pub card_expiry: Option<String>,
+        pub cardholder_name: Option<String>,
+        pub checks: Option<Checks>,
+        pub fingerprint: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct Checks {
+        pub three_ds: Option<ThreeDs>,
+        pub cvv_verification: Option<String>,
+        pub address: Option<String>,
+        pub postcode: Option<String>,
+        pub cardholder: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct ThreeDs {
+        pub eci: Option<String>,
+        pub state: Option<ThreeDsState>,
+        pub version: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, strum::Display, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    pub enum ThreeDsState {
+        Verified,
+        Failed,
+        Challenge,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct RevolutPayAccount {
+        pub id: String,
+        pub fingerprint: Option<String>,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct AuthenticationChallenge {
+        pub r#type: String,
+        pub acs_url: String,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct BillingAddress {
+        pub street_line_1: Option<String>,
+        pub street_line_2: Option<String>,
+        pub region: Option<String>,
+        pub city: Option<String>,
+        pub country_code: String,
+        pub postcode: String,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    pub struct Fee {
+        pub r#type: Option<String>,
+        pub amount: Option<u64>,
+        pub currency: Option<String>,
+    }
+}
+
+pub async fn retrieve<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+    payment_id: &str,
+) -> ApiResult<unversioned::Payment> {
+    client
+        .request(
+            HttpMethod::<()>::Get,
+            &client
+                .environment
+                .unversioned_uri(&format!("/payments/{payment_id}")),
+        )
+        .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::unversioned::*;
+
+    impl Default for Payment {
+        fn default() -> Self {
+            Self {
+                id: "some-payment-id".to_string(),
+                state: Default::default(),
+                decline_reason: None,
+                bank_message: None,
+                created_at: "some-date".to_string(),
+                updated_at: "some-date".to_string(),
+                token: None,
+                amount: 4242,
+                currency: None,
+                settled_amount: None,
+                payment_method: None,
+                authentication_challenge: None,
+                billing_address: None,
+                risk_level: None,
+                fees: None,
+                order_id: None,
+            }
+        }
+    }
+
+    impl Default for PaymentState {
+        fn default() -> Self {
+            Self::Completed
+        }
+    }
+
     impl Default for PaymentMethod {
         fn default() -> PaymentMethod {
             PaymentMethod::Card(Default::default())
         }
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct Card {
-        id: Option<String>,
-        card_brand: Option<String>,
-        funding: Option<String>,
-        card_country_code: Option<String>,
-        card_bin: Option<String>,
-        card_last_four: Option<String>,
-        card_expiry: Option<String>,
-        cardholder_name: Option<String>,
-        checks: Option<Checks>,
-        fingerprint: Option<String>,
-    }
-
-    #[cfg(test)]
     impl Default for Card {
         fn default() -> Self {
             Card {
@@ -155,16 +223,6 @@ pub mod unversioned {
         }
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct Checks {
-        three_ds: Option<ThreeDs>,
-        cvv_verification: Option<String>,
-        address: Option<String>,
-        postcode: Option<String>,
-        cardholder: Option<String>,
-    }
-
-    #[cfg(test)]
     impl Default for Checks {
         fn default() -> Self {
             Self {
@@ -177,14 +235,6 @@ pub mod unversioned {
         }
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct ThreeDs {
-        pub eci: Option<String>,
-        pub state: Option<ThreeDsState>,
-        pub version: Option<String>,
-    }
-
-    #[cfg(test)]
     impl Default for ThreeDs {
         fn default() -> Self {
             Self {
@@ -195,28 +245,12 @@ pub mod unversioned {
         }
     }
 
-    #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "snake_case")]
-    pub enum ThreeDsState {
-        Verified,
-        Failed,
-        Challenge,
-    }
-
-    #[cfg(test)]
     impl Default for ThreeDsState {
         fn default() -> Self {
             Self::Verified
         }
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct RevolutPayAccount {
-        pub id: String,
-        pub fingerprint: Option<String>,
-    }
-
-    #[cfg(test)]
     impl Default for RevolutPayAccount {
         fn default() -> Self {
             Self {
@@ -226,13 +260,6 @@ pub mod unversioned {
         }
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct AuthenticationChallenge {
-        pub r#type: String,
-        pub acs_url: String,
-    }
-
-    #[cfg(test)]
     impl Default for AuthenticationChallenge {
         fn default() -> Self {
             Self {
@@ -242,17 +269,6 @@ pub mod unversioned {
         }
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct BillingAddress {
-        pub street_line_1: Option<String>,
-        pub street_line_2: Option<String>,
-        pub region: Option<String>,
-        pub city: Option<String>,
-        pub country_code: String,
-        pub postcode: String,
-    }
-
-    #[cfg(test)]
     impl Default for BillingAddress {
         fn default() -> Self {
             Self {
@@ -266,14 +282,6 @@ pub mod unversioned {
         }
     }
 
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct Fee {
-        pub r#type: Option<String>,
-        pub amount: Option<u64>,
-        pub currency: Option<String>,
-    }
-
-    #[cfg(test)]
     impl Default for Fee {
         fn default() -> Self {
             Self {
@@ -283,18 +291,4 @@ pub mod unversioned {
             }
         }
     }
-}
-
-pub async fn retrieve<E: Environment>(
-    client: &Client<E, MerchantAuthentication>,
-    payment_id: &str,
-) -> ApiResult<unversioned::Payment> {
-    client
-        .request(
-            HttpMethod::<()>::Get,
-            &client
-                .environment
-                .unversioned_uri(&format!("/payments/{payment_id}")),
-        )
-        .await
 }

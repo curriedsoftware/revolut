@@ -44,13 +44,6 @@ pub mod unversioned {
         ValidateAddress,
     }
 
-    #[cfg(test)]
-    impl Default for RegisterAddressValidationEndpointForFastCheckoutEventType {
-        fn default() -> Self {
-            Self::ValidateAddress
-        }
-    }
-
     #[derive(Debug, Deserialize, Serialize)]
     pub struct RegisterAddressValidationEndpointForFastCheckout {
         pub id: String,
@@ -58,19 +51,6 @@ pub mod unversioned {
         pub url: String,
         pub event_type: RegisterAddressValidationEndpointForFastCheckoutEventType,
         pub location_id: Option<String>,
-    }
-
-    #[cfg(test)]
-    impl Default for RegisterAddressValidationEndpointForFastCheckout {
-        fn default() -> Self {
-            Self {
-                id: "some-register-addres-vaildation-endpoint-for-fast-checkout".to_string(),
-                signing_key: "some-signing-key".to_string(),
-                url: "some-url".to_string(),
-                event_type: Default::default(),
-                location_id: None,
-            }
-        }
     }
 }
 
@@ -111,4 +91,27 @@ pub async fn delete_synchronous_webhook<E: Environment>(
                 .unversioned_uri(&format!("/synchronous-webooks/{synchronous_webhook_id}")),
         )
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::unversioned::*;
+
+    impl Default for RegisterAddressValidationEndpointForFastCheckout {
+        fn default() -> Self {
+            Self {
+                id: "some-register-addres-vaildation-endpoint-for-fast-checkout".to_string(),
+                signing_key: "some-signing-key".to_string(),
+                url: "some-url".to_string(),
+                event_type: Default::default(),
+                location_id: None,
+            }
+        }
+    }
+
+    impl Default for RegisterAddressValidationEndpointForFastCheckoutEventType {
+        fn default() -> Self {
+            Self::ValidateAddress
+        }
+    }
 }
