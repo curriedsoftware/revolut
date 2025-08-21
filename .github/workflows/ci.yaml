@@ -51,8 +51,8 @@ jobs:
       - name: Lint
         run: |
           devenv shell just lint
-  tests:
-    name: Tests
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
