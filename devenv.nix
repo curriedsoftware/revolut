@@ -119,7 +119,7 @@
         ls -1 $src/examples | sed 's/\.rs$//' | \
           xargs -I{} sh -c 'cp target/release/examples/{} $out/bin/$(echo {} | sed 's/_/-/g')'
         runHook postInstall
-  '';
+      '';
       src = ./.;
       env = {
         GIT_REVISION = "devenv";
