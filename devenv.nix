@@ -10,7 +10,7 @@
     rust.enable = true;
   };
 
-  packages = with pkgs; [alejandra bat cargo-audit cargo-deny just jq openssl pkg-config];
+  packages = with pkgs; [alejandra bat cargo-audit cargo-deny just jq];
 
   enterTest = ''
     cargo test
@@ -33,8 +33,8 @@
       else
         mkdir .setup-business-api
         pushd .setup-business-api &> /dev/null
-        openssl genrsa -out privatecert.pem 2048
-        openssl req -new -x509 -key privatecert.pem -out publiccert.cer -days 1825 -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=example.com"
+        ${lib.getExe pkgs.openssl} genrsa -out privatecert.pem 2048
+        ${lib.getExe pkgs.openssl} req -new -x509 -key privatecert.pem -out publiccert.cer -days 1825 -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=example.com"
         echo "Certificate contents:"
         bat --style=header-filename,grid publiccert.cer
         echo "- Upload certificate to the API certificates section:"
@@ -58,10 +58,10 @@
           "exp": 1761663836
         }
       EOF
-        cat header.json | tr -d '\n' | tr -d '\r' | openssl enc -base64 -A | tr +/ -_ | tr -d '=' > client_assertion.txt
+        cat header.json | tr -d '\n' | tr -d '\r' | ${lib.getExe pkgs.openssl} enc -base64 -A | tr +/ -_ | tr -d '=' > client_assertion.txt
         echo -n "." >> client_assertion.txt
-        cat payload.json | tr -d '\n' | tr -d '\r' | openssl enc -base64 -A | tr +/ -_ | tr -d '=' >> client_assertion.txt
-        cat client_assertion.txt | tr -d '\n' | tr -d '\r' | openssl dgst -sha256 -sign privatecert.pem | openssl enc -base64 -A | tr +/ -_ | tr -d '=' > sign.txt
+        cat payload.json | tr -d '\n' | tr -d '\r' | ${lib.getExe pkgs.openssl} enc -base64 -A | tr +/ -_ | tr -d '=' >> client_assertion.txt
+        cat client_assertion.txt | tr -d '\n' | tr -d '\r' | ${lib.getExe pkgs.openssl} dgst -sha256 -sign privatecert.pem | ${lib.getExe pkgs.openssl} enc -base64 -A | tr +/ -_ | tr -d '=' > sign.txt
         echo -n "." >> client_assertion.txt
         cat sign.txt >> client_assertion.txt
 
