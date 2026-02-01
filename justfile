@@ -1,7 +1,7 @@
 default: fmt lint build test
 
 fmt:
-  find . -name "*.nix" | xargs alejandra
+  find . -name "*.nix" -not -path "./vendor/*" | xargs alejandra
   cargo fmt
 
 lint:
