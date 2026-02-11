@@ -29,15 +29,15 @@ use std::{clone::Clone, fmt::Debug, marker::PhantomData};
 
 pub use crate::{
     client::{
-        self, Body, Client, ClientBuilder, Environment, HttpMethod, MerchantClient,
+        Body, Client, ClientBuilder, CryptoRampClient, Environment, HttpMethod,
         MissingClientAuthentication, MissingEnvironment, ProductionEnvironment, RevolutEndpoint,
         SandboxEnvironment,
     },
     errors::{self, ApiResult, ClientBuilderError, Error},
 };
 
-pub fn merchant_client()
--> ClientBuilder<MissingEnvironment, MissingClientAuthentication, MerchantClient> {
+pub fn crypto_ramp_client()
+-> ClientBuilder<MissingEnvironment, MissingClientAuthentication, CryptoRampClient> {
     ClientBuilder {
         environment: MissingEnvironment,
         authentication: MissingClientAuthentication,
@@ -45,102 +45,85 @@ pub fn merchant_client()
     }
 }
 
-impl Environment for SandboxEnvironment<MerchantClient> {
+impl Environment for SandboxEnvironment<CryptoRampClient> {
     fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
         self.unversioned_uri(&format!("/{version}{path}"))
     }
 
     fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
-        RevolutEndpoint(format!("https://sandbox-merchant.revolut.com/api{path}",))
+        RevolutEndpoint(format!("https://sandbox-crypto-ramp.revolut.com/api{path}",))
     }
 }
 
-impl Environment for ProductionEnvironment<MerchantClient> {
+impl Environment for ProductionEnvironment<CryptoRampClient> {
     fn uri(&self, version: &str, path: &str) -> RevolutEndpoint {
         self.unversioned_uri(&format!("/{version}{path}"))
     }
 
     fn unversioned_uri(&self, path: &str) -> RevolutEndpoint {
-        RevolutEndpoint(format!("https://merchant.revolut.com/api{path}"))
+        RevolutEndpoint(format!("https://crypto-ramp.revolut.com/api{path}"))
     }
 }
 
-pub struct MissingSecretKey;
+pub struct MissingApiKey;
 
-pub trait MissingSecretKeyT {}
-impl MissingSecretKeyT for MissingSecretKey {}
-
-pub struct MerchantAuthenticationBuilder<S> {
-    secret_key: S,
+pub struct CryptoRampAuthenticationBuilder<S> {
+    api_key: S,
 }
 
-impl Default for MerchantAuthenticationBuilder<MissingSecretKey> {
+impl Default for CryptoRampAuthenticationBuilder<MissingApiKey> {
     fn default() -> Self {
-        MerchantAuthenticationBuilder {
-            secret_key: MissingSecretKey,
+        CryptoRampAuthenticationBuilder {
+            api_key: MissingApiKey,
         }
     }
 }
 
-impl MerchantAuthenticationBuilder<MissingSecretKey> {
-    #[cfg(test)]
-    pub fn with_dummy_secret_key(self) -> MerchantAuthenticationBuilder<()> {
-        MerchantAuthenticationBuilder { secret_key: () }
-    }
-
-    pub fn with_environment_inherited_secret_key(
+impl CryptoRampAuthenticationBuilder<MissingApiKey> {
+    pub fn with_environment_inherited_api_key(
         self,
-        secret_key_environment_variable: &str,
-    ) -> Result<MerchantAuthenticationBuilder<String>, ClientBuilderError> {
-        let secret_key = std::env::var(secret_key_environment_variable).map_err(|_| {
-            ClientBuilderError::MissingEnvironmentVariable(secret_key_environment_variable.into())
+        api_key_environment_variable: &str,
+    ) -> Result<CryptoRampAuthenticationBuilder<String>, ClientBuilderError> {
+        let api_key = std::env::var(api_key_environment_variable).map_err(|_| {
+            ClientBuilderError::MissingEnvironmentVariable(api_key_environment_variable.into())
         })?;
-        if secret_key.is_empty() {
+        if api_key.is_empty() {
             return Err(ClientBuilderError::InvalidSecret);
         }
-        Ok(MerchantAuthenticationBuilder { secret_key })
+        Ok(CryptoRampAuthenticationBuilder { api_key })
     }
 
-    pub fn with_secret_key(
+    pub fn with_api_key(
         self,
-        secret_key: &str,
-    ) -> Result<MerchantAuthenticationBuilder<String>, ClientBuilderError> {
-        if secret_key.is_empty() {
+        api_key: &str,
+    ) -> Result<CryptoRampAuthenticationBuilder<String>, ClientBuilderError> {
+        if api_key.is_empty() {
             return Err(ClientBuilderError::InvalidSecret);
         }
-        Ok(MerchantAuthenticationBuilder {
-            secret_key: secret_key.to_string(),
+        Ok(CryptoRampAuthenticationBuilder {
+            api_key: api_key.to_string(),
         })
     }
 }
 
-impl MerchantAuthenticationBuilder<String> {
-    pub fn build(self) -> MerchantAuthentication {
-        MerchantAuthentication {
-            secret_key: self.secret_key,
-        }
-    }
-}
-
-#[cfg(test)]
-impl MerchantAuthenticationBuilder<()> {
-    pub fn build(self) -> MerchantAuthentication {
-        MerchantAuthentication {
-            secret_key: String::new(),
+impl CryptoRampAuthenticationBuilder<String> {
+    pub fn build(self) -> CryptoRampAuthentication {
+        CryptoRampAuthentication {
+            api_key: self.api_key,
         }
     }
 }
 
 #[derive(Debug)]
-pub struct MerchantAuthentication {
-    secret_key: String,
+pub struct CryptoRampAuthentication {
+    api_key: String,
 }
 
-impl<E> ClientBuilder<E, MissingClientAuthentication, MerchantClient> {
+impl<E> ClientBuilder<E, MissingClientAuthentication, CryptoRampClient> {
     pub fn with_authentication(
         self,
-        authentication: MerchantAuthentication,
-    ) -> ClientBuilder<E, MerchantAuthentication, MerchantClient> {
+        authentication: CryptoRampAuthentication,
+    ) -> ClientBuilder<E, CryptoRampAuthentication, CryptoRampClient> {
         ClientBuilder {
             environment: self.environment,
             authentication,
@@ -149,8 +132,8 @@ impl<E> ClientBuilder<E, MissingClientAuthentication, MerchantClient> {
     }
 }
 
-impl<E: Environment, C> ClientBuilder<E, MerchantAuthentication, C> {
-    pub fn build(self) -> Result<Client<E, MerchantAuthentication>, ClientBuilderError> {
+impl<E: Environment, C> ClientBuilder<E, CryptoRampAuthentication, C> {
+    pub fn build(self) -> Result<Client<E, CryptoRampAuthentication>, ClientBuilderError> {
         let retry_policy = ExponentialBackoff::builder().build_with_max_retries(3);
         let client_builder = reqwest_middleware::ClientBuilder::new(reqwest::Client::new())
             .with(RetryTransientMiddleware::new_with_policy(retry_policy));
@@ -162,7 +145,7 @@ impl<E: Environment, C> ClientBuilder<E, MerchantAuthentication, C> {
     }
 }
 
-impl<E: Environment> Client<E, MerchantAuthentication> {
+impl<E: Environment> Client<E, CryptoRampAuthentication> {
     pub(crate) async fn request_<R: DeserializeOwned + Debug, T: Clone + Debug + Serialize>(
         &self,
         method: HttpMethod<'_, T>,
@@ -197,12 +180,8 @@ impl<E: Environment> Client<E, MerchantAuthentication> {
         };
 
         let response = request
-            .header(
-                "Authorization",
-                format!("Bearer {}", self.authentication.secret_key),
-            )
+            .header("X-API-KEY", &self.authentication.api_key)
             .header("Accept", "application/json")
-            .header("Revolut-Api-Version", "2025-12-04")
             .send()
             .await
             .map_err(|err| {
@@ -242,7 +221,7 @@ impl<E: Environment> Client<E, MerchantAuthentication> {
         method: HttpMethod<'_, T>,
         uri: &RevolutEndpoint,
     ) -> ApiResult<R> {
-        if self.authentication.secret_key.is_empty() {
+        if self.authentication.api_key.is_empty() {
             return Ok(Default::default());
         }
         self.request_(method, uri).await

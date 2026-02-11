@@ -1,5 +1,12 @@
 default: fmt lint build test
 
+generate:
+  cd /tmp && cargo run --manifest-path {{justfile_directory()}}/codegen/Cargo.toml -- --spec {{justfile_directory()}}/openapi-specs/yaml/business.yaml --output {{justfile_directory()}}/src/business/generated/ --api business
+  cd /tmp && cargo run --manifest-path {{justfile_directory()}}/codegen/Cargo.toml -- --spec {{justfile_directory()}}/openapi-specs/yaml/merchant-2025-12-04.yaml --output {{justfile_directory()}}/src/merchant/generated/ --api merchant
+  cd /tmp && cargo run --manifest-path {{justfile_directory()}}/codegen/Cargo.toml -- --spec {{justfile_directory()}}/openapi-specs/yaml/open-banking.yaml --output {{justfile_directory()}}/src/open_banking/generated/ --api open_banking
+  cd /tmp && cargo run --manifest-path {{justfile_directory()}}/codegen/Cargo.toml -- --spec {{justfile_directory()}}/openapi-specs/yaml/crypto-ramp-2.0.yaml --output {{justfile_directory()}}/src/crypto_ramp/generated/ --api crypto_ramp
+  cargo fmt
+
 fmt:
   find . -name "*.nix" -not -path "./vendor/*" | xargs alejandra
   cargo fmt

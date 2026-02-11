@@ -22,20 +22,5 @@
  * SOFTWARE.
  ***/
 
-pub mod business;
 pub mod client;
-pub mod crypto_ramp;
-pub mod errors;
-pub mod merchant;
-pub mod open_banking;
-
-pub use {client::ClientBuilder, errors::Error};
-
-#[derive(Debug)]
-pub struct BusinessClient;
-#[derive(Debug)]
-pub struct CryptoRampClient;
-#[derive(Debug)]
-pub struct MerchantClient;
-#[derive(Debug)]
-pub struct OpenBankingClient;
+pub mod generated;

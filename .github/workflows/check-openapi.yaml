@@ -1,0 +1,28 @@
+name: Check OpenAPI generated code
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Weekly on Monday at 9:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check-generated:
+    name: Verify generated code is up-to-date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v16
+        with:
+          name: devenv
+      - name: Install devenv.sh
+        run: nix profile install nixpkgs#devenv
+      - name: Regenerate code
+        run: devenv shell just generate
+      - name: Check for differences
+        run: git diff --exit-code src/*/generated/
+      - name: Build
+        run: devenv shell just build
+      - name: Test
+        run: devenv shell just test

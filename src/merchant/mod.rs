@@ -28,6 +28,7 @@ pub mod apple_pay;
 pub mod client;
 pub mod customers;
 pub mod disputes;
+pub mod generated;
 pub mod locations;
 pub mod orders;
 pub mod other;

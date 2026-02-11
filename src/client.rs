@@ -26,7 +26,7 @@ use serde::Serialize;
 use std::clone::Clone;
 
 pub use crate::{
-    BusinessClient, MerchantClient, OpenBankingClient,
+    BusinessClient, CryptoRampClient, MerchantClient, OpenBankingClient,
     errors::{self, ClientBuilderError, Error},
 };
 

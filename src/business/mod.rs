@@ -32,6 +32,7 @@ pub mod client;
 pub mod counterparties;
 pub mod expenses;
 pub mod foreign_exchange;
+pub mod generated;
 pub mod payment_drafts;
 pub mod payout_links;
 pub mod simulations;
