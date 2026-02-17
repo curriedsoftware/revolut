@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.61"
+rust-version = "1.68"
 name = "thiserror-impl"
-version = "2.0.14"
+version = "2.0.18"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 build = false
 autolib = false
@@ -30,6 +30,7 @@ repository = "https://github.com/dtolnay/thiserror"
 targets = ["x86_64-unknown-linux-gnu"]
 rustdoc-args = [
     "--generate-link-to-definition",
+    "--generate-macro-expansion",
     "--extern-html-root-url=core=https://doc.rust-lang.org",
     "--extern-html-root-url=alloc=https://doc.rust-lang.org",
     "--extern-html-root-url=std=https://doc.rust-lang.org",

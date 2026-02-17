@@ -70,10 +70,8 @@
 //! * `CFLAGS` - a series of space separated flags passed to compilers. Note that
 //!   individual flags cannot currently contain spaces, so doing
 //!   something like: `-L=foo\ bar` is not possible.
-//! * `CC` - the actual C compiler used. Note that this is used as an exact
-//!   executable name, so (for example) no extra flags can be passed inside
-//!   this variable, and the builder must ensure that there aren't any
-//!   trailing spaces. This compiler must understand the `-c` flag. For
+//! * `CC` - the actual C compiler used. Note that this supports passing a known
+//!   wrapper via `sccache cc`. This compiler must understand the `-c` flag. For
 //!   certain `TARGET`s, it also is assumed to know about other flags (most
 //!   common is `-fPIC`).
 //!   ccache, distcc, sccache, icecc, cachepot and buildcache are supported,
@@ -114,8 +112,8 @@
 //! Each of these variables can also be supplied with certain prefixes and suffixes,
 //! in the following prioritized order:
 //!
-//!   1. `<var>_<target>` - for example, `CC_x86_64-unknown-linux-gnu`
-//!   2. `<var>_<target_with_underscores>` - for example, `CC_x86_64_unknown_linux_gnu`
+//!   1. `<var>_<target>` - for example, `CC_x86_64-unknown-linux-gnu` or `CC_thumbv8m.main-none-eabi`
+//!   2. `<var>_<target_with_underscores>` - for example, `CC_x86_64_unknown_linux_gnu` or `CC_thumbv8m_main_none_eabi` (both periods and underscores are replaced)
 //!   3. `<build-kind>_<var>` - for example, `HOST_CC` or `TARGET_CFLAGS`
 //!   4. `<var>` - a plain `CC`, `AR` as above.
 //!
@@ -248,8 +246,6 @@ use std::fmt::{self, Display};
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Component, Path, PathBuf};
-#[cfg(feature = "parallel")]
-use std::process::Child;
 use std::process::{Command, Stdio};
 use std::sync::{
     atomic::{AtomicU8, Ordering::Relaxed},
@@ -260,12 +256,88 @@ use shlex::Shlex;
 
 #[cfg(feature = "parallel")]
 mod parallel;
+
 mod target;
-mod windows;
-use self::target::TargetInfo;
-// Regardless of whether this should be in this crate's public API,
-// it has been since 2015, so don't break it.
-pub use windows::find_tools as windows_registry;
+use self::target::*;
+
+/// A helper module to looking for windows-specific tools:
+/// 1. On Windows host, probe the Windows Registry if needed;
+/// 2. On non-Windows host, check specified environment variables.
+pub mod windows_registry {
+    // Regardless of whether this should be in this crate's public API,
+    // it has been since 2015, so don't break it.
+
+    /// Attempts to find a tool within an MSVC installation using the Windows
+    /// registry as a point to search from.
+    ///
+    /// The `arch_or_target` argument is the architecture or the Rust target name
+    /// that the tool should work for (e.g. compile or link for). The supported
+    /// architecture names are:
+    /// - `"x64"` or `"x86_64"`
+    /// - `"arm64"` or `"aarch64"`
+    /// - `"arm64ec"`
+    /// - `"x86"`, `"i586"` or `"i686"`
+    /// - `"arm"` or `"thumbv7a"`
+    ///
+    /// The `tool` argument is the tool to find. Supported tools include:
+    /// - MSVC tools: `cl.exe`, `link.exe`, `lib.exe`, etc.
+    /// - `MSBuild`: `msbuild.exe`
+    /// - Visual Studio IDE: `devenv.exe`
+    /// - Clang/LLVM tools: `clang.exe`, `clang++.exe`, `clang-*.exe`, `llvm-*.exe`, `lld.exe`, etc.
+    ///
+    /// This function will return `None` if the tool could not be found, or it will
+    /// return `Some(cmd)` which represents a command that's ready to execute the
+    /// tool with the appropriate environment variables set.
+    ///
+    /// Note that this function always returns `None` for non-MSVC targets (if a
+    /// full target name was specified).
+    pub fn find(arch_or_target: &str, tool: &str) -> Option<std::process::Command> {
+        ::find_msvc_tools::find(arch_or_target, tool)
+    }
+
+    /// A version of Visual Studio
+    #[derive(Debug, PartialEq, Eq, Copy, Clone)]
+    #[non_exhaustive]
+    pub enum VsVers {
+        /// Visual Studio 12 (2013)
+        #[deprecated = "Visual Studio 12 is no longer supported. cc will never return this value."]
+        Vs12,
+        /// Visual Studio 14 (2015)
+        Vs14,
+        /// Visual Studio 15 (2017)
+        Vs15,
+        /// Visual Studio 16 (2019)
+        Vs16,
+        /// Visual Studio 17 (2022)
+        Vs17,
+        /// Visual Studio 18 (2026)
+        Vs18,
+    }
+
+    /// Find the most recent installed version of Visual Studio
+    ///
+    /// This is used by the cmake crate to figure out the correct
+    /// generator.
+    pub fn find_vs_version() -> Result<VsVers, String> {
+        ::find_msvc_tools::find_vs_version().map(|vers| match vers {
+            #[allow(deprecated)]
+            ::find_msvc_tools::VsVers::Vs12 => VsVers::Vs12,
+            ::find_msvc_tools::VsVers::Vs14 => VsVers::Vs14,
+            ::find_msvc_tools::VsVers::Vs15 => VsVers::Vs15,
+            ::find_msvc_tools::VsVers::Vs16 => VsVers::Vs16,
+            ::find_msvc_tools::VsVers::Vs17 => VsVers::Vs17,
+            ::find_msvc_tools::VsVers::Vs18 => VsVers::Vs18,
+            _ => unreachable!("unknown VS version"),
+        })
+    }
+
+    /// Similar to the `find` function above, this function will attempt the same
+    /// operation (finding a MSVC tool in a local install) but instead returns a
+    /// [`Tool`](crate::Tool) which may be introspected.
+    pub fn find_tool(arch_or_target: &str, tool: &str) -> Option<crate::Tool> {
+        ::find_msvc_tools::find_tool(arch_or_target, tool).map(crate::Tool::from_find_msvc_tools)
+    }
+}
 
 mod command_helpers;
 use command_helpers::*;
@@ -331,7 +403,7 @@ pub struct Build {
     host: Option<Arc<str>>,
     out_dir: Option<Arc<Path>>,
     opt_level: Option<Arc<str>>,
-    debug: Option<bool>,
+    debug: Option<Arc<str>>,
     force_frame_pointer: Option<bool>,
     env: Vec<(Arc<OsStr>, Arc<OsStr>)>,
     compiler: Option<Arc<Path>>,
@@ -351,6 +423,7 @@ pub struct Build {
     shell_escaped_flags: Option<bool>,
     build_cache: Arc<BuildCache>,
     inherit_rustflags: bool,
+    prefer_clang_cl_over_msvc: bool,
 }
 
 /// Represents the types of errors that may occur while using cc-rs.
@@ -479,6 +552,7 @@ impl Build {
             shell_escaped_flags: None,
             build_cache: Arc::default(),
             inherit_rustflags: true,
+            prefer_clang_cl_over_msvc: false,
         }
     }
 
@@ -710,17 +784,19 @@ impl Build {
 
     /// Set the `-shared` flag.
     ///
-    /// When enabled, the compiler will produce a shared object which can
-    /// then be linked with other objects to form an executable.
+    /// This will typically be ignored by the compiler when calling [`Self::compile()`] since it only
+    /// produces static libraries.
     ///
     /// # Example
     ///
     /// ```no_run
+    /// // This will create a library named "liblibfoo.so.a"
     /// cc::Build::new()
     ///     .file("src/foo.c")
     ///     .shared_flag(true)
     ///     .compile("libfoo.so");
     /// ```
+    #[deprecated = "cc only creates static libraries, setting this does nothing"]
     pub fn shared_flag(&mut self, shared_flag: bool) -> &mut Build {
         self.shared_flag = Some(shared_flag);
         self
@@ -728,8 +804,8 @@ impl Build {
 
     /// Set the `-static` flag.
     ///
-    /// When enabled on systems that support dynamic linking, this prevents
-    /// linking with the shared libraries.
+    /// This will typically be ignored by the compiler when calling [`Self::compile()`] since it only
+    /// produces static libraries.
     ///
     /// # Example
     ///
@@ -740,6 +816,7 @@ impl Build {
     ///     .static_flag(true)
     ///     .compile("foo");
     /// ```
+    #[deprecated = "cc only creates static libraries, setting this does nothing"]
     pub fn static_flag(&mut self, static_flag: bool) -> &mut Build {
         self.static_flag = Some(static_flag);
         self
@@ -1101,7 +1178,23 @@ impl Build {
     /// This option is automatically scraped from the `DEBUG` environment
     /// variable by build scripts, so it's not required to call this function.
     pub fn debug(&mut self, debug: bool) -> &mut Build {
-        self.debug = Some(debug);
+        self.debug = Some(debug.to_string().into());
+        self
+    }
+
+    /// Configures whether the compiler will emit debug information when
+    /// generating object files.
+    ///
+    /// This should be one of the values accepted by Cargo's [`debug`][1]
+    /// profile setting, which cc-rs will try to map to the appropriate C
+    /// compiler flag.
+    ///
+    /// This option is automatically scraped from the `DEBUG` environment
+    /// variable by build scripts, so it's not required to call this function.
+    ///
+    /// [1]: https://doc.rust-lang.org/cargo/reference/profiles.html#debug
+    pub fn debug_str(&mut self, debug: &str) -> &mut Build {
+        self.debug = Some(debug.into());
         self
     }
 
@@ -1246,7 +1339,7 @@ impl Build {
     /// always run on every compilation if no rerun cargo metadata is emitted.
     ///
     /// NOTE that cc does not emit metadata to detect changes for `PATH`, since it could
-    /// be changed every comilation yet does not affect the result of compilation
+    /// be changed every compilation yet does not affect the result of compilation
     /// (i.e. rust-analyzer adds temporary directory to `PATH`).
     ///
     /// cc in general, has no way detecting changes to compiler, as there are so many ways to
@@ -1287,6 +1380,14 @@ impl Build {
     /// This option defaults to `true`.
     pub fn inherit_rustflags(&mut self, inherit_rustflags: bool) -> &mut Build {
         self.inherit_rustflags = inherit_rustflags;
+        self
+    }
+
+    /// Prefer to use clang-cl over msvc.
+    ///
+    /// This option defaults to `false`.
+    pub fn prefer_clang_cl_over_msvc(&mut self, prefer_clang_cl_over_msvc: bool) -> &mut Build {
+        self.prefer_clang_cl_over_msvc = prefer_clang_cl_over_msvc;
         self
     }
 
@@ -1399,7 +1500,6 @@ impl Build {
         }
 
         let mut cmd = compiler.to_command();
-        let is_arm = matches!(target.arch, "aarch64" | "arm");
         command_add_output_file(
             &mut cmd,
             &obj,
@@ -1410,7 +1510,7 @@ impl Build {
                 clang: compiler.is_like_clang(),
                 gnu: compiler.is_like_gnu(),
                 is_asm: false,
-                is_arm,
+                is_arm: is_arm(target),
             },
         );
 
@@ -1570,6 +1670,10 @@ impl Build {
                 if cfg!(target_os = "linux") {
                     libdir.push("targets");
                     libdir.push(format!("{}-linux", target.arch));
+                    if !libdir.exists() && target.arch == "aarch64" {
+                        libdir.pop();
+                        libdir.push("sbsa-linux");
+                    }
                     libdir.push("lib");
                     libtst = true;
                 } else if cfg!(target_env = "msvc") {
@@ -1675,157 +1779,23 @@ impl Build {
         Ok(objects.into_iter().map(|v| v.dst).collect())
     }
 
-    #[cfg(feature = "parallel")]
     fn compile_objects(&self, objs: &[Object]) -> Result<(), Error> {
-        use std::cell::Cell;
-
-        use parallel::async_executor::{block_on, YieldOnce};
-
         check_disabled()?;
 
-        if objs.len() <= 1 {
-            return self.compile_objects_sequential(objs);
+        #[cfg(feature = "parallel")]
+        if objs.len() > 1 {
+            return parallel::run_commands_in_parallel(
+                &self.cargo_output,
+                &mut objs.iter().map(|obj| self.create_compile_object_cmd(obj)),
+            );
         }
 
-        // Limit our parallelism globally with a jobserver.
-        let mut tokens = parallel::job_token::ActiveJobTokenServer::new();
-
-        // When compiling objects in parallel we do a few dirty tricks to speed
-        // things up:
-        //
-        // * First is that we use the `jobserver` crate to limit the parallelism
-        //   of this build script. The `jobserver` crate will use a jobserver
-        //   configured by Cargo for build scripts to ensure that parallelism is
-        //   coordinated across C compilations and Rust compilations. Before we
-        //   compile anything we make sure to wait until we acquire a token.
-        //
-        //   Note that this jobserver is cached globally so we only used one per
-        //   process and only worry about creating it once.
-        //
-        // * Next we use spawn the process to actually compile objects in
-        //   parallel after we've acquired a token to perform some work
-        //
-        // With all that in mind we compile all objects in a loop here, after we
-        // acquire the appropriate tokens, Once all objects have been compiled
-        // we wait on all the processes and propagate the results of compilation.
-
-        let pendings =
-            Cell::new(Vec::<(Command, KillOnDrop, parallel::job_token::JobToken)>::new());
-        let is_disconnected = Cell::new(false);
-        let has_made_progress = Cell::new(false);
-
-        let wait_future = async {
-            let mut error = None;
-            // Buffer the stdout
-            let mut stdout = io::BufWriter::with_capacity(128, io::stdout());
-
-            loop {
-                // If the other end of the pipe is already disconnected, then we're not gonna get any new jobs,
-                // so it doesn't make sense to reuse the tokens; in fact,
-                // releasing them as soon as possible (once we know that the other end is disconnected) is beneficial.
-                // Imagine that the last file built takes an hour to finish; in this scenario,
-                // by not releasing the tokens before that last file is done we would effectively block other processes from
-                // starting sooner - even though we only need one token for that last file, not N others that were acquired.
-
-                let mut pendings_is_empty = false;
-
-                cell_update(&pendings, |mut pendings| {
-                    // Try waiting on them.
-                    pendings.retain_mut(|(cmd, child, _token)| {
-                        match try_wait_on_child(cmd, &mut child.0, &mut stdout, &mut child.1) {
-                            Ok(Some(())) => {
-                                // Task done, remove the entry
-                                has_made_progress.set(true);
-                                false
-                            }
-                            Ok(None) => true, // Task still not finished, keep the entry
-                            Err(err) => {
-                                // Task fail, remove the entry.
-                                // Since we can only return one error, log the error to make
-                                // sure users always see all the compilation failures.
-                                has_made_progress.set(true);
-
-                                if self.cargo_output.warnings {
-                                    let _ = writeln!(stdout, "cargo:warning={}", err);
-                                }
-                                error = Some(err);
-
-                                false
-                            }
-                        }
-                    });
-                    pendings_is_empty = pendings.is_empty();
-                    pendings
-                });
-
-                if pendings_is_empty && is_disconnected.get() {
-                    break if let Some(err) = error {
-                        Err(err)
-                    } else {
-                        Ok(())
-                    };
-                }
-
-                YieldOnce::default().await;
-            }
-        };
-        let spawn_future = async {
-            for obj in objs {
-                let mut cmd = self.create_compile_object_cmd(obj)?;
-                let token = tokens.acquire().await?;
-                let mut child = spawn(&mut cmd, &self.cargo_output)?;
-                let mut stderr_forwarder = StderrForwarder::new(&mut child);
-                stderr_forwarder.set_non_blocking()?;
-
-                cell_update(&pendings, |mut pendings| {
-                    pendings.push((cmd, KillOnDrop(child, stderr_forwarder), token));
-                    pendings
-                });
-
-                has_made_progress.set(true);
-            }
-            is_disconnected.set(true);
-
-            Ok::<_, Error>(())
-        };
-
-        return block_on(wait_future, spawn_future, &has_made_progress);
-
-        struct KillOnDrop(Child, StderrForwarder);
-
-        impl Drop for KillOnDrop {
-            fn drop(&mut self) {
-                let child = &mut self.0;
-
-                child.kill().ok();
-            }
-        }
-
-        fn cell_update<T, F>(cell: &Cell<T>, f: F)
-        where
-            T: Default,
-            F: FnOnce(T) -> T,
-        {
-            let old = cell.take();
-            let new = f(old);
-            cell.set(new);
-        }
-    }
-
-    fn compile_objects_sequential(&self, objs: &[Object]) -> Result<(), Error> {
         for obj in objs {
             let mut cmd = self.create_compile_object_cmd(obj)?;
             run(&mut cmd, &self.cargo_output)?;
         }
 
         Ok(())
-    }
-
-    #[cfg(not(feature = "parallel"))]
-    fn compile_objects(&self, objs: &[Object]) -> Result<(), Error> {
-        check_disabled()?;
-
-        self.compile_objects_sequential(objs)
     }
 
     fn create_compile_object_cmd(&self, obj: &Object) -> Result<Command, Error> {
@@ -1845,7 +1815,7 @@ impl Build {
             }
             cmd
         };
-        let is_arm = matches!(target.arch, "aarch64" | "arm");
+        let is_arm = is_arm(&target);
         command_add_output_file(
             &mut cmd,
             &obj.dst,
@@ -1859,7 +1829,7 @@ impl Build {
                 is_arm,
             },
         );
-        // armasm and armasm64 don't requrie -c option
+        // armasm and armasm64 don't require -c option
         if !is_assembler_msvc || !is_arm {
             cmd.arg("-c");
         }
@@ -2029,9 +1999,21 @@ impl Build {
         // CFLAGS/CXXFLAGS, since those variables presumably already contain
         // the desired set of warnings flags.
         let envflags = self.envflags(if self.cpp { "CXXFLAGS" } else { "CFLAGS" })?;
-        if self.warnings.unwrap_or(envflags.is_none()) {
-            let wflags = cmd.family.warnings_flags().into();
-            cmd.push_cc_arg(wflags);
+        match self.warnings {
+            Some(true) => {
+                let wflags = cmd.family.warnings_flags().into();
+                cmd.push_cc_arg(wflags);
+            }
+            Some(false) => {
+                let wflags = cmd.family.warnings_suppression_flags().into();
+                cmd.push_cc_arg(wflags);
+            }
+            None => {
+                if envflags.is_none() {
+                    let wflags = cmd.family.warnings_flags().into();
+                    cmd.push_cc_arg(wflags);
+                }
+            }
         }
         if self.extra_warnings.unwrap_or(envflags.is_none()) {
             if let Some(wflags) = cmd.family.extra_warnings_flags() {
@@ -2145,6 +2127,7 @@ impl Build {
                     target.os != "windows"
                         && target.os != "none"
                         && target.os != "uefi"
+                        && target.os != "vita"
                         && target.arch != "wasm32"
                         && target.arch != "wasm64",
                 ) {
@@ -2209,7 +2192,11 @@ impl Build {
                 cmd.args.push("-G".into());
             }
             let family = cmd.family;
-            family.add_debug_flags(cmd, self.get_dwarf_version());
+            family.add_debug_flags(
+                cmd,
+                self.get_debug_str().as_deref().unwrap_or_default(),
+                self.get_dwarf_version(),
+            );
         }
 
         if self.get_force_frame_pointer() {
@@ -2302,7 +2289,7 @@ impl Build {
                     // So instead, we pass the deployment target with `-m*-version-min=`, and only
                     // pass it here on visionOS and Mac Catalyst where that option does not exist:
                     // https://github.com/rust-lang/cc-rs/issues/1383
-                    let version = if target.os == "visionos" || target.abi == "macabi" {
+                    let version = if target.os == "visionos" || target.env == "macabi" {
                         Some(self.apple_deployment_target(target))
                     } else {
                         None
@@ -2320,10 +2307,15 @@ impl Build {
                 cmd.push_cc_arg("-Brepro".into());
 
                 if clang_cl {
-                    if target.arch == "x86_64" {
-                        cmd.push_cc_arg("-m64".into());
-                    } else if target.arch == "x86" {
-                        cmd.push_cc_arg("-m32".into());
+                    cmd.push_cc_arg(
+                        format!(
+                            "--target={}",
+                            target.llvm_target(&self.get_raw_target()?, None)
+                        )
+                        .into(),
+                    );
+
+                    if target.arch == "x86" {
                         // See
                         // <https://learn.microsoft.com/en-us/cpp/build/reference/arch-x86?view=msvc-170>.
                         //
@@ -2334,14 +2326,6 @@ impl Build {
                         // <https://github.com/microsoft/STL/issues/3922>, and -
                         // <https://github.com/microsoft/STL/pull/4741>.
                         cmd.push_cc_arg("-arch:SSE2".into());
-                    } else {
-                        cmd.push_cc_arg(
-                            format!(
-                                "--target={}",
-                                target.llvm_target(&self.get_raw_target()?, None)
-                            )
-                            .into(),
-                        );
                     }
                 } else if target.full_arch == "i586" {
                     cmd.push_cc_arg("-arch:IA32".into());
@@ -2531,6 +2515,13 @@ impl Build {
             }
         }
 
+        if raw_target == "wasm32v1-none" {
+            // `wasm32v1-none` target only exists in `rustc`, so we need to change the compilation flags:
+            // https://doc.rust-lang.org/rustc/platform-support/wasm32v1-none.html
+            cmd.push_cc_arg("-mcpu=mvp".into());
+            cmd.push_cc_arg("-mmutable-globals".into());
+        }
+
         if target.os == "solaris" || target.os == "illumos" {
             // On Solaris and illumos, multi-threaded C programs must be built with `_REENTRANT`
             // defined. This configures headers to define APIs appropriately for multi-threaded
@@ -2594,25 +2585,26 @@ impl Build {
 
     fn msvc_macro_assembler(&self) -> Result<Command, Error> {
         let target = self.get_target()?;
-        let tool = if target.arch == "x86_64" {
-            "ml64.exe"
-        } else if target.arch == "arm" {
-            "armasm.exe"
-        } else if target.arch == "aarch64" {
-            "armasm64.exe"
-        } else {
-            "ml.exe"
+        let tool = match target.arch {
+            "x86_64" => "ml64.exe",
+            "arm" => "armasm.exe",
+            "aarch64" | "arm64ec" => "armasm64.exe",
+            _ => "ml.exe",
         };
         let mut cmd = self
-            .windows_registry_find(&target, tool)
+            .find_msvc_tools_find(&target, tool)
             .unwrap_or_else(|| self.cmd(tool));
         cmd.arg("-nologo"); // undocumented, yet working with armasm[64]
         for directory in self.include_directories.iter() {
             cmd.arg("-I").arg(&**directory);
         }
-        if target.arch == "aarch64" || target.arch == "arm" {
+        if is_arm(&target) {
             if self.get_debug() {
                 cmd.arg("-g");
+            }
+
+            if target.arch == "arm64ec" {
+                cmd.args(["-machine", "ARM64EC"]);
             }
 
             for (key, value) in self.definitions.iter() {
@@ -2791,7 +2783,7 @@ impl Build {
         // https://github.com/llvm/llvm-project/issues/88271
         // And the workaround to use `-mtargetos=` cannot be used with the `--target` flag that we
         // otherwise specify. So we avoid emitting that, and put the version in `--target` instead.
-        if cmd.is_like_gnu() || !(target.os == "visionos" || target.abi == "macabi") {
+        if cmd.is_like_gnu() || !(target.os == "visionos" || target.env == "macabi") {
             let min_version = self.apple_deployment_target(&target);
             cmd.args
                 .push(target.apple_version_flag(&min_version).into());
@@ -2811,7 +2803,7 @@ impl Build {
             cmd.env
                 .push(("SDKROOT".into(), OsStr::new(&sdk_path).to_owned()));
 
-            if target.abi == "macabi" {
+            if target.env == "macabi" {
                 // Mac Catalyst uses the macOS SDK, but to compile against and
                 // link to iOS-specific frameworks, we should have the support
                 // library stubs in the include and library search path.
@@ -2854,6 +2846,14 @@ impl Build {
         cmd
     }
 
+    fn prefer_clang(&self) -> bool {
+        if let Some(env) = self.getenv("CARGO_ENCODED_RUSTFLAGS") {
+            env.to_string_lossy().contains("linker-plugin-lto")
+        } else {
+            false
+        }
+    }
+
     fn get_base_compiler(&self) -> Result<Tool, Error> {
         let out_dir = self.get_out_dir().ok();
         let out_dir = out_dir.as_deref();
@@ -2868,23 +2868,35 @@ impl Build {
         }
         let target = self.get_target()?;
         let raw_target = self.get_raw_target()?;
-        let (env, msvc, gnu, traditional, clang) = if self.cpp {
-            ("CXX", "cl.exe", "g++", "c++", "clang++")
+
+        let msvc = if self.prefer_clang_cl_over_msvc {
+            "clang-cl.exe"
         } else {
-            ("CC", "cl.exe", "gcc", "cc", "clang")
+            "cl.exe"
         };
 
-        // On historical Solaris systems, "cc" may have been Sun Studio, which
-        // is not flag-compatible with "gcc".  This history casts a long shadow,
-        // and many modern illumos distributions today ship GCC as "gcc" without
-        // also making it available as "cc".
+        let (env, gnu, traditional, clang) = if self.cpp {
+            ("CXX", "g++", "c++", "clang++")
+        } else {
+            ("CC", "gcc", "cc", "clang")
+        };
+
+        let fallback = Cow::Borrowed(Path::new(traditional));
         let default = if cfg!(target_os = "solaris") || cfg!(target_os = "illumos") {
-            gnu
+            // On historical Solaris systems, "cc" may have been Sun Studio, which
+            // is not flag-compatible with "gcc".  This history casts a long shadow,
+            // and many modern illumos distributions today ship GCC as "gcc" without
+            // also making it available as "cc".
+            Cow::Borrowed(Path::new(gnu))
+        } else if self.prefer_clang() {
+            self.which(Path::new(clang), None)
+                .map(Cow::Owned)
+                .unwrap_or(fallback)
         } else {
-            traditional
+            fallback
         };
 
-        let cl_exe = self.windows_registry_find_tool(&target, "cl.exe");
+        let cl_exe = self.find_msvc_tools_find_tool(&target, msvc);
 
         let tool_opt: Option<Tool> = self
             .env_tool(env)
@@ -2937,19 +2949,19 @@ impl Build {
         let tool = match tool_opt {
             Some(t) => t,
             None => {
-                let compiler = if cfg!(windows) && target.os == "windows" {
+                let compiler: PathBuf = if cfg!(windows) && target.os == "windows" {
                     if target.env == "msvc" {
-                        msvc.to_string()
+                        msvc.into()
                     } else {
                         let cc = if target.abi == "llvm" { clang } else { gnu };
-                        format!("{cc}.exe")
+                        format!("{cc}.exe").into()
                     }
                 } else if target.os == "ios"
                     || target.os == "watchos"
                     || target.os == "tvos"
                     || target.os == "visionos"
                 {
-                    clang.to_string()
+                    clang.into()
                 } else if target.os == "android" {
                     autodetect_android_compiler(&raw_target, gnu, clang)
                 } else if target.os == "cloudabi" {
@@ -2957,42 +2969,37 @@ impl Build {
                         "{}-{}-{}-{}",
                         target.full_arch, target.vendor, target.os, traditional
                     )
+                    .into()
+                } else if target.os == "wasi" {
+                    self.autodetect_wasi_compiler(&raw_target, clang)
                 } else if target.arch == "wasm32" || target.arch == "wasm64" {
                     // Compiling WASM is not currently supported by GCC, so
                     // let's default to Clang.
-                    clang.to_string()
+                    clang.into()
                 } else if target.os == "vxworks" {
-                    if self.cpp {
-                        "wr-c++".to_string()
-                    } else {
-                        "wr-cc".to_string()
-                    }
+                    if self.cpp { "wr-c++" } else { "wr-cc" }.into()
                 } else if target.arch == "arm" && target.vendor == "kmc" {
-                    format!("arm-kmc-eabi-{gnu}")
+                    format!("arm-kmc-eabi-{gnu}").into()
                 } else if target.arch == "aarch64" && target.vendor == "kmc" {
-                    format!("aarch64-kmc-elf-{gnu}")
+                    format!("aarch64-kmc-elf-{gnu}").into()
                 } else if target.os == "nto" {
                     // See for details: https://github.com/rust-lang/cc-rs/pull/1319
-                    if self.cpp {
-                        "q++".to_string()
-                    } else {
-                        "qcc".to_string()
-                    }
+                    if self.cpp { "q++" } else { "qcc" }.into()
                 } else if self.get_is_cross_compile()? {
                     let prefix = self.prefix_for_target(&raw_target);
                     match prefix {
                         Some(prefix) => {
                             let cc = if target.abi == "llvm" { clang } else { gnu };
-                            format!("{prefix}-{cc}")
+                            format!("{prefix}-{cc}").into()
                         }
-                        None => default.to_string(),
+                        None => default.into(),
                     }
                 } else {
-                    default.to_string()
+                    default.into()
                 };
 
                 let mut t = Tool::new(
-                    PathBuf::from(compiler),
+                    compiler,
                     &self.build_cache.cached_compiler_family,
                     &self.cargo_output,
                     out_dir,
@@ -3069,6 +3076,23 @@ impl Build {
             };
         }
 
+        // Under cross-compilation scenarios, llvm-mingw's clang executable is just a
+        // wrapper script that calls the actual clang binary with a suitable `--target`
+        // argument, much like the Android NDK case outlined above. Passing a target
+        // argument ourselves in this case will result in an error, as they expect
+        // targets like `x86_64-w64-mingw32`, and we can't always set such a target
+        // string because it is specific to this MinGW cross-compilation toolchain.
+        //
+        // For example, the following command will always fail due to using an unsuitable
+        // `--target` argument we'd otherwise pass:
+        // $ /opt/llvm-mingw-20250613-ucrt-ubuntu-22.04-x86_64/bin/x86_64-w64-mingw32-clang --target=x86_64-pc-windows-gnu dummy.c
+        //
+        // Code reference:
+        // https://github.com/mstorsjo/llvm-mingw/blob/a1f6413e5c21fd74b64137b56167f4fba500d1d8/wrappers/clang-target-wrapper.sh#L31
+        if !cfg!(windows) && target.os == "windows" && is_llvm_mingw_wrapper(&tool.path) {
+            tool.has_internal_target_arg = true;
+        }
+
         // If we found `cl.exe` in our environment, the tool we're returning is
         // an MSVC-like tool, *and* no env vars were set then set env vars for
         // the tool that we're returning.
@@ -3129,12 +3153,8 @@ impl Build {
         // If this is an exact path on the filesystem we don't want to do any
         // interpretation at all, just pass it on through. This'll hopefully get
         // us to support spaces-in-paths.
-        if Path::new(tool).exists() {
-            return Some((
-                PathBuf::from(tool),
-                self.rustc_wrapper_fallback(),
-                Vec::new(),
-            ));
+        if let Some(exe) = check_exe(Path::new(tool).into()) {
+            return Some((exe, self.rustc_wrapper_fallback(), Vec::new()));
         }
 
         // Ok now we want to handle a couple of scenarios. We'll assume from
@@ -3357,12 +3377,8 @@ impl Build {
                     let compiler = self.get_base_compiler().ok()?;
                     if compiler.is_like_clang() {
                         name = format!("llvm-{tool}").into();
-                        self.search_programs(
-                            &mut self.cmd(&compiler.path),
-                            &name,
-                            &self.cargo_output,
-                        )
-                        .map(|name| self.cmd(name))
+                        self.search_programs(&compiler.path, &name, &self.cargo_output)
+                            .map(|name| self.cmd(name))
                     } else {
                         None
                     }
@@ -3392,25 +3408,32 @@ impl Build {
                     // here.
 
                     let compiler = self.get_base_compiler()?;
-                    let mut lib = String::new();
-                    if compiler.family == (ToolFamily::Msvc { clang_cl: true }) {
-                        // See if there is 'llvm-lib' next to 'clang-cl'
-                        // Another possibility could be to see if there is 'clang'
-                        // next to 'clang-cl' and use 'search_programs()' to locate
-                        // 'llvm-lib'. This is because 'clang-cl' doesn't support
-                        // the -print-search-dirs option.
-                        if let Some(mut cmd) = self.which(&compiler.path, None) {
-                            cmd.pop();
-                            cmd.push("llvm-lib.exe");
-                            if let Some(llvm_lib) = self.which(&cmd, None) {
-                                llvm_lib.to_str().unwrap().clone_into(&mut lib);
+                    let lib = if compiler.family == (ToolFamily::Msvc { clang_cl: true }) {
+                        self.search_programs(
+                            &compiler.path,
+                            Path::new("llvm-lib"),
+                            &self.cargo_output,
+                        )
+                        .or_else(|| {
+                            // See if there is 'llvm-lib' next to 'clang-cl'
+                            if let Some(mut cmd) = self.which(&compiler.path, None) {
+                                cmd.pop();
+                                cmd.push("llvm-lib");
+                                self.which(&cmd, None)
+                            } else {
+                                None
                             }
-                        }
-                    }
+                        })
+                    } else {
+                        None
+                    };
 
-                    if lib.is_empty() {
+                    if let Some(lib) = lib {
+                        name = lib;
+                        self.cmd(&name)
+                    } else {
                         name = PathBuf::from("lib.exe");
-                        let mut cmd = match self.windows_registry_find(&target, "lib.exe") {
+                        let mut cmd = match self.find_msvc_tools_find(&target, "lib.exe") {
                             Some(t) => t,
                             None => self.cmd("lib.exe"),
                         };
@@ -3418,9 +3441,6 @@ impl Build {
                             cmd.arg("/machine:arm64ec");
                         }
                         cmd
-                    } else {
-                        name = lib.into();
-                        self.cmd(&name)
                     }
                 } else if target.os == "illumos" {
                     // The default 'ar' on illumos uses a non-standard flags,
@@ -3511,11 +3531,13 @@ impl Build {
                     // Note: there is no `aarch64-pc-windows-gnu` target, only `-gnullvm`
                     "aarch64-pc-windows-gnullvm" => Some("aarch64-w64-mingw32"),
                     "aarch64-uwp-windows-gnu" => Some("aarch64-w64-mingw32"),
+                    "aarch64-unknown-helenos" => Some("aarch64-helenos"),
                     "aarch64-unknown-linux-gnu" => Some("aarch64-linux-gnu"),
                     "aarch64-unknown-linux-musl" => Some("aarch64-linux-musl"),
                     "aarch64-unknown-netbsd" => Some("aarch64--netbsd"),
                     "arm-unknown-linux-gnueabi" => Some("arm-linux-gnueabi"),
                     "armv4t-unknown-linux-gnueabi" => Some("arm-linux-gnueabi"),
+                    "armv5te-unknown-helenos-eabi" => Some("arm-helenos"),
                     "armv5te-unknown-linux-gnueabi" => Some("arm-linux-gnueabi"),
                     "armv5te-unknown-linux-musleabi" => Some("arm-linux-gnueabi"),
                     "arm-unknown-linux-gnueabihf" => Some("arm-linux-gnueabihf"),
@@ -3538,6 +3560,7 @@ impl Build {
                     "i686-pc-windows-gnu" => Some("i686-w64-mingw32"),
                     "i686-pc-windows-gnullvm" => Some("i686-w64-mingw32"),
                     "i686-uwp-windows-gnu" => Some("i686-w64-mingw32"),
+                    "i686-unknown-helenos" => Some("i686-helenos"),
                     "i686-unknown-linux-gnu" => self.find_working_gnu_prefix(&[
                         "i686-linux-gnu",
                         "x86_64-linux-gnu", // transparently support gcc-multilib
@@ -3556,6 +3579,7 @@ impl Build {
                     "mipsisa32r6el-unknown-linux-gnu" => Some("mipsisa32r6el-linux-gnu"),
                     "mipsisa64r6-unknown-linux-gnuabi64" => Some("mipsisa64r6-linux-gnuabi64"),
                     "mipsisa64r6el-unknown-linux-gnuabi64" => Some("mipsisa64r6el-linux-gnuabi64"),
+                    "powerpc-unknown-helenos" => Some("ppc-helenos"),
                     "powerpc-unknown-linux-gnu" => Some("powerpc-linux-gnu"),
                     "powerpc-unknown-linux-gnuspe" => Some("powerpc-linux-gnuspe"),
                     "powerpc-unknown-netbsd" => Some("powerpc--netbsd"),
@@ -3566,8 +3590,18 @@ impl Build {
                         "riscv64-unknown-elf",
                         "riscv-none-embed",
                     ]),
+                    "riscv32im-unknown-none-elf" => self.find_working_gnu_prefix(&[
+                        "riscv32-unknown-elf",
+                        "riscv64-unknown-elf",
+                        "riscv-none-embed",
+                    ]),
                     "riscv32imac-esp-espidf" => Some("riscv32-esp-elf"),
                     "riscv32imac-unknown-none-elf" => self.find_working_gnu_prefix(&[
+                        "riscv32-unknown-elf",
+                        "riscv64-unknown-elf",
+                        "riscv-none-embed",
+                    ]),
+                    "riscv32imafc-unknown-none-elf" => self.find_working_gnu_prefix(&[
                         "riscv32-unknown-elf",
                         "riscv64-unknown-elf",
                         "riscv-none-embed",
@@ -3594,12 +3628,14 @@ impl Build {
                         "riscv-none-embed",
                     ]),
                     "riscv64gc-unknown-linux-gnu" => Some("riscv64-linux-gnu"),
+                    "riscv64a23-unknown-linux-gnu" => Some("riscv64-linux-gnu"),
                     "riscv32gc-unknown-linux-gnu" => Some("riscv32-linux-gnu"),
                     "riscv64gc-unknown-linux-musl" => Some("riscv64-linux-musl"),
                     "riscv32gc-unknown-linux-musl" => Some("riscv32-linux-musl"),
                     "riscv64gc-unknown-netbsd" => Some("riscv64--netbsd"),
                     "s390x-unknown-linux-gnu" => Some("s390x-linux-gnu"),
                     "sparc-unknown-linux-gnu" => Some("sparc-linux-gnu"),
+                    "sparc64-unknown-helenos" => Some("sparc64-helenos"),
                     "sparc64-unknown-linux-gnu" => Some("sparc64-linux-gnu"),
                     "sparc64-unknown-netbsd" => Some("sparc64--netbsd"),
                     "sparcv9-sun-solaris" => Some("sparcv9-sun-solaris"),
@@ -3621,6 +3657,7 @@ impl Build {
                     "x86_64-pc-windows-gnullvm" => Some("x86_64-w64-mingw32"),
                     "x86_64-uwp-windows-gnu" => Some("x86_64-w64-mingw32"),
                     "x86_64-rumprun-netbsd" => Some("x86_64-rumprun-netbsd"),
+                    "x86_64-unknown-helenos" => Some("amd64-helenos"),
                     "x86_64-unknown-linux-gnu" => self.find_working_gnu_prefix(&[
                         "x86_64-linux-gnu", // rustfmt wrap
                     ]), // explicit None if not found, so caller knows to fall back
@@ -3628,6 +3665,12 @@ impl Build {
                         self.find_working_gnu_prefix(&["x86_64-linux-musl", "musl"])
                     }
                     "x86_64-unknown-netbsd" => Some("x86_64--netbsd"),
+                    "xtensa-esp32-espidf"
+                    | "xtensa-esp32-none-elf"
+                    | "xtensa-esp32s2-espidf"
+                    | "xtensa-esp32s2-none-elf"
+                    | "xtensa-esp32s3-espidf"
+                    | "xtensa-esp32s3-none-elf" => Some("xtensa-esp-elf"),
                     _ => None,
                 }
                 .map(Cow::Borrowed)
@@ -3703,8 +3746,25 @@ impl Build {
         }
     }
 
+    /// Returns true if *any* debug info is enabled.
+    ///
+    /// [`get_debug_str`] provides more detail.
     fn get_debug(&self) -> bool {
-        self.debug.unwrap_or_else(|| self.getenv_boolean("DEBUG"))
+        match self.get_debug_str() {
+            Err(_) => false,
+            Ok(d) => match &*d {
+                // From https://doc.rust-lang.org/cargo/reference/profiles.html#debug
+                "" | "0" | "false" | "none" => false,
+                _ => true,
+            },
+        }
+    }
+
+    fn get_debug_str(&self) -> Result<Cow<'_, str>, Error> {
+        match &self.debug {
+            Some(d) => Ok(Cow::Borrowed(d)),
+            None => self.getenv_unwrap_str("DEBUG").map(Cow::Owned),
+        }
     }
 
     fn get_shell_escaped_flags(&self) -> bool {
@@ -3775,7 +3835,12 @@ impl Build {
             self.cargo_output
                 .print_metadata(&format_args!("cargo:rerun-if-env-changed={v}"));
         }
-        let r = env::var_os(v).map(Arc::from);
+        let r = self
+            .env
+            .iter()
+            .find(|(k, _)| k.as_ref() == v)
+            .map(|(_, value)| value.clone())
+            .or_else(|| env::var_os(v).map(Arc::from));
         self.cargo_output.print_metadata(&format_args!(
             "{} = {}",
             v,
@@ -3825,7 +3890,7 @@ impl Build {
         } else {
             "HOST"
         };
-        let target_u = target.replace('-', "_");
+        let target_u = target.replace(['-', '.'], "_");
 
         Ok([
             format!("{env}_{target}"),
@@ -4130,13 +4195,6 @@ impl Build {
     }
 
     fn which(&self, tool: &Path, path_entries: Option<&OsStr>) -> Option<PathBuf> {
-        fn check_exe(mut exe: PathBuf) -> Option<PathBuf> {
-            let exe_ext = std::env::consts::EXE_EXTENSION;
-            let check =
-                exe.exists() || (!exe_ext.is_empty() && exe.set_extension(exe_ext) && exe.exists());
-            check.then_some(exe)
-        }
-
         // Loop through PATH entries searching for the |tool|.
         let find_exe_in_path = |path_entries: &OsStr| -> Option<PathBuf> {
             env::split_paths(path_entries).find_map(|path_entry| check_exe(path_entry.join(tool)))
@@ -4152,15 +4210,15 @@ impl Build {
         }
     }
 
-    /// search for |prog| on 'programs' path in '|cc| -print-search-dirs' output
+    /// search for |prog| on 'programs' path in '|cc| --print-search-dirs' output
     fn search_programs(
         &self,
-        cc: &mut Command,
+        cc: &Path,
         prog: &Path,
         cargo_output: &CargoOutput,
     ) -> Option<PathBuf> {
         let search_dirs = run_output(
-            cc.arg("-print-search-dirs"),
+            self.cmd(cc).arg("--print-search-dirs"),
             // this doesn't concern the compilation so we always want to show warnings.
             cargo_output,
         )
@@ -4176,17 +4234,17 @@ impl Build {
         None
     }
 
-    fn windows_registry_find(&self, target: &TargetInfo<'_>, tool: &str) -> Option<Command> {
-        self.windows_registry_find_tool(target, tool)
+    fn find_msvc_tools_find(&self, target: &TargetInfo<'_>, tool: &str) -> Option<Command> {
+        self.find_msvc_tools_find_tool(target, tool)
             .map(|c| c.to_command())
     }
 
-    fn windows_registry_find_tool(&self, target: &TargetInfo<'_>, tool: &str) -> Option<Tool> {
+    fn find_msvc_tools_find_tool(&self, target: &TargetInfo<'_>, tool: &str) -> Option<Tool> {
         struct BuildEnvGetter<'s>(&'s Build);
 
-        impl windows_registry::EnvGetter for BuildEnvGetter<'_> {
-            fn get_env(&self, name: &str) -> Option<windows_registry::Env> {
-                self.0.getenv(name).map(windows_registry::Env::Arced)
+        impl ::find_msvc_tools::EnvGetter for BuildEnvGetter<'_> {
+            fn get_env(&self, name: &str) -> Option<::find_msvc_tools::Env> {
+                self.0.getenv(name).map(::find_msvc_tools::Env::Arced)
             }
         }
 
@@ -4194,7 +4252,30 @@ impl Build {
             return None;
         }
 
-        windows_registry::find_tool_inner(target.full_arch, tool, &BuildEnvGetter(self))
+        ::find_msvc_tools::find_tool_with_env(target.full_arch, tool, &BuildEnvGetter(self))
+            .map(Tool::from_find_msvc_tools)
+    }
+
+    /// Compiling for WASI targets typically uses the [wasi-sdk] project and
+    /// installations of wasi-sdk are typically indicated with the
+    /// `WASI_SDK_PATH` environment variable. Check to see if that environment
+    /// variable exists, and check to see if an appropriate compiler is located
+    /// there. If that all passes then use that compiler by default, but
+    /// otherwise fall back to whatever the clang default is since gcc doesn't
+    /// have support for compiling to wasm.
+    ///
+    /// [wasi-sdk]: https://github.com/WebAssembly/wasi-sdk
+    fn autodetect_wasi_compiler(&self, raw_target: &str, clang: &str) -> PathBuf {
+        if let Some(path) = self.getenv("WASI_SDK_PATH") {
+            let target_clang = Path::new(&path)
+                .join("bin")
+                .join(format!("{raw_target}-clang"));
+            if let Some(path) = self.which(&target_clang, None) {
+                return path;
+            }
+        }
+
+        clang.into()
     }
 }
 
@@ -4238,8 +4319,19 @@ fn android_clang_compiler_uses_target_arg_internally(clang_path: &Path) -> bool 
     false
 }
 
+fn is_llvm_mingw_wrapper(clang_path: &Path) -> bool {
+    if let Some(filename) = clang_path
+        .file_name()
+        .and_then(|file_name| file_name.to_str())
+    {
+        filename.ends_with("-w64-mingw32-clang") || filename.ends_with("-w64-mingw32-clang++")
+    } else {
+        false
+    }
+}
+
 // FIXME: Use parsed target.
-fn autodetect_android_compiler(raw_target: &str, gnu: &str, clang: &str) -> String {
+fn autodetect_android_compiler(raw_target: &str, gnu: &str, clang: &str) -> PathBuf {
     let new_clang_key = match raw_target {
         "aarch64-linux-android" => Some("aarch64"),
         "armv7-linux-androideabi" => Some("armv7a"),
@@ -4284,6 +4376,7 @@ fn autodetect_android_compiler(raw_target: &str, gnu: &str, clang: &str) -> Stri
     } else {
         clang_compiler
     }
+    .into()
 }
 
 // Rust and clang/cc don't agree on how to name the target.
@@ -4302,6 +4395,10 @@ fn map_darwin_target_from_rust_to_compiler_architecture<'a>(target: &TargetInfo<
         "x86_64h" => "x86_64h",
         arch => arch,
     }
+}
+
+fn is_arm(target: &TargetInfo<'_>) -> bool {
+    matches!(target.arch, "aarch64" | "arm64ec" | "arm")
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -4352,9 +4449,8 @@ fn is_disabled() -> bool {
         0 => {
             let truth = compute_is_disabled();
             let encoded_truth = if truth { 2u8 } else { 1 };
-            // Might race against another thread, but we'd both be setting the
-            // same value so it should be fine.
-            CACHE.store(encoded_truth, Relaxed);
+            // Use compare_exchange to avoid race condition
+            let _ = CACHE.compare_exchange(0, encoded_truth, Relaxed, Relaxed);
             truth
         }
         _ => unreachable!(),
@@ -4367,10 +4463,16 @@ fn check_disabled() -> Result<(), Error> {
     if is_disabled() {
         return Err(Error::new(
             ErrorKind::Disabled,
-            "the `cc` crate's functionality has been disabled by the `CC_FORCE_DISABLE` environment variable."
+            "the `cc` crate's functionality has been disabled by the `CC_FORCE_DISABLE` environment variable.",
         ));
     }
     Ok(())
+}
+
+fn check_exe(mut exe: PathBuf) -> Option<PathBuf> {
+    let exe_ext = std::env::consts::EXE_EXTENSION;
+    let check = exe.exists() || (!exe_ext.is_empty() && exe.set_extension(exe_ext) && exe.exists());
+    check.then_some(exe)
 }
 
 #[cfg(test)]

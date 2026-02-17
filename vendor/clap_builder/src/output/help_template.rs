@@ -479,20 +479,18 @@ impl HelpTemplate<'_, '_> {
             // args alignment
             should_show_arg(self.use_long, arg)
         }) {
-            if longest_filter(arg) {
-                let width = display_width(&arg.to_string());
-                let actual_width = if arg.is_positional() {
-                    width
-                } else {
-                    width + SHORT_SIZE
-                };
-                longest = longest.max(actual_width);
-                debug!(
-                    "HelpTemplate::write_args: arg={:?} longest={}",
-                    arg.get_id(),
-                    longest
-                );
-            }
+            let width = display_width(&arg.to_string());
+            let actual_width = if arg.get_long().is_some() {
+                width + SHORT_SIZE
+            } else {
+                width
+            };
+            longest = longest.max(actual_width);
+            debug!(
+                "HelpTemplate::write_args: arg={:?} longest={}",
+                arg.get_id(),
+                longest
+            );
 
             let key = (sort_key)(arg);
             ord_v.insert(key, arg);
@@ -659,12 +657,15 @@ impl HelpTemplate<'_, '_> {
         help.indent("", &trailing_indent);
         self.writer.push_styled(&help);
 
+        let mut has_possible_values = false;
         if let Some(arg) = arg {
             if !arg.is_hide_possible_values_set() && self.use_long_pv(arg) {
                 const DASH_SPACE: usize = "- ".len();
                 let possible_vals = arg.get_possible_values();
                 if !possible_vals.is_empty() {
                     debug!("HelpTemplate::help: Found possible vals...{possible_vals:?}");
+                    has_possible_values = true;
+
                     let longest = possible_vals
                         .iter()
                         .filter(|f| !f.is_hide_set())
@@ -711,7 +712,7 @@ impl HelpTemplate<'_, '_> {
 
         if !spec_vals.is_empty() && next_line_specs {
             let mut help = StyledStr::new();
-            if !help_is_empty {
+            if !help_is_empty || has_possible_values {
                 let sep = "\n\n";
                 help.push_str(sep);
             }
@@ -1142,10 +1143,6 @@ fn should_show_arg(use_long: bool, arg: &Arg) -> bool {
 
 fn should_show_subcommand(subcommand: &Command) -> bool {
     !subcommand.is_hide_set()
-}
-
-fn longest_filter(arg: &Arg) -> bool {
-    arg.is_takes_value_set() || arg.get_long().is_some() || arg.get_short().is_none()
 }
 
 #[cfg(test)]

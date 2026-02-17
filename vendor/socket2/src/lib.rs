@@ -54,7 +54,7 @@
 
 #![deny(missing_docs, missing_debug_implementations, rust_2018_idioms)]
 // Automatically generate required OS/features for docs.rs.
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 // Disallow warnings when running tests.
 #![cfg_attr(test, deny(warnings))]
 // Disallow warnings in examples.
@@ -562,6 +562,7 @@ impl TcpKeepalive {
 /// This wraps `msghdr` on Unix and `WSAMSG` on Windows. Also see [`MsgHdrMut`]
 /// for the variant used by `recvmsg(2)`.
 #[cfg(not(target_os = "redox"))]
+#[repr(transparent)]
 pub struct MsgHdr<'addr, 'bufs, 'control> {
     inner: sys::msghdr,
     #[allow(clippy::type_complexity)]
@@ -630,6 +631,7 @@ impl<'name, 'bufs, 'control> fmt::Debug for MsgHdr<'name, 'bufs, 'control> {
 /// This wraps `msghdr` on Unix and `WSAMSG` on Windows. Also see [`MsgHdr`] for
 /// the variant used by `sendmsg(2)`.
 #[cfg(not(target_os = "redox"))]
+#[repr(transparent)]
 pub struct MsgHdrMut<'addr, 'bufs, 'control> {
     inner: sys::msghdr,
     #[allow(clippy::type_complexity)]

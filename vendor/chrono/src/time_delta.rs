@@ -10,6 +10,8 @@
 
 //! Temporal quantification
 
+#[cfg(all(not(feature = "std"), feature = "core-error"))]
+use core::error::Error;
 use core::fmt;
 use core::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 use core::time::Duration;
@@ -57,6 +59,7 @@ const SECS_PER_WEEK: i64 = 604_800;
     archive_attr(derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash))
 )]
 #[cfg_attr(feature = "rkyv-validation", archive(check_bytes))]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct TimeDelta {
     secs: i64,
     nanos: i32, // Always 0 <= nanos < NANOS_PER_SEC
@@ -587,7 +590,7 @@ impl fmt::Display for TimeDelta {
         // but we need to print it anyway.
         let (abs, sign) = if self.secs < 0 { (-*self, "-") } else { (*self, "") };
 
-        write!(f, "{}P", sign)?;
+        write!(f, "{sign}P")?;
         // Plenty of ways to encode an empty string. `P0D` is short and not too strange.
         if abs.secs == 0 && abs.nanos == 0 {
             return f.write_str("0D");
@@ -608,7 +611,7 @@ impl fmt::Display for TimeDelta {
                 fraction_digits = div;
                 figures -= 1;
             }
-            f.write_fmt(format_args!(".{:01$}", fraction_digits, figures))?;
+            f.write_fmt(format_args!(".{fraction_digits:0figures$}"))?;
         }
         f.write_str("S")?;
         Ok(())
@@ -622,6 +625,7 @@ impl fmt::Display for TimeDelta {
 /// *seconds*, while this module supports signed range of up to
 /// `i64::MAX` of *milliseconds*.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct OutOfRangeError(());
 
 impl fmt::Display for OutOfRangeError {
@@ -630,7 +634,7 @@ impl fmt::Display for OutOfRangeError {
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "core-error"))]
 impl Error for OutOfRangeError {
     #[allow(deprecated)]
     fn description(&self) -> &str {

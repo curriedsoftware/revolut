@@ -49,6 +49,23 @@ impl SockAddrStorage {
     /// # Safety
     ///
     /// The type `T` must be one of the `sockaddr_*` types defined by this platform.
+    ///
+    /// # Examples
+    /// ```
+    /// # #[allow(dead_code)]
+    /// # #[cfg(unix)] mod unix_example {
+    /// # use core::mem::size_of;
+    /// use libc::sockaddr_storage;
+    /// use socket2::{SockAddr, SockAddrStorage, socklen_t};
+    ///
+    /// fn from_sockaddr_storage(recv_address: &sockaddr_storage) -> SockAddr {
+    ///     let mut storage = SockAddrStorage::zeroed();
+    ///     let libc_address = unsafe { storage.view_as::<sockaddr_storage>() };
+    ///     *libc_address = *recv_address;
+    ///     unsafe { SockAddr::new(storage, size_of::<sockaddr_storage>() as socklen_t) }
+    /// }
+    /// # }
+    /// ```
     #[inline]
     pub unsafe fn view_as<T>(&mut self) -> &mut T {
         assert!(size_of::<T>() <= size_of::<Self>());
@@ -232,7 +249,7 @@ impl SockAddr {
         &self.storage as *const sockaddr_storage as *const SockAddrStorage
     }
 
-    /// Retuns the address as the storage.
+    /// Returns the address as the storage.
     pub const fn as_storage(self) -> SockAddrStorage {
         SockAddrStorage {
             storage: self.storage,
@@ -309,7 +326,7 @@ impl SockAddr {
     /// Returns the initialised storage bytes.
     fn as_bytes(&self) -> &[u8] {
         // SAFETY: `self.storage` is a C struct which can always be treated a
-        // slice of bytes. Furthermore, we ensure we don't read any unitialised
+        // slice of bytes. Furthermore, we ensure we don't read any uninitialised
         // bytes by using `self.len`.
         unsafe { std::slice::from_raw_parts(self.as_ptr().cast(), self.len as usize) }
     }

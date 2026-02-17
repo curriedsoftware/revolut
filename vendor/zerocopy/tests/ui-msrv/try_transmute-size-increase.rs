@@ -6,9 +6,7 @@
 // This file may not be copied, modified, or distributed except according to
 // those terms.
 
-include!("../../zerocopy-derive/tests/include.rs");
-
-extern crate zerocopy;
+include!("../include.rs");
 
 use util::AU16;
 use zerocopy::try_transmute;
@@ -16,5 +14,5 @@ use zerocopy::try_transmute;
 // `try_transmute!` does not support transmuting from a smaller type to a larger
 // one.
 fn main() {
-    let increase_size: Result<AU16, _> = try_transmute!(0u8);
+    let _increase_size: Result<AU16, _> = try_transmute!(0u8);
 }

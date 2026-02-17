@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.74"
 name = "clap_builder"
-version = "4.5.44"
+version = "4.5.59"
 build = false
 include = [
     "build.rs",
@@ -43,14 +43,7 @@ repository = "https://github.com/clap-rs/clap"
 
 [package.metadata.docs.rs]
 features = ["unstable-doc"]
-rustdoc-args = [
-    "--cfg",
-    "docsrs",
-]
-cargo-args = [
-    "-Zunstable-options",
-    "-Zrustdoc-scrape-examples",
-]
+rustdoc-args = ["--generate-link-to-definition"]
 
 [package.metadata.playground]
 features = ["unstable-doc"]
@@ -120,7 +113,7 @@ version = "0.3.73"
 optional = true
 
 [dependencies.clap_lex]
-version = "0.7.4"
+version = "1.0.0"
 
 [dependencies.strsim]
 version = "0.11.0"
@@ -141,6 +134,9 @@ optional = true
 [dev-dependencies.color-print]
 version = "0.3.6"
 
+[dev-dependencies.snapbox]
+version = "0.6.16"
+
 [dev-dependencies.static_assertions]
 version = "1.1.0"
 
@@ -158,7 +154,7 @@ create_dir = "warn"
 dbg_macro = "warn"
 debug_assert_with_mut_call = "warn"
 doc_markdown = "warn"
-empty_enum = "warn"
+empty_enums = "warn"
 enum_glob_use = "warn"
 expl_impl_clone_on_copy = "warn"
 explicit_deref_methods = "warn"

@@ -202,9 +202,9 @@
 //!
 //! # Thanks
 //!
-//! Zerocopy is maintained by engineers at Google and Amazon with help from
-//! [many wonderful contributors][contributors]. Thank you to everyone who has
-//! lent a hand in making Rust a little more secure!
+//! Zerocopy is maintained by engineers at Google with help from [many wonderful
+//! contributors][contributors]. Thank you to everyone who has lent a hand in
+//! making Rust a little more secure!
 //!
 //! [contributors]: https://github.com/google/zerocopy/graphs/contributors
 
@@ -259,6 +259,7 @@
     clippy::indexing_slicing,
     clippy::missing_inline_in_public_items,
     clippy::missing_safety_doc,
+    clippy::multiple_unsafe_ops_per_block,
     clippy::must_use_candidate,
     clippy::must_use_unit,
     clippy::obfuscated_if_else,
@@ -303,26 +304,9 @@
     clippy::indexing_slicing,
 ))]
 #![cfg_attr(not(any(test, kani, feature = "std")), no_std)]
-// NOTE: This attribute should have the effect of causing CI to fail if
-// `stdarch_x86_avx512` - which is currently stable in 1.89.0-nightly as of this
-// writing on 2025-06-10 - has its stabilization rolled back.
-//
-// FIXME(#2583): Remove once `stdarch_x86_avx512` is stabilized in 1.89.0, and
-// 1.89.0 has been released as stable.
-#![cfg_attr(
-    all(feature = "simd-nightly", any(target_arch = "x86", target_arch = "x86_64")),
-    expect(stable_features)
-)]
-// FIXME(#2583): Remove once `stdarch_x86_avx512` is stabilized in 1.89.0, and
-// 1.89.0 has been released as stable. Replace with version detection for 1.89.0
-// (see #2574 for a draft implementation).
-#![cfg_attr(
-    all(feature = "simd-nightly", any(target_arch = "x86", target_arch = "x86_64")),
-    feature(stdarch_x86_avx512)
-)]
 #![cfg_attr(
     all(feature = "simd-nightly", target_arch = "arm"),
-    feature(stdarch_arm_dsp, stdarch_arm_neon_intrinsics)
+    feature(stdarch_arm_neon_intrinsics)
 )]
 #![cfg_attr(
     all(feature = "simd-nightly", any(target_arch = "powerpc", target_arch = "powerpc64")),
@@ -330,16 +314,21 @@
 )]
 #![cfg_attr(feature = "float-nightly", feature(f16, f128))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
+#![cfg_attr(__ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS, feature(coverage_attribute))]
 #![cfg_attr(
-    __ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS,
-    feature(layout_for_ptr, coverage_attribute)
+    any(__ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS, miri),
+    feature(layout_for_ptr)
 )]
+#![cfg_attr(all(test, __ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS), feature(test))]
 
 // This is a hack to allow zerocopy-derive derives to work in this crate. They
 // assume that zerocopy is linked as an extern crate, so they access items from
 // it as `zerocopy::Xxx`. This makes that still work.
 #[cfg(any(feature = "derive", test))]
 extern crate self as zerocopy;
+
+#[cfg(all(test, __ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS))]
+extern crate test;
 
 #[doc(hidden)]
 #[macro_use]
@@ -349,7 +338,7 @@ pub mod byte_slice;
 pub mod byteorder;
 mod deprecated;
 
-#[doc(hidden)]
+#[cfg(__ZEROCOPY_INTERNAL_USE_ONLY_DEV_MODE)]
 pub mod doctests;
 
 // This module is `pub` so that zerocopy's error types and error handling
@@ -386,7 +375,10 @@ use core::{
 #[cfg(feature = "std")]
 use std::io;
 
-use crate::pointer::invariant::{self, BecauseExclusive};
+#[doc(hidden)]
+pub use crate::pointer::invariant::{self, BecauseExclusive};
+#[doc(hidden)]
+pub use crate::pointer::PtrInner;
 pub use crate::{
     byte_slice::*,
     byteorder::*,
@@ -420,33 +412,15 @@ pub use crate::pointer::{invariant::BecauseImmutable, Maybe, Ptr};
 #[allow(unused_imports)]
 use crate::util::polyfills::{self, NonNullExt as _, NumExt as _};
 
-#[rustversion::nightly]
-#[cfg(all(test, not(__ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS)))]
+#[cfg(all(test, not(__ZEROCOPY_INTERNAL_USE_ONLY_DEV_MODE)))]
 const _: () = {
-    #[deprecated = "some tests may be skipped due to missing RUSTFLAGS=\"--cfg __ZEROCOPY_INTERNAL_USE_ONLY_NIGHTLY_FEATURES_IN_TESTS\""]
-    const _WARNING: () = ();
+    #[deprecated = "Development of zerocopy using cargo is not supported. Please use `cargo.sh` or `win-cargo.bat` instead."]
+    #[allow(unused)]
+    const WARNING: () = ();
     #[warn(deprecated)]
-    _WARNING
+    WARNING
 };
 
-// These exist so that code which was written against the old names will get
-// less confusing error messages when they upgrade to a more recent version of
-// zerocopy. On our MSRV toolchain, the error messages read, for example:
-//
-//   error[E0603]: trait `FromZeroes` is private
-//       --> examples/deprecated.rs:1:15
-//        |
-//   1    | use zerocopy::FromZeroes;
-//        |               ^^^^^^^^^^ private trait
-//        |
-//   note: the trait `FromZeroes` is defined here
-//       --> /Users/josh/workspace/zerocopy/src/lib.rs:1845:5
-//        |
-//   1845 | use FromZeros as FromZeroes;
-//        |     ^^^^^^^^^^^^^^^^^^^^^^^
-//
-// The "note" provides enough context to make it easy to figure out how to fix
-// the error.
 /// Implements [`KnownLayout`].
 ///
 /// This derive analyzes various aspects of a type's layout that are needed for
@@ -549,6 +523,24 @@ const _: () = {
 #[cfg(any(feature = "derive", test))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
 pub use zerocopy_derive::KnownLayout;
+// These exist so that code which was written against the old names will get
+// less confusing error messages when they upgrade to a more recent version of
+// zerocopy. On our MSRV toolchain, the error messages read, for example:
+//
+//   error[E0603]: trait `FromZeroes` is private
+//       --> examples/deprecated.rs:1:15
+//        |
+//   1    | use zerocopy::FromZeroes;
+//        |               ^^^^^^^^^^ private trait
+//        |
+//   note: the trait `FromZeroes` is defined here
+//       --> /Users/josh/workspace/zerocopy/src/lib.rs:1845:5
+//        |
+//   1845 | use FromZeros as FromZeroes;
+//        |     ^^^^^^^^^^^^^^^^^^^^^^^
+//
+// The "note" provides enough context to make it easy to figure out how to fix
+// the error.
 #[allow(unused)]
 use {FromZeros as FromZeroes, IntoBytes as AsBytes, Ref as LayoutVerified};
 
@@ -630,7 +622,7 @@ use {FromZeros as FromZeroes, IntoBytes as AsBytes, Ref as LayoutVerified};
 /// example.
 ///
 /// A `#[repr(C)]` slice DST is laid out [just like sized `#[repr(C)]`
-/// types][repr-c-structs], but the presenence of a variable-length field
+/// types][repr-c-structs], but the presence of a variable-length field
 /// introduces the possibility of *dynamic padding*. In particular, it may be
 /// necessary to add trailing padding *after* the trailing slice field in order
 /// to satisfy the outer type's alignment, and the amount of padding required
@@ -740,7 +732,7 @@ use {FromZeros as FromZeroes, IntoBytes as AsBytes, Ref as LayoutVerified};
     doc = concat!("[derive]: https://docs.rs/zerocopy/", env!("CARGO_PKG_VERSION"), "/zerocopy/derive.KnownLayout.html"),
 )]
 #[cfg_attr(
-    zerocopy_diagnostic_on_unimplemented_1_78_0,
+    not(no_zerocopy_diagnostic_on_unimplemented_1_78_0),
     diagnostic::on_unimplemented(note = "Consider adding `#[derive(KnownLayout)]` to `{Self}`")
 )]
 pub unsafe trait KnownLayout {
@@ -755,7 +747,7 @@ pub unsafe trait KnownLayout {
 
     /// The type of metadata stored in a pointer to `Self`.
     ///
-    /// This is `()` for sized types and `usize` for slice DSTs.
+    /// This is `()` for sized types and [`usize`] for slice DSTs.
     type PointerMetadata: PointerMetadata;
 
     /// A maybe-uninitialized analog of `Self`
@@ -821,7 +813,7 @@ pub unsafe trait KnownLayout {
         let meta = Self::pointer_to_metadata(ptr.as_ptr());
         // SAFETY: `size_for_metadata` promises to only return `None` if the
         // resulting size would not fit in a `usize`.
-        meta.size_for_metadata(Self::LAYOUT)
+        Self::size_for_metadata(meta)
     }
 
     #[doc(hidden)]
@@ -830,6 +822,37 @@ pub unsafe trait KnownLayout {
     fn raw_dangling() -> NonNull<Self> {
         let meta = Self::PointerMetadata::from_elem_count(0);
         Self::raw_from_ptr_len(NonNull::dangling(), meta)
+    }
+
+    /// Computes the size of an object of type `Self` with the given pointer
+    /// metadata.
+    ///
+    /// # Safety
+    ///
+    /// `size_for_metadata` promises to return `None` if and only if the
+    /// resulting size would not fit in a [`usize`]. Note that the returned size
+    /// could exceed the actual maximum valid size of an allocated object,
+    /// [`isize::MAX`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use zerocopy::KnownLayout;
+    ///
+    /// assert_eq!(u8::size_for_metadata(()), Some(1));
+    /// assert_eq!(u16::size_for_metadata(()), Some(2));
+    /// assert_eq!(<[u8]>::size_for_metadata(42), Some(42));
+    /// assert_eq!(<[u16]>::size_for_metadata(42), Some(84));
+    ///
+    /// // This size exceeds the maximum valid object size (`isize::MAX`):
+    /// assert_eq!(<[u8]>::size_for_metadata(usize::MAX), Some(usize::MAX));
+    ///
+    /// // This size, if computed, would exceed `usize::MAX`:
+    /// assert_eq!(<[u16]>::size_for_metadata(usize::MAX), None);
+    /// ```
+    #[inline(always)]
+    fn size_for_metadata(meta: Self::PointerMetadata) -> Option<usize> {
+        meta.size_for_metadata(Self::LAYOUT)
     }
 }
 
@@ -865,6 +888,12 @@ pub trait PointerMetadata: Copy + Eq + Debug {
     /// `elems`. No other types are currently supported.
     fn from_elem_count(elems: usize) -> Self;
 
+    /// Converts `self` to an element count.
+    ///
+    /// If `Self = ()`, this returns `0`. If `Self = usize`, this returns
+    /// `self`. No other types are currently supported.
+    fn to_elem_count(self) -> usize;
+
     /// Computes the size of the object with the given layout and pointer
     /// metadata.
     ///
@@ -887,6 +916,11 @@ impl PointerMetadata for () {
     fn from_elem_count(_elems: usize) -> () {}
 
     #[inline]
+    fn to_elem_count(self) -> usize {
+        0
+    }
+
+    #[inline]
     fn size_for_metadata(self, layout: DstLayout) -> Option<usize> {
         match layout.size_info {
             SizeInfo::Sized { size } => Some(size),
@@ -901,6 +935,11 @@ impl PointerMetadata for usize {
     #[inline]
     fn from_elem_count(elems: usize) -> usize {
         elems
+    }
+
+    #[inline]
+    fn to_elem_count(self) -> usize {
+        self
     }
 
     #[inline]
@@ -1046,6 +1085,7 @@ impl_known_layout!(const N: usize, T => [T; N]);
 // [3] Per https://doc.rust-lang.org/1.85.0/core/cell/struct.Cell.html#memory-layout:
 //
 //   `Cell<T>` has the same in-memory representation as `T`.
+#[allow(clippy::multiple_unsafe_ops_per_block)]
 const _: () = unsafe {
     unsafe_impl_known_layout!(
         #[repr([u8])]
@@ -1069,6 +1109,192 @@ const _: () = unsafe {
 const _: () = unsafe {
     unsafe_impl_known_layout!(T: ?Sized + KnownLayout => #[repr(T::MaybeUninit)] MaybeUninit<T>)
 };
+
+// FIXME(#196, #2856): Eventually, we'll want to support enums variants and
+// union fields being treated uniformly since they behave similarly to each
+// other in terms of projecting validity – specifically, for a type `T` with
+// validity `V`, if `T` is a struct type, then its fields straightforwardly also
+// have validity `V`. By contrast, if `T` is an enum or union type, then
+// validity is not straightforwardly recursive in this way.
+#[doc(hidden)]
+pub const STRUCT_VARIANT_ID: i128 = -1;
+#[doc(hidden)]
+pub const UNION_VARIANT_ID: i128 = -2;
+#[doc(hidden)]
+pub const REPR_C_UNION_VARIANT_ID: i128 = -3;
+
+/// # Safety
+///
+/// `Self::ProjectToTag` must satisfy its safety invariant.
+#[doc(hidden)]
+pub unsafe trait HasTag {
+    fn only_derive_is_allowed_to_implement_this_trait()
+    where
+        Self: Sized;
+
+    /// The type's enum tag, or `()` for non-enum types.
+    type Tag: Immutable;
+
+    /// A pointer projection from `Self` to its tag.
+    ///
+    /// # Safety
+    ///
+    /// It must be the case that, for all `slf: Ptr<'_, Self, I>`, it is sound
+    /// to project from `slf` to `Ptr<'_, Self::Tag, I>` using this projection.
+    type ProjectToTag: pointer::cast::Project<Self, Self::Tag>;
+}
+
+/// Projects a given field from `Self`.
+///
+/// All implementations of `HasField` for a particular field `f` in `Self`
+/// should use the same `Field` type; this ensures that `Field` is inferable
+/// given an explicit `VARIANT_ID` and `FIELD_ID`.
+///
+/// # Safety
+///
+/// A field `f` is `HasField` for `Self` if and only if:
+///
+/// - If `Self` has the layout of a struct or union type, then `VARIANT_ID` is
+///   `STRUCT_VARIANT_ID` or `UNION_VARIANT_ID` respectively; otherwise, if
+///   `Self` has the layout of an enum type, `VARIANT_ID` is the numerical index
+///   of the enum variant in which `f` appears. Note that `Self` does not need
+///   to actually *be* such a type – it just needs to have the same layout as
+///   such a type. For example, a `#[repr(transparent)]` wrapper around an enum
+///   has the same layout as that enum.
+/// - If `f` has name `n`, `FIELD_ID` is `zerocopy::ident_id!(n)`; otherwise,
+///   if `f` is at index `i`, `FIELD_ID` is `zerocopy::ident_id!(i)`.
+/// - `Field` is a type with the same visibility as `f`.
+/// - `Type` has the same type as `f`.
+///
+/// The caller must **not** assume that a pointer's referent being aligned
+/// implies that calling `project` on that pointer will result in a pointer to
+/// an aligned referent. For example, `HasField` may be implemented for
+/// `#[repr(packed)]` structs.
+///
+/// The implementation of `project` must satisfy its safety post-condition.
+#[doc(hidden)]
+pub unsafe trait HasField<Field, const VARIANT_ID: i128, const FIELD_ID: i128>:
+    HasTag
+{
+    fn only_derive_is_allowed_to_implement_this_trait()
+    where
+        Self: Sized;
+
+    /// The type of the field.
+    type Type: ?Sized;
+
+    /// Projects from `slf` to the field.
+    ///
+    /// Users should generally not call `project` directly, and instead should
+    /// use high-level APIs like [`PtrInner::project`] or [`Ptr::project`].
+    ///
+    /// # Safety
+    ///
+    /// The returned pointer refers to a non-strict subset of the bytes of
+    /// `slf`'s referent, and has the same provenance as `slf`.
+    #[must_use]
+    fn project(slf: PtrInner<'_, Self>) -> *mut Self::Type;
+}
+
+/// Projects a given field from `Self`.
+///
+/// Implementations of this trait encode the conditions under which a field can
+/// be projected from a `Ptr<'_, Self, I>`, and how the invariants of that
+/// [`Ptr`] (`I`) determine the invariants of pointers projected from it. In
+/// other words, it is a type-level function over invariants; `I` goes in,
+/// `Self::Invariants` comes out.
+///
+/// # Safety
+///
+/// `T: ProjectField<Field, I, VARIANT_ID, FIELD_ID>` if, for a
+/// `ptr: Ptr<'_, T, I>` such that `T::is_projectable(ptr).is_ok()`,
+/// `<T as HasField<Field, VARIANT_ID, FIELD_ID>>::project(ptr.as_inner())`
+/// conforms to `T::Invariants`.
+#[doc(hidden)]
+pub unsafe trait ProjectField<Field, I, const VARIANT_ID: i128, const FIELD_ID: i128>:
+    HasField<Field, VARIANT_ID, FIELD_ID>
+where
+    I: invariant::Invariants,
+{
+    fn only_derive_is_allowed_to_implement_this_trait()
+    where
+        Self: Sized;
+
+    /// The invariants of the projected field pointer, with respect to the
+    /// invariants, `I`, of the containing pointer. The aliasing dimension of
+    /// the invariants is guaranteed to remain unchanged.
+    type Invariants: invariant::Invariants<Aliasing = I::Aliasing>;
+
+    /// The failure mode of projection. `()` if the projection is fallible,
+    /// otherwise [`core::convert::Infallible`].
+    type Error;
+
+    /// Is the given field projectable from `ptr`?
+    ///
+    /// If a field with [`Self::Invariants`] is projectable from the referent,
+    /// this function produces an `Ok(ptr)` from which the projection can be
+    /// made; otherwise `Err`.
+    ///
+    /// This method must be overriden if the field's projectability depends on
+    /// the value of the bytes in `ptr`.
+    #[inline(always)]
+    fn is_projectable<'a>(_ptr: Ptr<'a, Self::Tag, I>) -> Result<(), Self::Error> {
+        trait IsInfallible {
+            const IS_INFALLIBLE: bool;
+        }
+
+        struct Projection<T, Field, I, const VARIANT_ID: i128, const FIELD_ID: i128>(
+            PhantomData<(Field, I, T)>,
+        )
+        where
+            T: ?Sized + HasField<Field, VARIANT_ID, FIELD_ID>,
+            I: invariant::Invariants;
+
+        impl<T, Field, I, const VARIANT_ID: i128, const FIELD_ID: i128> IsInfallible
+            for Projection<T, Field, I, VARIANT_ID, FIELD_ID>
+        where
+            T: ?Sized + HasField<Field, VARIANT_ID, FIELD_ID>,
+            I: invariant::Invariants,
+        {
+            const IS_INFALLIBLE: bool = {
+                let is_infallible = match VARIANT_ID {
+                    // For nondestructive projections of struct and union
+                    // fields, the projected field's satisfaction of
+                    // `Invariants` does not depend on the value of the
+                    // referent. This default implementation of `is_projectable`
+                    // is non-destructive, as it does not overwrite any part of
+                    // the referent.
+                    crate::STRUCT_VARIANT_ID | crate::UNION_VARIANT_ID => true,
+                    _enum_variant => {
+                        use crate::invariant::{Validity, ValidityKind};
+                        match I::Validity::KIND {
+                            // The `Uninit` and `Initialized` validity
+                            // invariants do not depend on the enum's tag. In
+                            // particular, we don't actually care about what
+                            // variant is present – we can treat *any* range of
+                            // uninitialized or initialized memory as containing
+                            // an uninitialized or initialized instance of *any*
+                            // type – the type itself is irrelevant.
+                            ValidityKind::Uninit | ValidityKind::Initialized => true,
+                            // The projectability of an enum field from an
+                            // `AsInitialized` or `Valid` state is a dynamic
+                            // property of its tag.
+                            ValidityKind::AsInitialized | ValidityKind::Valid => false,
+                        }
+                    }
+                };
+                const_assert!(is_infallible);
+                is_infallible
+            };
+        }
+
+        const_assert!(
+            <Projection<Self, Field, I, VARIANT_ID, FIELD_ID> as IsInfallible>::IS_INFALLIBLE
+        );
+
+        Ok(())
+    }
+}
 
 /// Analyzes whether a type is [`FromZeros`].
 ///
@@ -1267,14 +1493,12 @@ pub use zerocopy_derive::Immutable;
 // # Safety (Internal)
 //
 // If `T: Immutable`, unsafe code *inside of this crate* may assume that, given
-// `t: &T`, `t` does not contain any [`UnsafeCell`]s at any byte location
-// within the byte range addressed by `t`. This includes ranges of length 0
-// (e.g., `UnsafeCell<()>` and `[UnsafeCell<u8>; 0]`). If a type implements
-// `Immutable` which violates this assumptions, it may cause this crate to
-// exhibit [undefined behavior].
+// `t: &T`, `t` does not permit interior mutation of its referent. Because
+// [`UnsafeCell`] is the only type which permits interior mutation, it is
+// sufficient (though not necessary) to guarantee that `T` contains no
+// `UnsafeCell`s.
 //
 // [`UnsafeCell`]: core::cell::UnsafeCell
-// [undefined behavior]: https://raphlinus.github.io/programming/rust/2018/08/17/undefined-behavior.html
 #[cfg_attr(
     feature = "derive",
     doc = "[derive]: zerocopy_derive::Immutable",
@@ -1286,7 +1510,7 @@ pub use zerocopy_derive::Immutable;
     doc = concat!("[derive-analysis]: https://docs.rs/zerocopy/", env!("CARGO_PKG_VERSION"), "/zerocopy/derive.Immutable.html#analysis"),
 )]
 #[cfg_attr(
-    zerocopy_diagnostic_on_unimplemented_1_78_0,
+    not(no_zerocopy_diagnostic_on_unimplemented_1_78_0),
     diagnostic::on_unimplemented(note = "Consider adding `#[derive(Immutable)]` to `{Self}`")
 )]
 pub unsafe trait Immutable {
@@ -1415,7 +1639,7 @@ pub use zerocopy_derive::TryFromBytes;
 /// definitely invalid.
 ///
 /// Zerocopy takes a conservative approach, and only considers a bit pattern to
-/// be valid if its validity is a documenteed guarantee provided by the
+/// be valid if its validity is a documented guarantee provided by the
 /// language.
 ///
 /// For most use cases, Rust's current guarantees align with programmers'
@@ -1456,7 +1680,7 @@ pub use zerocopy_derive::TryFromBytes;
     doc = concat!("[derive]: https://docs.rs/zerocopy/", env!("CARGO_PKG_VERSION"), "/zerocopy/derive.TryFromBytes.html"),
 )]
 #[cfg_attr(
-    zerocopy_diagnostic_on_unimplemented_1_78_0,
+    not(no_zerocopy_diagnostic_on_unimplemented_1_78_0),
     diagnostic::on_unimplemented(note = "Consider adding `#[derive(TryFromBytes)]` to `{Self}`")
 )]
 pub unsafe trait TryFromBytes {
@@ -1489,7 +1713,9 @@ pub unsafe trait TryFromBytes {
     /// [`UnsafeCell`]: core::cell::UnsafeCell
     /// [`Shared`]: invariant::Shared
     #[doc(hidden)]
-    fn is_bit_valid<A: invariant::Reference>(candidate: Maybe<'_, Self, A>) -> bool;
+    fn is_bit_valid<A>(candidate: Maybe<'_, Self, A>) -> bool
+    where
+        A: invariant::Alignment;
 
     /// Attempts to interpret the given `source` as a `&Self`.
     ///
@@ -1576,11 +1802,6 @@ pub unsafe trait TryFromBytes {
                 // This call may panic. If that happens, it doesn't cause any soundness
                 // issues, as we have not generated any invalid state which we need to
                 // fix before returning.
-                //
-                // Note that one panic or post-monomorphization error condition is
-                // calling `try_into_valid` (and thus `is_bit_valid`) with a shared
-                // pointer when `Self: !Immutable`. Since `Self: Immutable`, this panic
-                // condition will not happen.
                 match source.try_into_valid() {
                     Ok(valid) => Ok(valid.as_ref()),
                     Err(e) => {
@@ -1855,16 +2076,9 @@ pub unsafe trait TryFromBytes {
                 // This call may panic. If that happens, it doesn't cause any soundness
                 // issues, as we have not generated any invalid state which we need to
                 // fix before returning.
-                //
-                // Note that one panic or post-monomorphization error condition is
-                // calling `try_into_valid` (and thus `is_bit_valid`) with a shared
-                // pointer when `Self: !Immutable`. Since `Self: Immutable`, this panic
-                // condition will not happen.
                 match source.try_into_valid() {
                     Ok(source) => Ok(source.as_mut()),
-                    Err(e) => {
-                        Err(e.map_src(|src| src.as_bytes::<BecauseExclusive>().as_mut()).into())
-                    }
+                    Err(e) => Err(e.map_src(|src| src.as_bytes().as_mut()).into()),
                 }
             }
             Err(e) => Err(e.map_src(Ptr::as_mut).into()),
@@ -2150,11 +2364,6 @@ pub unsafe trait TryFromBytes {
                 // This call may panic. If that happens, it doesn't cause any soundness
                 // issues, as we have not generated any invalid state which we need to
                 // fix before returning.
-                //
-                // Note that one panic or post-monomorphization error condition is
-                // calling `try_into_valid` (and thus `is_bit_valid`) with a shared
-                // pointer when `Self: !Immutable`. Since `Self: Immutable`, this panic
-                // condition will not happen.
                 match source.try_into_valid() {
                     Ok(source) => Ok(source.as_ref()),
                     Err(e) => {
@@ -2437,16 +2646,9 @@ pub unsafe trait TryFromBytes {
                 // This call may panic. If that happens, it doesn't cause any soundness
                 // issues, as we have not generated any invalid state which we need to
                 // fix before returning.
-                //
-                // Note that one panic or post-monomorphization error condition is
-                // calling `try_into_valid` (and thus `is_bit_valid`) with a shared
-                // pointer when `Self: !Immutable`. Since `Self: Immutable`, this panic
-                // condition will not happen.
                 match source.try_into_valid() {
                     Ok(source) => Ok(source.as_mut()),
-                    Err(e) => {
-                        Err(e.map_src(|src| src.as_bytes::<BecauseExclusive>().as_mut()).into())
-                    }
+                    Err(e) => Err(e.map_src(|src| src.as_bytes().as_mut()).into()),
                 }
             }
             Err(e) => Err(e.map_src(Ptr::as_mut).into()),
@@ -2682,12 +2884,22 @@ pub unsafe trait TryFromBytes {
     /// let bytes = &mut [0x10, 0xC0, 240, 77][..];
     /// assert!(Packet::try_read_from_bytes(bytes).is_err());
     /// ```
+    ///
+    /// # Performance Considerations
+    ///
+    /// In this version of zerocopy, this method reads the `source` into a
+    /// well-aligned stack allocation and *then* validates that the allocation
+    /// is a valid `Self`. This ensures that validation can be performed using
+    /// aligned reads (which carry a performance advantage over unaligned reads
+    /// on many platforms) at the cost of an unconditional copy.
     #[must_use = "has no side effects"]
     #[inline]
     fn try_read_from_bytes(source: &[u8]) -> Result<Self, TryReadError<&[u8], Self>>
     where
         Self: Sized,
     {
+        // FIXME(#2981): If `align_of::<Self>() == 1`, validate `source` in-place.
+
         let candidate = match CoreMaybeUninit::<Self>::read_from_bytes(source) {
             Ok(candidate) => candidate,
             Err(e) => {
@@ -2743,12 +2955,22 @@ pub unsafe trait TryFromBytes {
     /// let bytes = &[0x10, 0xC0, 240, 77, 0, 1, 2, 3, 4, 5, 6][..];
     /// assert!(Packet::try_read_from_prefix(bytes).is_err());
     /// ```
+    ///
+    /// # Performance Considerations
+    ///
+    /// In this version of zerocopy, this method reads the `source` into a
+    /// well-aligned stack allocation and *then* validates that the allocation
+    /// is a valid `Self`. This ensures that validation can be performed using
+    /// aligned reads (which carry a performance advantage over unaligned reads
+    /// on many platforms) at the cost of an unconditional copy.
     #[must_use = "has no side effects"]
     #[inline]
     fn try_read_from_prefix(source: &[u8]) -> Result<(Self, &[u8]), TryReadError<&[u8], Self>>
     where
         Self: Sized,
     {
+        // FIXME(#2981): If `align_of::<Self>() == 1`, validate `source` in-place.
+
         let (candidate, suffix) = match CoreMaybeUninit::<Self>::read_from_prefix(source) {
             Ok(candidate) => candidate,
             Err(e) => {
@@ -2805,12 +3027,22 @@ pub unsafe trait TryFromBytes {
     /// let bytes = &[0, 1, 2, 3, 4, 5, 0x10, 0xC0, 240, 77][..];
     /// assert!(Packet::try_read_from_suffix(bytes).is_err());
     /// ```
+    ///
+    /// # Performance Considerations
+    ///
+    /// In this version of zerocopy, this method reads the `source` into a
+    /// well-aligned stack allocation and *then* validates that the allocation
+    /// is a valid `Self`. This ensures that validation can be performed using
+    /// aligned reads (which carry a performance advantage over unaligned reads
+    /// on many platforms) at the cost of an unconditional copy.
     #[must_use = "has no side effects"]
     #[inline]
     fn try_read_from_suffix(source: &[u8]) -> Result<(&[u8], Self), TryReadError<&[u8], Self>>
     where
         Self: Sized,
     {
+        // FIXME(#2981): If `align_of::<Self>() == 1`, validate `source` in-place.
+
         let (prefix, candidate) = match CoreMaybeUninit::<Self>::read_from_suffix(source) {
             Ok(candidate) => candidate,
             Err(e) => {
@@ -2834,11 +3066,6 @@ fn try_ref_from_prefix_suffix<T: TryFromBytes + KnownLayout + Immutable + ?Sized
             // This call may panic. If that happens, it doesn't cause any soundness
             // issues, as we have not generated any invalid state which we need to
             // fix before returning.
-            //
-            // Note that one panic or post-monomorphization error condition is
-            // calling `try_into_valid` (and thus `is_bit_valid`) with a shared
-            // pointer when `Self: !Immutable`. Since `Self: Immutable`, this panic
-            // condition will not happen.
             match source.try_into_valid() {
                 Ok(valid) => Ok((valid.as_ref(), prefix_suffix.as_ref())),
                 Err(e) => Err(e.map_src(|src| src.as_bytes::<BecauseImmutable>().as_ref()).into()),
@@ -2859,14 +3086,9 @@ fn try_mut_from_prefix_suffix<T: IntoBytes + TryFromBytes + KnownLayout + ?Sized
             // This call may panic. If that happens, it doesn't cause any soundness
             // issues, as we have not generated any invalid state which we need to
             // fix before returning.
-            //
-            // Note that one panic or post-monomorphization error condition is
-            // calling `try_into_valid` (and thus `is_bit_valid`) with a shared
-            // pointer when `Self: !Immutable`. Since `Self: Immutable`, this panic
-            // condition will not happen.
             match candidate.try_into_valid() {
                 Ok(valid) => Ok((valid.as_mut(), prefix_suffix.as_mut())),
-                Err(e) => Err(e.map_src(|src| src.as_bytes::<BecauseExclusive>().as_mut()).into()),
+                Err(e) => Err(e.map_src(|src| src.as_bytes().as_mut()).into()),
             }
         }
         Err(e) => Err(e.map_src(Ptr::as_mut).into()),
@@ -2897,7 +3119,7 @@ unsafe fn try_read_from<S, T: TryFromBytes>(
     // via `c_ptr` so long as it is live, so we don't need to worry about the
     // fact that `c_ptr` may have more restricted validity than `candidate`.
     let c_ptr = unsafe { c_ptr.assume_validity::<invariant::Initialized>() };
-    let c_ptr = c_ptr.transmute();
+    let mut c_ptr = c_ptr.cast::<_, crate::pointer::cast::CastSized, _>();
 
     // Since we don't have `T: KnownLayout`, we hack around that by using
     // `Wrapping<T>`, which implements `KnownLayout` even if `T` doesn't.
@@ -2905,12 +3127,7 @@ unsafe fn try_read_from<S, T: TryFromBytes>(
     // This call may panic. If that happens, it doesn't cause any soundness
     // issues, as we have not generated any invalid state which we need to fix
     // before returning.
-    //
-    // Note that one panic or post-monomorphization error condition is calling
-    // `try_into_valid` (and thus `is_bit_valid`) with a shared pointer when
-    // `Self: !Immutable`. Since `Self: Immutable`, this panic condition will
-    // not happen.
-    if !Wrapping::<T>::is_bit_valid(c_ptr.forget_aligned()) {
+    if !Wrapping::<T>::is_bit_valid(c_ptr.reborrow_shared().forget_aligned()) {
         return Err(ValidityError::new(source).into());
     }
 
@@ -3005,7 +3222,7 @@ unsafe fn try_read_from<S, T: TryFromBytes>(
     doc = concat!("[derive-analysis]: https://docs.rs/zerocopy/", env!("CARGO_PKG_VERSION"), "/zerocopy/derive.FromZeros.html#analysis"),
 )]
 #[cfg_attr(
-    zerocopy_diagnostic_on_unimplemented_1_78_0,
+    not(no_zerocopy_diagnostic_on_unimplemented_1_78_0),
     diagnostic::on_unimplemented(note = "Consider adding `#[derive(FromZeros)]` to `{Self}`")
 )]
 pub unsafe trait FromZeros: TryFromBytes {
@@ -3141,7 +3358,7 @@ pub unsafe trait FromZeros: TryFromBytes {
             // is sufficiently aligned. Since the produced pointer is a
             // `NonNull`, it is non-null.
             //
-            // [1] Per https://doc.rust-lang.org/nightly/std/boxed/index.html#memory-layout:
+            // [1] Per https://doc.rust-lang.org/1.81.0/std/boxed/index.html#memory-layout:
             //
             //   For zero-sized values, the `Box` pointer has to be non-null and sufficiently aligned.
             //
@@ -3244,7 +3461,7 @@ pub unsafe trait FromZeros: TryFromBytes {
 
     /// Extends a `Vec<Self>` by pushing `additional` new items onto the end of
     /// the vector. The new items are initialized with zeros.
-    #[cfg(zerocopy_panic_in_const_and_vec_try_reserve_1_57_0)]
+    #[cfg(not(no_zerocopy_panic_in_const_and_vec_try_reserve_1_57_0))]
     #[cfg(feature = "alloc")]
     #[cfg_attr(doc_cfg, doc(cfg(all(rust = "1.57.0", feature = "alloc"))))]
     #[inline(always)]
@@ -3263,7 +3480,7 @@ pub unsafe trait FromZeros: TryFromBytes {
     /// # Panics
     ///
     /// Panics if `position > v.len()`.
-    #[cfg(zerocopy_panic_in_const_and_vec_try_reserve_1_57_0)]
+    #[cfg(not(no_zerocopy_panic_in_const_and_vec_try_reserve_1_57_0))]
     #[cfg(feature = "alloc")]
     #[cfg_attr(doc_cfg, doc(cfg(all(rust = "1.57.0", feature = "alloc"))))]
     #[inline]
@@ -3286,6 +3503,7 @@ pub unsafe trait FromZeros: TryFromBytes {
         //
         // `v.len() - position` cannot overflow because we asserted that
         // `position <= v.len()`.
+        #[allow(clippy::multiple_unsafe_ops_per_block)]
         unsafe {
             // This is a potentially overlapping copy.
             let ptr = v.as_mut_ptr();
@@ -3367,11 +3585,10 @@ pub unsafe trait FromZeros: TryFromBytes {
 ///
 /// - If the type is a struct, all of its fields must be `FromBytes`.
 /// - If the type is an enum:
-///   - It must have a defined representation (`repr`s `u8`, `u16`, `u32`,
-///     `u64`, `usize`, `i8`, `i16`, `i32`, `i64`, or `isize`).
+///   - It must have a defined representation which is one of `u8`, `u16`, `i8`,
+///     or `i16`.
 ///   - The maximum number of discriminants must be used (so that every possible
-///     bit pattern is a valid one). Be very careful when using the `usize` or
-///     `isize` representations, as their size is platform-dependent.
+///     bit pattern is a valid one).
 ///   - Its fields must be `FromBytes`.
 ///
 /// This analysis is subject to change. Unsafe code may *only* rely on the
@@ -3520,7 +3737,7 @@ pub use zerocopy_derive::FromBytes;
     doc = concat!("[derive-analysis]: https://docs.rs/zerocopy/", env!("CARGO_PKG_VERSION"), "/zerocopy/derive.FromBytes.html#analysis"),
 )]
 #[cfg_attr(
-    zerocopy_diagnostic_on_unimplemented_1_78_0,
+    not(no_zerocopy_diagnostic_on_unimplemented_1_78_0),
     diagnostic::on_unimplemented(note = "Consider adding `#[derive(FromBytes)]` to `{Self}`")
 )]
 pub unsafe trait FromBytes: FromZeros {
@@ -4281,8 +4498,8 @@ pub unsafe trait FromBytes: FromZeros {
     /// ```
     ///
     /// Since an explicit `count` is provided, this method supports types with
-    /// zero-sized trailing slice elements. Methods such as [`mut_from`] which
-    /// do not take an explicit count do not support such types.
+    /// zero-sized trailing slice elements. Methods such as [`mut_from_bytes`]
+    /// which do not take an explicit count do not support such types.
     ///
     /// ```
     /// use zerocopy::*;
@@ -4300,7 +4517,7 @@ pub unsafe trait FromBytes: FromZeros {
     /// assert_eq!(zsty.trailing_dst.len(), 42);
     /// ```
     ///
-    /// [`mut_from`]: FromBytes::mut_from
+    /// [`mut_from_bytes`]: FromBytes::mut_from_bytes
     #[must_use = "has no side effects"]
     #[inline]
     fn mut_from_bytes_with_elems(
@@ -4313,9 +4530,7 @@ pub unsafe trait FromBytes: FromZeros {
         let source = Ptr::from_mut(source);
         let maybe_slf = source.try_cast_into_no_leftover::<_, BecauseImmutable>(Some(count));
         match maybe_slf {
-            Ok(slf) => Ok(slf
-                .recall_validity::<_, (_, (_, (BecauseExclusive, BecauseExclusive)))>()
-                .as_mut()),
+            Ok(slf) => Ok(slf.recall_validity::<_, (_, (_, BecauseExclusive))>().as_mut()),
             Err(err) => Err(err.map_src(|s| s.as_mut())),
         }
     }
@@ -4649,6 +4864,7 @@ pub unsafe trait FromBytes: FromZeros {
     /// let header = BitmapFileHeader::read_from_io(&mut file).unwrap();
     /// ```
     #[cfg(feature = "std")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     #[inline(always)]
     fn read_from_io<R>(mut src: R) -> io::Result<Self>
     where
@@ -4672,7 +4888,7 @@ pub unsafe trait FromBytes: FromZeros {
         // cannot be violated even though `buf` may have more permissive bit
         // validity than `ptr`.
         let ptr = unsafe { ptr.assume_validity::<invariant::Initialized>() };
-        let ptr = ptr.as_bytes::<BecauseExclusive>();
+        let ptr = ptr.as_bytes();
         src.read_exact(ptr.as_mut())?;
         // SAFETY: `buf` entirely consists of initialized bytes, and `Self` is
         // `FromBytes`.
@@ -4973,7 +5189,7 @@ pub use zerocopy_derive::IntoBytes;
     doc = concat!("[derive-analysis]: https://docs.rs/zerocopy/", env!("CARGO_PKG_VERSION"), "/zerocopy/derive.IntoBytes.html#analysis"),
 )]
 #[cfg_attr(
-    zerocopy_diagnostic_on_unimplemented_1_78_0,
+    not(no_zerocopy_diagnostic_on_unimplemented_1_78_0),
     diagnostic::on_unimplemented(note = "Consider adding `#[derive(IntoBytes)]` to `{Self}`")
 )]
 pub unsafe trait IntoBytes {
@@ -5040,10 +5256,8 @@ pub unsafe trait IntoBytes {
         //   initialized.
         // - Since `slf` is derived from `self`, and `self` is an immutable
         //   reference, the only other references to this memory region that
-        //   could exist are other immutable references, and those don't allow
-        //   mutation. `Self: Immutable` prohibits types which contain
-        //   `UnsafeCell`s, which are the only types for which this rule
-        //   wouldn't be sufficient.
+        //   could exist are other immutable references, which by `Self:
+        //   Immutable` don't permit mutation.
         // - The total size of the resulting slice is no larger than
         //   `isize::MAX` because no allocation produced by safe code can be
         //   larger than `isize::MAX`.
@@ -5385,6 +5599,7 @@ pub unsafe trait IntoBytes {
     /// assert_eq!(dst, [255, 255]);
     /// ```
     #[cfg(feature = "std")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
     #[inline(always)]
     fn write_to_io<W>(&self, mut dst: W) -> io::Result<()>
     where
@@ -5535,7 +5750,7 @@ pub use zerocopy_derive::Unaligned;
     doc = concat!("[derive-analysis]: https://docs.rs/zerocopy/", env!("CARGO_PKG_VERSION"), "/zerocopy/derive.Unaligned.html#analysis"),
 )]
 #[cfg_attr(
-    zerocopy_diagnostic_on_unimplemented_1_78_0,
+    not(no_zerocopy_diagnostic_on_unimplemented_1_78_0),
     diagnostic::on_unimplemented(note = "Consider adding `#[derive(Unaligned)]` to `{Self}`")
 )]
 pub unsafe trait Unaligned {
@@ -5638,13 +5853,13 @@ pub use zerocopy_derive::SplitAt;
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "alloc")))]
-#[cfg(zerocopy_panic_in_const_and_vec_try_reserve_1_57_0)]
+#[cfg(not(no_zerocopy_panic_in_const_and_vec_try_reserve_1_57_0))]
 mod alloc_support {
     use super::*;
 
     /// Extends a `Vec<T>` by pushing `additional` new items onto the end of the
     /// vector. The new items are initialized with zeros.
-    #[cfg(zerocopy_panic_in_const_and_vec_try_reserve_1_57_0)]
+    #[cfg(not(no_zerocopy_panic_in_const_and_vec_try_reserve_1_57_0))]
     #[doc(hidden)]
     #[deprecated(since = "0.8.0", note = "moved to `FromZeros`")]
     #[inline(always)]
@@ -5661,7 +5876,7 @@ mod alloc_support {
     /// # Panics
     ///
     /// Panics if `position > v.len()`.
-    #[cfg(zerocopy_panic_in_const_and_vec_try_reserve_1_57_0)]
+    #[cfg(not(no_zerocopy_panic_in_const_and_vec_try_reserve_1_57_0))]
     #[doc(hidden)]
     #[deprecated(since = "0.8.0", note = "moved to `FromZeros`")]
     #[inline(always)]
@@ -5675,7 +5890,7 @@ mod alloc_support {
 }
 
 #[cfg(feature = "alloc")]
-#[cfg(zerocopy_panic_in_const_and_vec_try_reserve_1_57_0)]
+#[cfg(not(no_zerocopy_panic_in_const_and_vec_try_reserve_1_57_0))]
 #[doc(hidden)]
 pub use alloc_support::*;
 
@@ -5722,26 +5937,30 @@ mod tests {
             };
         }
 
-        let layout = |offset, align, _trailing_slice_elem_size| DstLayout {
-            align: NonZeroUsize::new(align).unwrap(),
-            size_info: match _trailing_slice_elem_size {
-                None => SizeInfo::Sized { size: offset },
-                Some(elem_size) => SizeInfo::SliceDst(TrailingSliceLayout { offset, elem_size }),
-            },
-        };
+        let layout =
+            |offset, align, trailing_slice_elem_size, statically_shallow_unpadded| DstLayout {
+                align: NonZeroUsize::new(align).unwrap(),
+                size_info: match trailing_slice_elem_size {
+                    None => SizeInfo::Sized { size: offset },
+                    Some(elem_size) => {
+                        SizeInfo::SliceDst(TrailingSliceLayout { offset, elem_size })
+                    }
+                },
+                statically_shallow_unpadded,
+            };
 
-        test!((), layout(0, 1, None));
-        test!(u8, layout(1, 1, None));
+        test!((), layout(0, 1, None, false));
+        test!(u8, layout(1, 1, None, false));
         // Use `align_of` because `u64` alignment may be smaller than 8 on some
         // platforms.
-        test!(u64, layout(8, mem::align_of::<u64>(), None));
-        test!(AU64, layout(8, 8, None));
+        test!(u64, layout(8, mem::align_of::<u64>(), None, false));
+        test!(AU64, layout(8, 8, None, false));
 
         test!(Option<&'static ()>, usize::LAYOUT);
 
-        test!([()], layout(0, 1, Some(0)));
-        test!([u8], layout(0, 1, Some(1)));
-        test!(str, layout(0, 1, Some(1)));
+        test!([()], layout(0, 1, Some(0), true));
+        test!([u8], layout(0, 1, Some(1), true));
+        test!(str, layout(0, 1, Some(1), true));
     }
 
     #[cfg(feature = "derive")]
@@ -5796,11 +6015,13 @@ mod tests {
         let sized_layout = |align, size| DstLayout {
             align: NonZeroUsize::new(align).unwrap(),
             size_info: SizeInfo::Sized { size },
+            statically_shallow_unpadded: false,
         };
 
-        let unsized_layout = |align, elem_size, offset| DstLayout {
+        let unsized_layout = |align, elem_size, offset, statically_shallow_unpadded| DstLayout {
             align: NonZeroUsize::new(align).unwrap(),
             size_info: SizeInfo::SliceDst(TrailingSliceLayout { offset, elem_size }),
+            statically_shallow_unpadded,
         };
 
         // | `repr(C)`? | generic? | `KnownLayout`? | `Sized`? | Type Name |
@@ -5928,7 +6149,7 @@ mod tests {
             .pad_to_align();
 
         assert_eq!(<KL10 as KnownLayout>::LAYOUT, expected);
-        assert_eq!(<KL10 as KnownLayout>::LAYOUT, unsized_layout(4, 1, 4));
+        assert_eq!(<KL10 as KnownLayout>::LAYOUT, unsized_layout(4, 1, 4, false));
 
         // ...with `align(N)`:
         #[allow(dead_code)]
@@ -5944,7 +6165,7 @@ mod tests {
             .pad_to_align();
 
         assert_eq!(<KL10Align as KnownLayout>::LAYOUT, expected);
-        assert_eq!(<KL10Align as KnownLayout>::LAYOUT, unsized_layout(64, 1, 4));
+        assert_eq!(<KL10Align as KnownLayout>::LAYOUT, unsized_layout(64, 1, 4, false));
 
         // ...with `packed`:
         #[allow(dead_code)]
@@ -5960,7 +6181,7 @@ mod tests {
             .pad_to_align();
 
         assert_eq!(<KL10Packed as KnownLayout>::LAYOUT, expected);
-        assert_eq!(<KL10Packed as KnownLayout>::LAYOUT, unsized_layout(1, 1, 4));
+        assert_eq!(<KL10Packed as KnownLayout>::LAYOUT, unsized_layout(1, 1, 4, false));
 
         // ...with `packed(N)`:
         #[allow(dead_code)]
@@ -5976,7 +6197,7 @@ mod tests {
             .pad_to_align();
 
         assert_eq!(<KL10PackedN as KnownLayout>::LAYOUT, expected);
-        assert_eq!(<KL10PackedN as KnownLayout>::LAYOUT, unsized_layout(2, 1, 4));
+        assert_eq!(<KL10PackedN as KnownLayout>::LAYOUT, unsized_layout(2, 1, 4, false));
 
         // | `repr(C)`? | generic? | `KnownLayout`? | `Sized`? | Type Name |
         // |          Y |        N |              Y |        Y |      KL11 |
@@ -6082,11 +6303,11 @@ mod tests {
 
         assert_eq!(<KLTU<(), AU16> as KnownLayout>::LAYOUT, sized_layout(2, 2));
 
-        assert_eq!(<KLTU<(), [()]> as KnownLayout>::LAYOUT, unsized_layout(1, 0, 0));
+        assert_eq!(<KLTU<(), [()]> as KnownLayout>::LAYOUT, unsized_layout(1, 0, 0, false));
 
-        assert_eq!(<KLTU<(), [u8]> as KnownLayout>::LAYOUT, unsized_layout(1, 1, 0));
+        assert_eq!(<KLTU<(), [u8]> as KnownLayout>::LAYOUT, unsized_layout(1, 1, 0, false));
 
-        assert_eq!(<KLTU<(), [AU16]> as KnownLayout>::LAYOUT, unsized_layout(2, 2, 0));
+        assert_eq!(<KLTU<(), [AU16]> as KnownLayout>::LAYOUT, unsized_layout(2, 2, 0, false));
 
         assert_eq!(<KLTU<u8, ()> as KnownLayout>::LAYOUT, sized_layout(1, 1));
 
@@ -6094,11 +6315,11 @@ mod tests {
 
         assert_eq!(<KLTU<u8, AU16> as KnownLayout>::LAYOUT, sized_layout(2, 4));
 
-        assert_eq!(<KLTU<u8, [()]> as KnownLayout>::LAYOUT, unsized_layout(1, 0, 1));
+        assert_eq!(<KLTU<u8, [()]> as KnownLayout>::LAYOUT, unsized_layout(1, 0, 1, false));
 
-        assert_eq!(<KLTU<u8, [u8]> as KnownLayout>::LAYOUT, unsized_layout(1, 1, 1));
+        assert_eq!(<KLTU<u8, [u8]> as KnownLayout>::LAYOUT, unsized_layout(1, 1, 1, false));
 
-        assert_eq!(<KLTU<u8, [AU16]> as KnownLayout>::LAYOUT, unsized_layout(2, 2, 2));
+        assert_eq!(<KLTU<u8, [AU16]> as KnownLayout>::LAYOUT, unsized_layout(2, 2, 2, false));
 
         assert_eq!(<KLTU<AU16, ()> as KnownLayout>::LAYOUT, sized_layout(2, 2));
 
@@ -6106,11 +6327,11 @@ mod tests {
 
         assert_eq!(<KLTU<AU16, AU16> as KnownLayout>::LAYOUT, sized_layout(2, 4));
 
-        assert_eq!(<KLTU<AU16, [()]> as KnownLayout>::LAYOUT, unsized_layout(2, 0, 2));
+        assert_eq!(<KLTU<AU16, [()]> as KnownLayout>::LAYOUT, unsized_layout(2, 0, 2, false));
 
-        assert_eq!(<KLTU<AU16, [u8]> as KnownLayout>::LAYOUT, unsized_layout(2, 1, 2));
+        assert_eq!(<KLTU<AU16, [u8]> as KnownLayout>::LAYOUT, unsized_layout(2, 1, 2, false));
 
-        assert_eq!(<KLTU<AU16, [AU16]> as KnownLayout>::LAYOUT, unsized_layout(2, 2, 2));
+        assert_eq!(<KLTU<AU16, [AU16]> as KnownLayout>::LAYOUT, unsized_layout(2, 2, 2, false));
 
         // Test a variety of field counts.
 
@@ -6124,30 +6345,30 @@ mod tests {
         #[repr(C)]
         struct KLF1([u8]);
 
-        assert_eq!(<KLF1 as KnownLayout>::LAYOUT, unsized_layout(1, 1, 0));
+        assert_eq!(<KLF1 as KnownLayout>::LAYOUT, unsized_layout(1, 1, 0, true));
 
         #[derive(KnownLayout)]
         #[repr(C)]
         struct KLF2(NotKnownLayout<u8>, [u8]);
 
-        assert_eq!(<KLF2 as KnownLayout>::LAYOUT, unsized_layout(1, 1, 1));
+        assert_eq!(<KLF2 as KnownLayout>::LAYOUT, unsized_layout(1, 1, 1, false));
 
         #[derive(KnownLayout)]
         #[repr(C)]
         struct KLF3(NotKnownLayout<u8>, NotKnownLayout<AU16>, [u8]);
 
-        assert_eq!(<KLF3 as KnownLayout>::LAYOUT, unsized_layout(2, 1, 4));
+        assert_eq!(<KLF3 as KnownLayout>::LAYOUT, unsized_layout(2, 1, 4, false));
 
         #[derive(KnownLayout)]
         #[repr(C)]
         struct KLF4(NotKnownLayout<u8>, NotKnownLayout<AU16>, NotKnownLayout<AU32>, [u8]);
 
-        assert_eq!(<KLF4 as KnownLayout>::LAYOUT, unsized_layout(4, 1, 8));
+        assert_eq!(<KLF4 as KnownLayout>::LAYOUT, unsized_layout(4, 1, 8, false));
     }
 
     #[test]
     fn test_object_safety() {
-        fn _takes_no_cell(_: &dyn Immutable) {}
+        fn _takes_immutable(_: &dyn Immutable) {}
         fn _takes_unaligned(_: &dyn Unaligned) {}
     }
 
@@ -6362,10 +6583,10 @@ mod tests {
     }
 
     #[test]
-    fn test_ref_from_mut_from() {
-        // Test `FromBytes::{ref_from, mut_from}{,_prefix,Suffix}` success cases
-        // Exhaustive coverage for these methods is covered by the `Ref` tests above,
-        // which these helper methods defer to.
+    fn test_ref_from_mut_from_bytes() {
+        // Test `FromBytes::{ref_from_bytes, mut_from_bytes}{,_prefix,Suffix}`
+        // success cases. Exhaustive coverage for these methods is covered by
+        // the `Ref` tests above, which these helper methods defer to.
 
         let mut buf =
             Align::<[u8; 16], AU64>::new([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
@@ -6397,8 +6618,9 @@ mod tests {
     }
 
     #[test]
-    fn test_ref_from_mut_from_error() {
-        // Test `FromBytes::{ref_from, mut_from}{,_prefix,Suffix}` error cases.
+    fn test_ref_from_mut_from_bytes_error() {
+        // Test `FromBytes::{ref_from_bytes, mut_from_bytes}{,_prefix,Suffix}`
+        // error cases.
 
         // Fail because the buffer is too large.
         let mut buf = Align::<[u8; 16], AU64>::default();
@@ -6582,7 +6804,7 @@ mod tests {
     mod alloc {
         use super::*;
 
-        #[cfg(zerocopy_panic_in_const_and_vec_try_reserve_1_57_0)]
+        #[cfg(not(no_zerocopy_panic_in_const_and_vec_try_reserve_1_57_0))]
         #[test]
         fn test_extend_vec_zeroed() {
             // Test extending when there is an existing allocation.
@@ -6600,7 +6822,7 @@ mod tests {
             drop(v);
         }
 
-        #[cfg(zerocopy_panic_in_const_and_vec_try_reserve_1_57_0)]
+        #[cfg(not(no_zerocopy_panic_in_const_and_vec_try_reserve_1_57_0))]
         #[test]
         fn test_extend_vec_zeroed_zst() {
             // Test extending when there is an existing (fake) allocation.
@@ -6617,7 +6839,7 @@ mod tests {
             drop(v);
         }
 
-        #[cfg(zerocopy_panic_in_const_and_vec_try_reserve_1_57_0)]
+        #[cfg(not(no_zerocopy_panic_in_const_and_vec_try_reserve_1_57_0))]
         #[test]
         fn test_insert_vec_zeroed() {
             // Insert at start (no existing allocation).
@@ -6649,7 +6871,7 @@ mod tests {
             drop(v);
         }
 
-        #[cfg(zerocopy_panic_in_const_and_vec_try_reserve_1_57_0)]
+        #[cfg(not(no_zerocopy_panic_in_const_and_vec_try_reserve_1_57_0))]
         #[test]
         fn test_insert_vec_zeroed_zst() {
             // Insert at start (no existing fake allocation).
@@ -6746,5 +6968,77 @@ mod tests {
                 Err(AllocError)
             );
         }
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_deprecated_from_bytes() {
+        let val = 0u32;
+        let bytes = val.as_bytes();
+
+        assert!(u32::ref_from(bytes).is_some());
+        // mut_from needs mut bytes
+        let mut val = 0u32;
+        let mut_bytes = val.as_mut_bytes();
+        assert!(u32::mut_from(mut_bytes).is_some());
+
+        assert!(u32::read_from(bytes).is_some());
+
+        let (slc, rest) = <u32>::slice_from_prefix(bytes, 0).unwrap();
+        assert!(slc.is_empty());
+        assert_eq!(rest.len(), 4);
+
+        let (rest, slc) = <u32>::slice_from_suffix(bytes, 0).unwrap();
+        assert!(slc.is_empty());
+        assert_eq!(rest.len(), 4);
+
+        let (slc, rest) = <u32>::mut_slice_from_prefix(mut_bytes, 0).unwrap();
+        assert!(slc.is_empty());
+        assert_eq!(rest.len(), 4);
+
+        let (rest, slc) = <u32>::mut_slice_from_suffix(mut_bytes, 0).unwrap();
+        assert!(slc.is_empty());
+        assert_eq!(rest.len(), 4);
+    }
+
+    #[test]
+    fn test_try_ref_from_prefix_suffix() {
+        use crate::util::testutil::Align;
+        let bytes = &Align::<[u8; 4], u32>::new([0u8; 4]).t[..];
+        let (r, rest): (&u32, &[u8]) = u32::try_ref_from_prefix(bytes).unwrap();
+        assert_eq!(*r, 0);
+        assert_eq!(rest.len(), 0);
+
+        let (rest, r): (&[u8], &u32) = u32::try_ref_from_suffix(bytes).unwrap();
+        assert_eq!(*r, 0);
+        assert_eq!(rest.len(), 0);
+    }
+
+    #[test]
+    fn test_raw_dangling() {
+        use crate::util::AsAddress;
+        let ptr: NonNull<u32> = u32::raw_dangling();
+        assert_eq!(AsAddress::addr(ptr), 1);
+
+        let ptr: NonNull<[u32]> = <[u32]>::raw_dangling();
+        assert_eq!(AsAddress::addr(ptr), 1);
+    }
+
+    #[test]
+    fn test_try_ref_from_prefix_with_elems() {
+        use crate::util::testutil::Align;
+        let bytes = &Align::<[u8; 8], u32>::new([0u8; 8]).t[..];
+        let (r, rest): (&[u32], &[u8]) = <[u32]>::try_ref_from_prefix_with_elems(bytes, 2).unwrap();
+        assert_eq!(r.len(), 2);
+        assert_eq!(rest.len(), 0);
+    }
+
+    #[test]
+    fn test_try_ref_from_suffix_with_elems() {
+        use crate::util::testutil::Align;
+        let bytes = &Align::<[u8; 8], u32>::new([0u8; 8]).t[..];
+        let (rest, r): (&[u8], &[u32]) = <[u32]>::try_ref_from_suffix_with_elems(bytes, 2).unwrap();
+        assert_eq!(r.len(), 2);
+        assert_eq!(rest.len(), 0);
     }
 }

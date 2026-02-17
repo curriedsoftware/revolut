@@ -134,6 +134,12 @@ impl<'cmd> Parser<'cmd> {
                         // ParseResult::MaybeHyphenValue, do nothing
                     } else {
                         debug!("Parser::get_matches_with: setting TrailingVals=true");
+                        if self.cmd.get_keymap().get(&pos_counter).is_some_and(|arg| {
+                            self.check_terminator(arg, arg_os.to_value_os()).is_some()
+                        }) {
+                            // count as both an escape and terminator
+                            pos_counter += 1;
+                        }
                         trailing_values = true;
                         matcher.start_trailing();
                         continue;
@@ -483,7 +489,8 @@ impl<'cmd> Parser<'cmd> {
                     pos_sc_name.clone(),
                     matcher
                         .arg_ids()
-                        .map(|id| self.cmd.find(id).unwrap().to_string())
+                        // skip groups
+                        .filter_map(|id| self.cmd.find(id).map(|a| a.to_string()))
                         .collect(),
                     Usage::new(self.cmd).create_usage_with_title(&[]),
                 ));
@@ -737,7 +744,7 @@ impl<'cmd> Parser<'cmd> {
                     p.flag_subcmd_skip = self.flag_subcmd_skip;
                 }
                 if let Err(error) = p.get_matches_with(&mut sc_matcher, raw_args, args_cursor) {
-                    if partial_parsing_enabled {
+                    if partial_parsing_enabled && error.use_stderr() {
                         debug!("Parser::parse_subcommand: ignored error in subcommand {sc_name}: {error:?}");
                     } else {
                         return Err(error);
@@ -1462,7 +1469,8 @@ impl<'cmd> Parser<'cmd> {
 
                     if add {
                         if let Some(default) = default {
-                            let arg_values = vec![default.to_os_string()];
+                            let arg_values =
+                                default.iter().map(|os_str| os_str.to_os_string()).collect();
                             let trailing_idx = None;
                             let _ = ok!(self.react(
                                 None,

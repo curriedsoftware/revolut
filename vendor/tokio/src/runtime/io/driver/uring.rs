@@ -14,7 +14,7 @@ use std::{io, mem, task::Waker};
 const DEFAULT_RING_SIZE: u32 = 256;
 
 #[repr(usize)]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 enum State {
     Uninitialized = 0,
     Initialized = 1,
@@ -22,8 +22,8 @@ enum State {
 }
 
 impl State {
-    fn as_usize(self) -> usize {
-        self as usize
+    fn as_usize(&self) -> usize {
+        *self as usize
     }
 
     fn from_usize(value: usize) -> Self {
@@ -96,10 +96,10 @@ impl UringContext {
                     ops.remove(idx);
                 }
                 Some(other) => {
-                    panic!("unexpected lifecycle for slot {}: {:?}", idx, other);
+                    panic!("unexpected lifecycle for slot {idx}: {other:?}");
                 }
                 None => {
-                    panic!("no op at index {}", idx);
+                    panic!("no op at index {idx}");
                 }
             }
         }
@@ -147,26 +147,12 @@ impl Drop for UringContext {
             self.submit().expect("Internal error when dropping driver");
         }
 
-        let mut cancel_ops = Slab::new();
-        let mut keys_to_move = Vec::new();
+        let mut ops = std::mem::take(&mut self.ops);
 
-        for (key, lifecycle) in self.ops.iter() {
-            match lifecycle {
-                Lifecycle::Waiting(_) | Lifecycle::Submitted | Lifecycle::Cancelled(_) => {
-                    // these should be cancelled
-                    keys_to_move.push(key);
-                }
-                // We don't wait for completed ops.
-                Lifecycle::Completed(_) => {}
-            }
-        }
+        // Remove all completed ops since we don't need to wait for them.
+        ops.retain(|_, lifecycle| !matches!(lifecycle, Lifecycle::Completed(_)));
 
-        for key in keys_to_move {
-            let lifecycle = self.remove_op(key);
-            cancel_ops.insert(lifecycle);
-        }
-
-        while !cancel_ops.is_empty() {
+        while !ops.is_empty() {
             // Wait until at least one completion is available.
             self.ring_mut()
                 .submit_and_wait(1)
@@ -174,14 +160,13 @@ impl Drop for UringContext {
 
             for cqe in self.ring_mut().completion() {
                 let idx = cqe.user_data() as usize;
-                cancel_ops.remove(idx);
+                ops.remove(idx);
             }
         }
     }
 }
 
 impl Handle {
-    #[allow(dead_code)]
     fn add_uring_source(&self, uringfd: RawFd) -> io::Result<()> {
         let mut source = SourceFd(&uringfd);
         self.registry
@@ -206,6 +191,13 @@ impl Handle {
                 }
                 // If the system doesn't support io_uring, we set the state to Unsupported.
                 Err(e) if e.raw_os_error() == Some(libc::ENOSYS) => {
+                    self.set_uring_state(State::Unsupported);
+                    Ok(false)
+                }
+                // If we get EPERM, io-uring syscalls may be blocked (for example, by seccomp).
+                // In this case, we try to fall back to spawn_blocking for this and future operations.
+                // See also: https://github.com/tokio-rs/tokio/issues/7691
+                Err(e) if e.raw_os_error() == Some(libc::EPERM) => {
                     self.set_uring_state(State::Unsupported);
                     Ok(false)
                 }
@@ -265,14 +257,17 @@ impl Handle {
             submit_or_remove(ctx)?;
         }
 
+        // Ensure that the completion queue is not full before submitting the entry.
+        while ctx.ring_mut().completion().is_full() {
+            ctx.dispatch_completions();
+        }
+
         // Note: For now, we submit the entry immediately without utilizing batching.
         submit_or_remove(ctx)?;
 
         Ok(index)
     }
 
-    // TODO: Remove this annotation when operations are actually supported
-    #[allow(unused_variables, unreachable_code)]
     pub(crate) fn cancel_op<T: Cancellable>(&self, index: usize, data: Option<T>) {
         let mut guard = self.get_uring().lock();
         let ctx = &mut *guard;
@@ -293,7 +288,7 @@ impl Handle {
                 // We can safely remove the entry from the slab, as it has already been completed.
                 ops.remove(index);
             }
-            prev => panic!("Unexpected state: {:?}", prev),
+            prev => panic!("Unexpected state: {prev:?}"),
         };
     }
 }
