@@ -368,10 +368,9 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .map_err(|err| {
                 errors::Error::ClientError(errors::ClientError::CannotLogIn(format!("{err:?}")))
             })?
+            && access_token_expires_at.to_utc() > Utc::now()
         {
-            if access_token_expires_at.to_utc() > Utc::now() {
-                return Ok(());
-            }
+            return Ok(());
         }
         self.login().await
     }
