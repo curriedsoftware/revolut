@@ -10,6 +10,11 @@
     rust.enable = true;
   };
 
+  dotenv = {
+    enable = true;
+    filename = [".env" ".env.local"];
+  };
+
   packages = with pkgs; [alejandra bat cargo-audit cargo-deny just jq];
 
   enterTest = ''
