@@ -135,8 +135,9 @@ impl<E> ClientBuilder<E, MissingClientAuthentication, CryptoRampClient> {
 impl<E: Environment, C> ClientBuilder<E, CryptoRampAuthentication, C> {
     pub fn build(self) -> Result<Client<E, CryptoRampAuthentication>, ClientBuilderError> {
         let retry_policy = ExponentialBackoff::builder().build_with_max_retries(3);
-        let client_builder = reqwest_middleware::ClientBuilder::new(reqwest::Client::new())
-            .with(RetryTransientMiddleware::new_with_policy(retry_policy));
+        let client_builder =
+            reqwest_middleware::ClientBuilder::new(crate::client::reqwest_client())
+                .with(RetryTransientMiddleware::new_with_policy(retry_policy));
         Ok(Client {
             environment: self.environment,
             client: client_builder.build(),

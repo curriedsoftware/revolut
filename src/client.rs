@@ -65,6 +65,34 @@ pub enum HttpMethod<'a, T: Clone + Serialize> {
     Put { body: Option<Body<'a, T>> },
 }
 
+/// Builds the underlying [`reqwest::Client`] shared by every API client.
+///
+/// In non-test builds we rely on reqwest's default rustls platform verifier,
+/// which loads the system root certificates.
+#[cfg(not(test))]
+pub(crate) fn reqwest_client() -> reqwest::Client {
+    reqwest::Client::new()
+}
+
+/// Builds the underlying [`reqwest::Client`] shared by every API client.
+///
+/// Under `cfg(test)` the request layer short-circuits before reaching the
+/// network (see the `request`/`request_raw` overrides in each client module),
+/// so the client never performs a real TLS handshake. We therefore build it
+/// with an empty root certificate set via [`tls_certs_only`], which avoids
+/// invoking the rustls platform verifier. The platform verifier panics with
+/// "No CA certificates were loaded from the system" in sandboxed build
+/// environments (e.g. the Nix/devenv CI build) that have no system trust store.
+///
+/// [`tls_certs_only`]: reqwest::ClientBuilder::tls_certs_only
+#[cfg(test)]
+pub(crate) fn reqwest_client() -> reqwest::Client {
+    reqwest::Client::builder()
+        .tls_certs_only(std::iter::empty())
+        .build()
+        .expect("failed to build test reqwest client")
+}
+
 impl<'a, T: Clone + Serialize> From<&HttpMethod<'a, T>> for reqwest::Method {
     fn from(method: &HttpMethod<'a, T>) -> Self {
         match method {
