@@ -27,7 +27,3 @@ reqwest-retry = { version = "0.9", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 strum = { version = "0.27", features = ["derive"] }
-
-[patch.crates-io]
-# To get rid of https://github.com/advisories/GHSA-434x-w66g-qw3r
-bytes = { git = "https://github.com/tokio-rs/bytes.git", tag = "v1.11.1" }

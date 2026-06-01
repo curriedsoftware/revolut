@@ -125,11 +125,11 @@ features = ["alloc"]
 optional = true
 default-features = false
 
-[dev-dependencies]
-serde_test = "1.0"
+[dev-dependencies.serde_test]
+version = "1.0"
 
-[target."cfg(loom)".dev-dependencies]
-loom = "0.7"
+[target."cfg(loom)".dev-dependencies.loom]
+version = "0.7"
 
 [lints.rust.unexpected_cfgs]
 level = "warn"
