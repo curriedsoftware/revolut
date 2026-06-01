@@ -6,6 +6,7 @@ edition = "2024"
 license = "MIT"
 description = "A library to communicate with the Revolut API"
 repository = "https://github.com/curriedsoftware/revolut"
+exclude = [".env.local"]
 
 [features]
 default = ["sandbox"]
