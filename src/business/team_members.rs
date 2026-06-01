@@ -37,6 +37,10 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
+    // Reused verbatim from the OpenAPI-generated types: structurally identical.
+    // `TeamRole` matches the spec's `Role`.
+    pub use crate::business::generated::Role as TeamRole;
+
     #[derive(Clone, Debug, Default)]
     pub struct ListParams {
         pub created_before: Option<String>,
@@ -77,14 +81,6 @@ pub mod v10 {
         pub email: String,
         pub id: String,
         pub role_id: String,
-        pub created_at: String,
-        pub updated_at: String,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct TeamRole {
-        pub id: String,
-        pub name: String,
         pub created_at: String,
         pub updated_at: String,
     }

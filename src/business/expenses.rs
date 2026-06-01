@@ -43,6 +43,10 @@ pub mod v10 {
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
 
+    // Reused verbatim from the OpenAPI-generated types: structurally identical.
+    // `Amount` matches the spec's `AmountWithCurrency`.
+    pub use crate::business::generated::{AmountWithCurrency as Amount, Category};
+
     #[derive(Clone, Debug, Default)]
     pub struct ListParams {
         pub from: Option<String>,
@@ -50,18 +54,6 @@ pub mod v10 {
         pub count: Option<u64>,
         pub state: Option<ExpenseState>,
         pub transaction_type: Option<TransactionType>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct Amount {
-        pub amount: Option<f64>,
-        pub currency: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct Category {
-        pub name: String,
-        pub code: Option<String>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]

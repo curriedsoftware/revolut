@@ -36,6 +36,12 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
+    // Reused verbatim from the OpenAPI-generated types: structurally identical.
+    // `CounterpartyAddress` matches the spec's `BeneficiaryAddress`.
+    pub use crate::business::generated::{
+        BeneficiaryAddress as CounterpartyAddress, IndividualName,
+    };
+
     #[derive(Clone, Debug, Default)]
     pub struct ListParams {
         pub name: Option<String>,
@@ -72,22 +78,6 @@ pub mod v10 {
     pub enum CounterpartyProfileType {
         Personal,
         Business,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct IndividualName {
-        pub first_name: Option<String>,
-        pub last_name: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-    pub struct CounterpartyAddress {
-        pub street_line1: Option<String>,
-        pub street_line2: Option<String>,
-        pub region: Option<String>,
-        pub city: Option<String>,
-        pub country: String,
-        pub postcode: String,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]

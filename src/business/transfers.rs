@@ -33,6 +33,9 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
+    // Reused verbatim from the OpenAPI-generated types: structurally identical.
+    pub use crate::business::generated::{ExchangeReason, TransferReason};
+
     #[derive(Debug, Default, Deserialize, Serialize)]
     pub struct PayRequest {
         pub request_id: String,
@@ -59,20 +62,6 @@ pub mod v10 {
         pub counterparty_id: String,
         pub account_id: Option<String>,
         pub card_id: Option<String>,
-    }
-
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct TransferReason {
-        pub country: String,
-        pub currency: String,
-        pub code: String,
-        pub description: String,
-    }
-
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct ExchangeReason {
-        pub code: String,
-        pub name: String,
     }
 
     #[derive(Debug, Default, Deserialize, Serialize)]

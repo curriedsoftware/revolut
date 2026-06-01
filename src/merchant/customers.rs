@@ -31,6 +31,11 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
+    // Reused verbatim from the OpenAPI-generated types. These stay in sync
+    // automatically when the specs are bumped via `just generate`; we only
+    // alias them back to this crate's public names.
+    pub use crate::merchant::generated::Customer;
+
     #[derive(Clone, Debug, Default)]
     pub struct ListParams {
         pub limit: Option<u16>,
@@ -52,22 +57,6 @@ pub mod v10 {
         pub email: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub phone: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub date_of_birth: Option<String>,
-    }
-
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct Customer {
-        pub id: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub full_name: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub business_name: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub phone: Option<String>,
-        pub created_at: String,
-        pub updated_at: String,
-        pub email: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub date_of_birth: Option<String>,
     }

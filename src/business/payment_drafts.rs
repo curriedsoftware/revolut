@@ -33,17 +33,17 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
+    // Reused verbatim from the OpenAPI-generated types: structurally identical
+    // (the generated `PaymentOrderInfo` types `payments_count` as the richer
+    // `i64`).
+    pub use crate::business::generated::{
+        AmountWithCurrency as Amount, CreatePaymentDraftResponse as CreatePaymentDraft, Fee,
+        PaymentOrderInfo as PaymentOrder,
+    };
+
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct PaymentDraft {
         pub payment_orders: Vec<PaymentOrder>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct PaymentOrder {
-        pub id: String,
-        pub scheduled_for: Option<String>,
-        pub title: Option<String>,
-        pub payments_count: u64,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -84,21 +84,10 @@ pub mod v10 {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct CreatePaymentDraft {
-        pub id: String,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct PaymentDraftDetails {
         pub scheduled_for: Option<String>,
         pub title: Option<String>,
         pub payments: Vec<Payment>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct Amount {
-        pub amount: Option<f64>,
-        pub currency: Option<String>,
     }
 
     // SCREAMING_SNAKE_CASE
@@ -121,12 +110,6 @@ pub mod v10 {
         pub to: Amount,
         pub rate: Option<String>,
         pub fee: Option<Fee>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct Fee {
-        pub amount: Option<f64>,
-        pub currency: Option<String>,
     }
 }
 
@@ -241,14 +224,8 @@ mod tests {
         }
     }
 
-    impl Default for Amount {
-        fn default() -> Self {
-            Self {
-                amount: None,
-                currency: None,
-            }
-        }
-    }
+    // `Default for Amount` (the shared generated `AmountWithCurrency`) is defined
+    // once in `business::expenses`; trait impls are crate-global, so it applies here too.
 
     impl Default for PaymentState {
         fn default() -> Self {

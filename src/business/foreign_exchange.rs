@@ -33,6 +33,9 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
+    // Reused verbatim from the OpenAPI-generated types: structurally identical.
+    pub use crate::business::generated::AmountWithCurrency;
+
     #[derive(Clone, Debug, Default)]
     pub struct ExchangeRateGetParams {
         pub from: String,
@@ -46,12 +49,6 @@ pub mod v10 {
         pub to: AmountWithCurrency,
         pub fee: AmountWithCurrency,
         pub rate_date: String,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct AmountWithCurrency {
-        pub amount: Option<f64>,
-        pub currency: Option<String>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]

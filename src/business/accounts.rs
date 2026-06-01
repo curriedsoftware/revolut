@@ -33,6 +33,17 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
+    // Reused verbatim from the OpenAPI-generated types. These stay in sync
+    // automatically when the specs are bumped via `just generate`; we only
+    // alias them back to this crate's public names.
+    pub use crate::business::generated::{
+        AccountBankDetailsItem as BankDetails, BeneficiaryAddress as AccountAddress,
+        EstimatedTime as AccountEstimatedTime,
+    };
+
+    // Kept hand-written: the spec declares `state` as an inline string enum,
+    // which the generator flattens to `String`. We keep the typed enum (and the
+    // `Account` struct that embeds it) so this remains correct by construction.
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Account {
         pub id: String,
@@ -50,39 +61,6 @@ pub mod v10 {
     pub enum AccountState {
         Active,
         Inactive,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct AccountEstimatedTime {
-        pub unit: String,
-        pub min: Option<u16>,
-        pub max: Option<u16>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct AccountAddress {
-        pub street_line1: Option<String>,
-        pub street_line2: Option<String>,
-        pub region: Option<String>,
-        pub city: Option<String>,
-        pub country: String,
-        pub postcode: String,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct BankDetails {
-        pub iban: Option<String>,
-        pub bic: Option<String>,
-        pub account_no: Option<String>,
-        pub sort_code: Option<String>,
-        pub routing_number: Option<String>,
-        pub beneficiary: String,
-        pub beneficiary_address: AccountAddress,
-        pub bank_country: Option<String>,
-        pub pooled: Option<bool>,
-        pub unique_reference: Option<String>,
-        pub schemes: Vec<String>,
-        pub estimated_time: AccountEstimatedTime,
     }
 }
 

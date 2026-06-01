@@ -37,20 +37,13 @@ use crate::{
 pub mod v10 {
     use serde::{Deserialize, Serialize};
 
+    // Reused verbatim from the OpenAPI-generated types: structurally identical.
+    pub use crate::business::generated::{CardProduct, SpendProgram as CardSpendProgram};
+
     #[derive(Clone, Debug, Default)]
     pub struct ListParams {
         pub created_before: Option<String>,
         pub limit: Option<u16>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct CardProduct {
-        pub code: String,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct CardSpendProgram {
-        pub label: String,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
