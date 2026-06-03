@@ -433,10 +433,28 @@ pub mod v10 {
         RevolutPayAccount,
     }
 
+    /// The 3-D Secure `version` is returned inconsistently by Revolut: as a bare
+    /// number (e.g. `2`) for retrieved orders, and as a string (e.g. `"2"`)
+    /// elsewhere. Accept either and normalise to a string so deserialization of
+    /// the surrounding order does not fail.
+    fn deserialize_opt_string_or_number<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = Option::<serde_json::Value>::deserialize(deserializer)?;
+        Ok(value.and_then(|v| match v {
+            serde_json::Value::Null => None,
+            serde_json::Value::String(s) => Some(s),
+            serde_json::Value::Number(n) => Some(n.to_string()),
+            other => Some(other.to_string()),
+        }))
+    }
+
     #[derive(Debug, Deserialize, Serialize)]
     pub struct ThreeDs {
         pub eci: Option<String>,
         pub state: Option<ThreeDsState>,
+        #[serde(default, deserialize_with = "deserialize_opt_string_or_number")]
         pub version: Option<String>,
     }
 
