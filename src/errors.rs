@@ -27,9 +27,9 @@ use std::fmt::Debug;
 
 #[derive(Debug, Deserialize)]
 pub enum Error {
-    ClientBuilderError(ClientBuilderError),
-    ClientError(ClientError),
-    BackendError(BackendError),
+    ClientBuilderError(Box<ClientBuilderError>),
+    ClientError(Box<ClientError>),
+    BackendError(Box<BackendError>),
 }
 
 #[derive(Debug, Deserialize)]
@@ -71,18 +71,20 @@ pub type ApiResult<T> = std::result::Result<T, Error>;
 
 impl From<ClientBuilderError> for Error {
     fn from(error: ClientBuilderError) -> Self {
-        Error::ClientBuilderError(error)
+        Error::ClientBuilderError(Box::new(error))
     }
 }
 
 impl From<serde_json::Error> for Error {
     fn from(error: serde_json::Error) -> Self {
-        Error::ClientError(ClientError::SerializationError(format!("{error:?}")))
+        Error::ClientError(Box::new(ClientError::SerializationError(format!(
+            "{error:?}"
+        ))))
     }
 }
 
 impl From<reqwest::Error> for Error {
     fn from(error: reqwest::Error) -> Self {
-        Error::ClientError(ClientError::RequestError(format!("{error:?}")))
+        Error::ClientError(Box::new(ClientError::RequestError(format!("{error:?}"))))
     }
 }

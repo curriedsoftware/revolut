@@ -186,7 +186,9 @@ impl<E: Environment> Client<E, CryptoRampAuthentication> {
             .send()
             .await
             .map_err(|err| {
-                errors::Error::ClientError(errors::ClientError::RequestError(format!("{err:?}")))
+                errors::Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
+                    "{err:?}"
+                ))))
             })?;
 
         if response.status().is_success() {
@@ -195,9 +197,9 @@ impl<E: Environment> Client<E, CryptoRampAuthentication> {
             }
             let response_ = format!("{response:?}");
             Ok(response.json().await.map_err(|err| {
-                errors::Error::ClientError(errors::ClientError::RequestError(format!(
+                errors::Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
                     "{err:?}: {response_}",
-                )))
+                ))))
             })?)
         } else {
             Err(Error::BackendError(response.json().await?))

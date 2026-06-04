@@ -220,8 +220,10 @@ impl Iso8601Duration {
         if is_valid_iso8601_duration(&value) {
             Ok(Self(value))
         } else {
-            Err(Error::ClientError(ClientError::ValidationError(format!(
-                "expected an ISO 8601 duration (e.g. `P1M`, `P7D`, `PT1H30M`), got `{value}`"
+            Err(Error::ClientError(Box::new(ClientError::ValidationError(
+                format!(
+                    "expected an ISO 8601 duration (e.g. `P1M`, `P7D`, `PT1H30M`), got `{value}`"
+                ),
             ))))
         }
     }
@@ -310,8 +312,10 @@ fn validate_iso8601_duration(field: &str, value: &str) -> ApiResult<()> {
     if is_valid_iso8601_duration(value) {
         Ok(())
     } else {
-        Err(Error::ClientError(ClientError::ValidationError(format!(
-            "`{field}` must be an ISO 8601 duration (e.g. `P1M`, `P7D`, `PT1H30M`), got `{value}`"
+        Err(Error::ClientError(Box::new(ClientError::ValidationError(
+            format!(
+                "`{field}` must be an ISO 8601 duration (e.g. `P1M`, `P7D`, `PT1H30M`), got `{value}`"
+            ),
         ))))
     }
 }
@@ -375,13 +379,13 @@ pub const fn is_valid_iso8601_duration(value: &str) -> bool {
 
     let mut saw_component = false;
     if date_end > 1 {
-        if !valid_components(bytes, 1, date_end, &[b'Y', b'M', b'D']) {
+        if !valid_components(bytes, 1, date_end, b"YMD") {
             return false;
         }
         saw_component = true;
     }
     if has_time {
-        if !valid_components(bytes, time_start, len, &[b'H', b'M', b'S']) {
+        if !valid_components(bytes, time_start, len, b"HMS") {
             return false;
         }
         saw_component = true;
@@ -585,7 +589,7 @@ mod tests {
         );
         assert!(matches!(
             Iso8601Duration::parse("two weeks"),
-            Err(Error::ClientError(ClientError::ValidationError(_)))
+            Err(Error::ClientError(e)) if matches!(*e, ClientError::ValidationError(_))
         ));
         // `FromStr` / `TryFrom` route through the same validation.
         assert!("P7D".parse::<Iso8601Duration>().is_ok());
@@ -609,7 +613,7 @@ mod tests {
         };
         assert!(matches!(
             create_plan(&test_client(), &plan).await,
-            Err(Error::ClientError(ClientError::ValidationError(_)))
+            Err(Error::ClientError(e)) if matches!(*e, ClientError::ValidationError(_))
         ));
     }
 
@@ -624,7 +628,7 @@ mod tests {
         };
         assert!(matches!(
             create(&test_client(), &subscription).await,
-            Err(Error::ClientError(ClientError::ValidationError(_)))
+            Err(Error::ClientError(e)) if matches!(*e, ClientError::ValidationError(_))
         ));
     }
 
