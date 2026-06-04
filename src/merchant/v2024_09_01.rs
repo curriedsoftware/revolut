@@ -27,7 +27,7 @@ use crate::{
     errors::ApiResult,
     merchant::{
         Client, apple_pay, client, customers, disputes, locations, orders, other, payments,
-        payouts, report_runs, webhooks,
+        payouts, report_runs, subscriptions, webhooks,
     },
 };
 
@@ -158,6 +158,64 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
         payment_method_id: &str,
     ) -> ApiResult<()> {
         customers::delete_payment_method(self, customer_id, payment_method_id).await
+    }
+}
+
+/// Subscriptions API. Available in sandbox and production environments.
+impl<E: Environment> Client<E, client::MerchantAuthentication> {
+    pub async fn create_subscription_plan(
+        &self,
+        plan: &subscriptions::v10::SubscriptionPlanCreation,
+    ) -> ApiResult<subscriptions::v10::SubscriptionPlan> {
+        subscriptions::create_plan(self, plan).await
+    }
+
+    pub async fn subscription_plans(&self) -> ApiResult<subscriptions::v10::SubscriptionPlans> {
+        subscriptions::plans(self).await
+    }
+
+    pub async fn subscription_plan(
+        &self,
+        plan_id: &str,
+    ) -> ApiResult<subscriptions::v10::SubscriptionPlan> {
+        subscriptions::plan(self, plan_id).await
+    }
+
+    pub async fn create_subscription(
+        &self,
+        subscription: &subscriptions::v10::SubscriptionCreation,
+    ) -> ApiResult<subscriptions::v10::Subscription> {
+        subscriptions::create(self, subscription).await
+    }
+
+    pub async fn subscriptions(&self) -> ApiResult<subscriptions::v10::Subscriptions> {
+        subscriptions::list(self).await
+    }
+
+    pub async fn subscription(
+        &self,
+        subscription_id: &str,
+    ) -> ApiResult<subscriptions::v10::Subscription> {
+        subscriptions::retrieve(self, subscription_id).await
+    }
+
+    pub async fn update_subscription(
+        &self,
+        subscription_id: &str,
+        update: &subscriptions::v10::SubscriptionUpdate,
+    ) -> ApiResult<subscriptions::v10::Subscription> {
+        subscriptions::update(self, subscription_id, update).await
+    }
+
+    pub async fn cancel_subscription(&self, subscription_id: &str) -> ApiResult<()> {
+        subscriptions::cancel(self, subscription_id).await
+    }
+
+    pub async fn subscription_cycles(
+        &self,
+        subscription_id: &str,
+    ) -> ApiResult<subscriptions::v10::SubscriptionCycles> {
+        subscriptions::cycles(self, subscription_id).await
     }
 }
 

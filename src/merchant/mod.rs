@@ -35,6 +35,7 @@ pub mod other;
 pub mod payments;
 pub mod payouts;
 pub mod report_runs;
+pub mod subscriptions;
 pub mod webhooks;
 
 pub mod v2024_09_01;

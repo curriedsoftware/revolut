@@ -45,6 +45,7 @@ pub enum ClientError {
     HttpStatus(u16),
     RequestError(String),
     SerializationError(String),
+    ValidationError(String),
     GenericError(String),
 }
 
