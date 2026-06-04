@@ -5,20 +5,37 @@
 
 use serde::{Deserialize, Serialize};
 
-pub type OrderAmountV2 = i64;
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OrderState {
+    Pending,
+    Processing,
+    Authorised,
+    Completed,
+    Cancelled,
+    Failed,
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CustomerV2 {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub full_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub phone: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub email: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub date_of_birth: Option<String>,
+#[serde(rename_all = "snake_case")]
+pub enum OrderTypeV2 {
+    Payment,
+    PaymentRequest,
+    Refund,
+    Chargeback,
+    ChargebackReversal,
+    CreditReimbursement,
+}
+
+pub type OrderAmountV2 = i64;
+
+pub type OutstandingAmount = i64;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CaptureModeV2 {
+    Automatic,
+    Manual,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -26,6 +43,28 @@ pub struct CustomerV2 {
 pub enum EnforceChallengeV2 {
     Automatic,
     Forced,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AuthorisationType {
+    Final,
+    PreAuthorisation,
+}
+
+pub type Metadata = std::collections::HashMap<String, String>;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct OrderCustomerV2 {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phone: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub full_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date_of_birth: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -72,6 +111,82 @@ pub struct LineItem {
 pub type LineItems = Vec<LineItem>;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct MerchantOrderData {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reference: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct OrderSimplifiedV2 {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub token: Option<String>,
+    #[serde(rename = "type")]
+    pub r#type: OrderTypeV2,
+    pub state: OrderState,
+    pub created_at: String,
+    pub updated_at: String,
+    pub amount: i64,
+    pub currency: String,
+    pub outstanding_amount: i64,
+    pub capture_mode: CaptureModeV2,
+    pub enforce_challenge: EnforceChallengeV2,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authorisation_type: Option<AuthorisationType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<Metadata>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub related_order_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer: Option<OrderCustomerV2>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line_items: Option<Vec<LineItem>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub merchant_order_data: Option<MerchantOrderData>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub redirect_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cancel_authorised_after: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub statement_descriptor_suffix: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct OrdersV2 {
+    pub orders: Vec<OrderSimplifiedV2>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ErrorV2 {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<i64>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CustomerV2 {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub full_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phone: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date_of_birth: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct AddressV3 {
     pub street_line_1: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -114,22 +229,6 @@ pub struct Shipping {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub shipments: Option<Vec<Shipment>>,
 }
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum CaptureModeV2 {
-    Automatic,
-    Manual,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum AuthorisationType {
-    Final,
-    PreAuthorisation,
-}
-
-pub type Metadata = std::collections::HashMap<String, String>;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -383,14 +482,6 @@ pub struct IndustryDataV3 {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct MerchantOrderData {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub reference: Option<String>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct UpcomingPayment {
     pub date: String,
     pub payment_method_id: String,
@@ -435,30 +526,6 @@ pub struct OrderCreationV6 {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub statement_descriptor_suffix: Option<String>,
 }
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum OrderTypeV2 {
-    Payment,
-    PaymentRequest,
-    Refund,
-    Chargeback,
-    ChargebackReversal,
-    CreditReimbursement,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum OrderState {
-    Pending,
-    Processing,
-    Authorised,
-    Completed,
-    Cancelled,
-    Failed,
-}
-
-pub type OutstandingAmount = i64;
 
 pub type RefundedAmount = i64;
 
@@ -537,6 +604,7 @@ pub enum PaymentMethodType {
     GooglePay,
     RevolutPayCard,
     RevolutPayAccount,
+    SepaDirectDebit,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -583,6 +651,8 @@ pub struct ApplePay {
     pub capture_deadline: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fingerprint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub network_transaction_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -615,6 +685,8 @@ pub struct Card {
     pub capture_deadline: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fingerprint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub network_transaction_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -647,6 +719,8 @@ pub struct GooglePay {
     pub capture_deadline: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fingerprint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub network_transaction_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -679,6 +753,8 @@ pub struct RevolutPayCard {
     pub capture_deadline: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fingerprint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub network_transaction_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -692,6 +768,20 @@ pub struct RevolutPayAccount {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SepaDirectDebit {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(rename = "type")]
+    pub r#type: PaymentMethodType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub debtor_iban_last_four: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub debtor_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mandate_reference: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum PaymentMethodV2 {
     ApplePay(ApplePay),
@@ -699,19 +789,27 @@ pub enum PaymentMethodV2 {
     GooglePay(GooglePay),
     RevolutPayCard(RevolutPayCard),
     RevolutPayAccount(RevolutPayAccount),
+    SepaDirectDebit(SepaDirectDebit),
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AuthenticationChallengeType {
+    ThreeDs,
+    ThreeDsFingerprint,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ThreeDs {
     #[serde(rename = "type")]
-    pub r#type: String,
+    pub r#type: AuthenticationChallengeType,
     pub acs_url: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ThreeDsFingerprint {
     #[serde(rename = "type")]
-    pub r#type: String,
+    pub r#type: AuthenticationChallengeType,
     pub fingerprint_url: String,
     pub fingerprint_data: String,
 }
@@ -741,6 +839,14 @@ pub struct Fee {
 }
 
 pub type Fees = Vec<Fee>;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Payer {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phone: Option<String>,
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PaymentV2 {
@@ -773,6 +879,8 @@ pub struct PaymentV2 {
     pub risk_level: Option<PaymentRiskLevel>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fees: Option<Vec<Fee>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payer: Option<Payer>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -858,79 +966,41 @@ pub struct OrderV6 {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ErrorV2 {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub code: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub message: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub timestamp: Option<i64>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct OrderUpdateV6 {
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub amount: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub currency: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub settlement_currency: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub customer: Option<CustomerV2>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enforce_challenge: Option<EnforceChallengeV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub line_items: Option<Vec<LineItem>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub shipping: Option<Shipping>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub capture_mode: Option<CaptureModeV2>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cancel_authorised_after: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expire_pending_after: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Metadata>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub industry_data: Option<IndustryDataV3>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Address {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub street_line_1: Option<String>,
+    pub merchant_order_data: Option<MerchantOrderData>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub street_line_2: Option<String>,
+    pub upcoming_payment_data: Option<UpcomingPayment>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub region: Option<String>,
+    pub redirect_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub city: Option<String>,
-    pub country_code: String,
-    pub postcode: String,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct SimplifiedOrder {
-    pub id: String,
-    #[serde(rename = "type")]
-    pub r#type: String,
-    pub state: String,
-    pub created_at: String,
-    pub updated_at: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub completed_at: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub capture_mode: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub settlement_currency: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub merchant_order_ext_ref: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub customer_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub email: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub phone: Option<String>,
-    pub order_amount: serde_json::Value,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub order_outstanding_amount: Option<serde_json::Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub shipping_address: Option<Address>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Error {
-    #[serde(rename = "errorId")]
-    pub error_id: String,
-    pub timestamp: i64,
+    pub statement_descriptor_suffix: Option<String>,
 }
 
 pub type IncrementAmount = i64;
@@ -940,6 +1010,16 @@ pub struct IncrementalAuthorisationRequest {
     pub amount: i64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reference: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line_items: Option<Vec<LineItem>>,
+}
+
+pub type OrderCaptureAmount = i64;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct OrderCaptureV2 {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub amount: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub line_items: Option<Vec<LineItem>>,
 }
@@ -1005,7 +1085,15 @@ pub struct PaymentRetrieval {
     pub order_id: String,
     pub payment_method: serde_json::Value,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub token: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub amount: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub currency: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub state: Option<PaymentStateV2>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub decline_reason: Option<DeclineReasonV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authentication_challenge: Option<AuthenticationChallenge>,
 }
@@ -1037,27 +1125,179 @@ pub struct SavedPaymentMethod {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Customer {
+pub struct CustomerSimplified {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub full_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub business_name: Option<String>,
+    pub email: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub phone: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Customers {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next_page_token: Option<String>,
+    pub customers: Vec<CustomerSimplified>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CustomerCreationV2 {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub full_name: Option<String>,
     pub email: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phone: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date_of_birth: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CustomerCreation {
+pub struct CustomerCreated {
+    pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub full_name: Option<String>,
+    pub email: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub business_name: Option<String>,
+    pub phone: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PaymentMethodTypeV2 {
+    Card,
+    RevolutPay,
+    SepaDirectDebit,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SavedFor {
+    Customer,
+    Merchant,
+}
+
+pub type CardExpiryMonth = i64;
+
+pub type CardExpiryYear = i64;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CardBrandV2 {
+    Visa,
+    Mastercard,
+    AmericanExpress,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CardFundingV2 {
+    Debit,
+    Credit,
+    Prepaid,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct BillingAddress {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub street_line_1: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub street_line_2: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub region: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub city: Option<String>,
+    pub country_code: String,
+    pub postcode: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CardV2 {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub r#type: PaymentMethodTypeV2,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub saved_for: Option<SavedFor>,
+    pub created_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bin: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_four: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expiry_month: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expiry_year: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cardholder_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub brand: Option<CardBrandV2>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub funding: Option<CardFundingV2>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub issuer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub issuer_country: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub billing_address: Option<BillingAddress>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct RevolutPayV2 {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub r#type: PaymentMethodTypeV2,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub saved_for: Option<SavedFor>,
+    pub created_at: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SepaDirectDebitV2 {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub r#type: PaymentMethodTypeV2,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub saved_for: Option<SavedFor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub debtor_iban_last_four: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub debtor_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mandate_reference: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub billing_address: Option<BillingAddress>,
+    pub created_at: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum PaymentMethodV4 {
+    CardV2(CardV2),
+    RevolutPayV2(RevolutPayV2),
+    SepaDirectDebitV2(SepaDirectDebitV2),
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CustomerV3 {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub full_name: Option<String>,
+    pub email: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phone: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+    pub payment_methods: Vec<PaymentMethodV4>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CustomerUpdateV2 {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub full_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1067,46 +1307,104 @@ pub struct CustomerCreation {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CustomerPaymentMethod {
-    pub id: String,
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub r#type: Option<String>,
+pub struct CustomerPaymentMethodsV2 {
+    pub payment_methods: Vec<PaymentMethodV4>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct PaymentMethodUpdate {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub saved_for: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub method_details: Option<serde_json::Value>,
+}
+
+pub type DisputePaymentAmount = i64;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DisputePaymentMethodType {
+    ApplePay,
+    AppleTapToPay,
+    Card,
+    GooglePay,
+    RevolutPayAccount,
+    RevolutPayCard,
+    SepaDirectDebit,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CustomerWithPaymentMethod {
-    pub id: String,
+pub struct DisputePaymentMethodApplePay {
+    #[serde(rename = "type")]
+    pub r#type: DisputePaymentMethodType,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub full_name: Option<String>,
+    pub card_brand: Option<CardBrandV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub business_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub phone: Option<String>,
-    pub created_at: String,
-    pub updated_at: String,
-    pub email: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub date_of_birth: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub payment_methods: Option<Vec<CustomerPaymentMethod>>,
+    pub card_last_four: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct CustomerUpdate {
+pub struct DisputePaymentMethodAppleTapToPay {
+    #[serde(rename = "type")]
+    pub r#type: DisputePaymentMethodType,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct DisputePaymentMethodCard {
+    #[serde(rename = "type")]
+    pub r#type: DisputePaymentMethodType,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub full_name: Option<String>,
+    pub card_brand: Option<CardBrandV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub business_name: Option<String>,
+    pub card_last_four: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct DisputePaymentMethodGooglePay {
+    #[serde(rename = "type")]
+    pub r#type: DisputePaymentMethodType,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub email: Option<String>,
+    pub card_brand: Option<CardBrandV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub phone: Option<String>,
+    pub card_last_four: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct DisputePaymentMethodRevolutPayAccount {
+    #[serde(rename = "type")]
+    pub r#type: DisputePaymentMethodType,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct DisputePaymentMethodRevolutPayCard {
+    #[serde(rename = "type")]
+    pub r#type: DisputePaymentMethodType,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub date_of_birth: Option<String>,
+    pub card_brand: Option<CardBrandV2>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub card_last_four: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct DisputePaymentMethodSepaDirectDebit {
+    #[serde(rename = "type")]
+    pub r#type: DisputePaymentMethodType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub debtor_iban_last_four: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub debtor_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mandate_reference: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum DisputePaymentMethod {
+    DisputePaymentMethodApplePay(DisputePaymentMethodApplePay),
+    DisputePaymentMethodAppleTapToPay(DisputePaymentMethodAppleTapToPay),
+    DisputePaymentMethodCard(DisputePaymentMethodCard),
+    DisputePaymentMethodGooglePay(DisputePaymentMethodGooglePay),
+    DisputePaymentMethodRevolutPayAccount(DisputePaymentMethodRevolutPayAccount),
+    DisputePaymentMethodRevolutPayCard(DisputePaymentMethodRevolutPayCard),
+    DisputePaymentMethodSepaDirectDebit(DisputePaymentMethodSepaDirectDebit),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1124,7 +1422,7 @@ pub struct DisputePayment {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub currency: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub payment_method: Option<serde_json::Value>,
+    pub payment_method: Option<DisputePaymentMethod>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1216,6 +1514,8 @@ pub struct PaymentRetrievalV2 {
     pub risk_level: Option<PaymentRiskLevel>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fees: Option<Vec<Fee>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payer: Option<Payer>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1232,6 +1532,73 @@ pub type CycleCount = i64;
 pub type SubscriptionAmount = i64;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SubscriptionItemType {
+    Flat,
+    Usage,
+}
+
+pub type SubscriptionItemPackageSize = f64;
+
+pub type SubscriptionItemQuantity = f64;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SubscriptionItemFlat {
+    pub id: String,
+    pub name: String,
+    #[serde(rename = "type")]
+    pub r#type: SubscriptionItemType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub package_size: Option<f64>,
+    pub unit: String,
+    pub quantity: f64,
+    pub amount: i64,
+    pub currency: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SubscriptionItemTier {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub upper_quantity_threshold: Option<f64>,
+    pub amount: i64,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum UsageAggregationMethod {
+    Sum,
+    Latest,
+    Max,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SubscriptionItemUsage {
+    pub id: String,
+    pub name: String,
+    #[serde(rename = "type")]
+    pub r#type: SubscriptionItemType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub package_size: Option<f64>,
+    pub unit: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub amount: Option<i64>,
+    pub currency: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tiers: Option<Vec<SubscriptionItemTier>>,
+    pub code: String,
+    pub usage_aggregation_method: UsageAggregationMethod,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum SubscriptionItem {
+    SubscriptionItemFlat(SubscriptionItemFlat),
+    SubscriptionItemUsage(SubscriptionItemUsage),
+}
+
+pub type SubscriptionItems = Vec<SubscriptionItem>;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct SubscriptionPlanPhase {
     pub id: String,
     pub ordinal: i64,
@@ -1242,6 +1609,8 @@ pub struct SubscriptionPlanPhase {
     pub amount: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub currency: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subscription_items: Option<Vec<SubscriptionItem>>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1270,6 +1639,45 @@ pub struct SubscriptionPlans {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SubscriptionItemFlatCreation {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub r#type: SubscriptionItemType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub package_size: Option<f64>,
+    pub unit: String,
+    pub quantity: f64,
+    pub amount: i64,
+    pub currency: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SubscriptionItemUsageCreation {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub r#type: SubscriptionItemType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub package_size: Option<f64>,
+    pub unit: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub amount: Option<i64>,
+    pub currency: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tiers: Option<Vec<SubscriptionItemTier>>,
+    pub code: String,
+    pub usage_aggregation_method: UsageAggregationMethod,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum SubscriptionItemCreation {
+    SubscriptionItemFlatCreation(SubscriptionItemFlatCreation),
+    SubscriptionItemUsageCreation(SubscriptionItemUsageCreation),
+}
+
+pub type SubscriptionItemsCreation = Vec<SubscriptionItemCreation>;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct SubscriptionPlanPhaseCreation {
     pub ordinal: i64,
     pub cycle_duration: String,
@@ -1277,6 +1685,8 @@ pub struct SubscriptionPlanPhaseCreation {
     pub cycle_count: Option<i64>,
     pub amount: i64,
     pub currency: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subscription_items: Option<Vec<SubscriptionItemCreation>>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1360,6 +1770,11 @@ pub struct SubscriptionUpdate {
     pub external_reference: Option<String>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SubscriptionUpdateRenewalDate {
+    pub renewal_date: String,
+}
+
 pub type CycleNumber = i64;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1388,7 +1803,11 @@ pub struct SubscriptionCycle {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub end_date: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub usage_cutoff_date: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub order_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub post_billing_order_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub trial: Option<bool>,
 }
@@ -1398,6 +1817,50 @@ pub struct SubscriptionCycles {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub next_page_token: Option<String>,
     pub cycles: Vec<SubscriptionCycle>,
+}
+
+pub type SubscriptionUsageQuantity = f64;
+
+pub type SubscriptionUsageMetadata = std::collections::HashMap<String, serde_json::Value>;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SubscriptionUsage {
+    pub id: String,
+    pub subscription_id: String,
+    pub subscription_cycle_id: String,
+    pub subscription_item_code: String,
+    pub usage_date: String,
+    pub quantity: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<SubscriptionUsageMetadata>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SubscriptionUsages {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next_page_token: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub subscription_usages: Option<Vec<SubscriptionUsage>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SubscriptionUsageCreation {
+    pub subscription_id: String,
+    pub subscription_item_code: String,
+    pub usage_date: String,
+    pub quantity: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<SubscriptionUsageMetadata>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct SubscriptionUsageUpdate {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub quantity: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<SubscriptionUsageMetadata>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1460,6 +1923,7 @@ pub enum ReportRunType {
     CustomReport,
     PayoutStatementReport,
     IcppFeeBreakdownReport,
+    PaymentsReport,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1520,6 +1984,34 @@ pub struct ReportRunIcppReport {
     pub options: Option<ReportRunOptions>,
 }
 
+pub type ReportRunPaymentsEntityStates = Vec<String>;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ReportRunPaymentsFilter {
+    pub from: String,
+    pub to: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub entity_states: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ReportRunPaymentsOptions {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timezone: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub columns: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ReportRunPaymentsReport {
+    pub filter: ReportRunPaymentsFilter,
+    pub format: ReportRunFormat,
+    #[serde(rename = "type")]
+    pub r#type: ReportRunType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub options: Option<ReportRunPaymentsOptions>,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ReportRunDetails {
     pub report_run_id: String,
@@ -1538,28 +2030,22 @@ pub struct ReportRunError {
 pub type WebhookEvents = Vec<String>;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Webhook {
+pub struct WebhookV2 {
     pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub events: Option<Vec<String>>,
+    pub url: String,
+    pub events: Vec<String>,
+    pub signing_secret: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Webhooks {
+    pub webhooks: Vec<WebhookV2>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct WebhookCreation {
     pub url: String,
     pub events: Vec<String>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct WebhookWithSigningSecret {
-    pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub events: Option<Vec<String>>,
-    pub signing_secret: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1572,6 +2058,7 @@ pub enum WebhookCallbackEvent {
     OrderIncrementalAuthorisationAuthorised,
     OrderIncrementalAuthorisationDeclined,
     OrderIncrementalAuthorisationFailed,
+    OrderPaymentAuthenticationChallenged,
     OrderPaymentAuthenticated,
     OrderPaymentDeclined,
     OrderPaymentFailed,
@@ -1616,6 +2103,21 @@ pub struct WebhookPayoutEvent {
 pub struct WebhookDisputeEvent {
     pub event: WebhookCallbackEvent,
     pub dispute_id: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Error {
+    #[serde(rename = "errorId")]
+    pub error_id: String,
+    pub timestamp: i64,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct WebhookUpdate {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub events: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1686,10 +2188,8 @@ pub struct OpeningHours {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct LocationPhysicalDetails {
     pub address: AddressV3,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub geo_location: Option<GeoLocation>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub opening_hours: Option<OpeningHours>,
+    pub geo_location: GeoLocation,
+    pub opening_hours: OpeningHours,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1751,4 +2251,75 @@ pub enum LocationUpdatePhysical {
 pub enum LocationUpdate {
     LocationUpdateOnline(LocationUpdateOnline),
     LocationUpdatePhysical(LocationUpdatePhysical),
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TerminalOperationMode {
+    Pos,
+    PaymentAcceptance,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TerminalType {
+    YoutransactorUcubeTouch,
+    NewlandN950,
+    NewlandN750,
+    NewlandR25p,
+}
+
+pub type TerminalBatteryLevel = i64;
+
+pub type TerminalOnline = bool;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Terminal {
+    pub id: String,
+    pub name: String,
+    #[serde(rename = "type")]
+    pub r#type: TerminalType,
+    pub serial_number: String,
+    pub battery_level: i64,
+    pub online: bool,
+    pub last_online_at: String,
+}
+
+pub type Terminals = Vec<Terminal>;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct TerminalsResponse {
+    pub terminals: Vec<Terminal>,
+}
+
+pub type PaymentIntentAmount = i64;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct PaymentIntentCreation {
+    pub amount: i64,
+    pub terminal_id: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PaymentIntentState {
+    Pending,
+    Processing,
+    Completed,
+    Cancelled,
+    Failed,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct PaymentIntent {
+    pub id: String,
+    pub state: PaymentIntentState,
+    pub terminal_id: String,
+    pub order_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payment_id: Option<String>,
+    pub amount: i64,
+    pub currency: String,
+    pub created_at: String,
+    pub updated_at: String,
 }

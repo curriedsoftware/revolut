@@ -33,8 +33,17 @@ pub mod v10 {
 
     // Reused verbatim from the OpenAPI-generated types. These stay in sync
     // automatically when the specs are bumped via `just generate`; we only
-    // alias them back to this crate's public names.
-    pub use crate::merchant::generated::Customer;
+    // alias them back to this crate's public names. Each endpoint returns a
+    // distinct generated shape, so we expose them directly rather than wrap
+    // them in hand-written copies that would silently drift from the spec:
+    //   - create               -> `CustomerCreationV2` / `CustomerCreated`
+    //   - list                 -> paginated `Customers`
+    //   - retrieve / update    -> `CustomerUpdateV2` / `CustomerV3`
+    //   - payment methods       -> `CustomerPaymentMethodsV2` / `PaymentMethodV4`
+    pub use crate::merchant::generated::{
+        CustomerCreated, CustomerCreationV2, CustomerPaymentMethodsV2, CustomerUpdateV2,
+        CustomerV3, Customers, PaymentMethodV4,
+    };
 
     #[derive(Clone, Debug, Default)]
     pub struct ListParams {
@@ -47,61 +56,6 @@ pub mod v10 {
         pub only_merchant: Option<bool>,
     }
 
-    #[derive(Debug, Default, Deserialize, Serialize)]
-    pub struct CustomerRequest {
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub full_name: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub business_name: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub email: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub phone: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub date_of_birth: Option<String>,
-    }
-
-    // SCREAMING_SNAKE_CASE
-    #[derive(Debug, Deserialize, strum::Display, Serialize)]
-    #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-    pub enum PaymentMethodType {
-        Card,
-        RevolutPay,
-    }
-
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct PaymentMethod {
-        pub id: String,
-        pub r#type: PaymentMethodType,
-        pub saved_for: Option<String>,
-        pub method_details: Option<PaymentMethodDetails>,
-    }
-
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct PaymentMethodDetails {
-        pub bin: Option<String>,
-        pub last4: Option<String>,
-        pub expiry_month: Option<u8>,
-        pub expiry_year: Option<u8>,
-        pub cardholder_name: Option<String>,
-        pub billing_address: Option<BillingAddress>,
-        pub brand: Option<String>,
-        pub funding: Option<String>,
-        pub issuer: Option<String>,
-        pub issuer_country: Option<String>,
-        pub created_at: Option<String>,
-    }
-
-    #[derive(Debug, Deserialize, Serialize)]
-    pub struct BillingAddress {
-        pub street_line_1: Option<String>,
-        pub street_line_2: Option<String>,
-        pub post_code: Option<String>,
-        pub city: Option<String>,
-        pub region: Option<String>,
-        pub country_code: Option<String>,
-    }
-
     // SCREAMING_SNAKE_CASE
     #[derive(Clone, Debug, Deserialize, strum::Display, Serialize)]
     #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -109,6 +63,9 @@ pub mod v10 {
         Customer,
     }
 
+    // Thin request wrapper kept on purpose: the generated `Payment-Method-Update`
+    // types `saved_for` as a free-form `Option<String>`, whereas we restrict it
+    // to the values this client supports.
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct PaymentMethodRequest {
         saved_for: PaymentMethodSavedForRequest,
@@ -167,8 +124,8 @@ impl std::fmt::Display for v10::PaymentMethodListParams {
 
 pub async fn create<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
-    customer: &v10::CustomerRequest,
-) -> ApiResult<v10::Customer> {
+    customer: &v10::CustomerCreationV2,
+) -> ApiResult<v10::CustomerCreated> {
     client
         .request(
             HttpMethod::Post {
@@ -182,7 +139,7 @@ pub async fn create<E: Environment>(
 pub async fn list<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
     list_params: &v10::ListParams,
-) -> ApiResult<Vec<v10::Customer>> {
+) -> ApiResult<v10::Customers> {
     client
         .request(
             HttpMethod::<()>::Get,
@@ -196,7 +153,7 @@ pub async fn list<E: Environment>(
 pub async fn retrieve<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
     customer_id: &str,
-) -> ApiResult<v10::Customer> {
+) -> ApiResult<v10::CustomerV3> {
     client
         .request(
             HttpMethod::<()>::Get,
@@ -210,8 +167,8 @@ pub async fn retrieve<E: Environment>(
 pub async fn update<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
     customer_id: &str,
-    customer: &v10::CustomerRequest,
-) -> ApiResult<v10::Customer> {
+    customer: &v10::CustomerUpdateV2,
+) -> ApiResult<v10::CustomerV3> {
     client
         .request(
             HttpMethod::Patch {
@@ -242,7 +199,7 @@ pub async fn payment_methods<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
     customer_id: &str,
     list_params: &v10::PaymentMethodListParams,
-) -> ApiResult<Vec<v10::PaymentMethod>> {
+) -> ApiResult<v10::CustomerPaymentMethodsV2> {
     client
         .request(
             HttpMethod::<()>::Get,
@@ -258,7 +215,7 @@ pub async fn payment_method<E: Environment>(
     client: &Client<E, MerchantAuthentication>,
     customer_id: &str,
     payment_method_id: &str,
-) -> ApiResult<v10::PaymentMethod> {
+) -> ApiResult<v10::PaymentMethodV4> {
     client
         .request(
             HttpMethod::<()>::Get,
@@ -275,7 +232,7 @@ pub async fn update_payment_method<E: Environment>(
     customer_id: &str,
     payment_method_id: &str,
     payment_method: &v10::PaymentMethodRequest,
-) -> ApiResult<v10::PaymentMethod> {
+) -> ApiResult<v10::PaymentMethodV4> {
     client
         .request(
             HttpMethod::Patch {
@@ -309,66 +266,59 @@ pub async fn delete_payment_method<E: Environment>(
 mod tests {
     use super::v10::*;
 
-    impl Default for Customer {
+    impl Default for CustomerV3 {
         fn default() -> Self {
             Self {
                 id: "some-customer-id".to_string(),
                 full_name: None,
-                business_name: None,
                 phone: None,
                 created_at: "some-created-at".to_string(),
                 updated_at: "some-updated-at".to_string(),
                 email: "some-email@example.com".to_string(),
-                date_of_birth: None,
+                payment_methods: vec![],
             }
         }
     }
 
-    impl Default for PaymentMethodType {
+    impl Default for CustomerCreated {
         fn default() -> Self {
-            Self::Card
+            Self {
+                id: "some-customer-id".to_string(),
+                full_name: None,
+                phone: None,
+                created_at: "some-created-at".to_string(),
+                updated_at: "some-updated-at".to_string(),
+                email: "some-email@example.com".to_string(),
+            }
         }
     }
 
-    impl Default for PaymentMethod {
+    impl Default for Customers {
         fn default() -> Self {
             Self {
+                next_page_token: None,
+                customers: vec![],
+            }
+        }
+    }
+
+    impl Default for CustomerPaymentMethodsV2 {
+        fn default() -> Self {
+            Self {
+                payment_methods: vec![],
+            }
+        }
+    }
+
+    impl Default for PaymentMethodV4 {
+        fn default() -> Self {
+            use crate::merchant::generated::{PaymentMethodTypeV2, RevolutPayV2};
+            Self::RevolutPayV2(RevolutPayV2 {
                 id: "some-payment-method-id".to_string(),
-                r#type: Default::default(),
+                r#type: PaymentMethodTypeV2::RevolutPay,
                 saved_for: None,
-                method_details: None,
-            }
-        }
-    }
-
-    impl Default for PaymentMethodDetails {
-        fn default() -> Self {
-            Self {
-                bin: None,
-                last4: None,
-                expiry_month: None,
-                expiry_year: None,
-                cardholder_name: None,
-                billing_address: None,
-                brand: None,
-                funding: None,
-                issuer: None,
-                issuer_country: None,
-                created_at: None,
-            }
-        }
-    }
-
-    impl Default for BillingAddress {
-        fn default() -> Self {
-            Self {
-                street_line_1: None,
-                street_line_2: None,
-                post_code: None,
-                city: None,
-                region: None,
-                country_code: None,
-            }
+                created_at: "some-created-at".to_string(),
+            })
         }
     }
 }

@@ -245,8 +245,8 @@ pub enum ObEntryStatus1Code {
 #[serde(rename_all = "PascalCase")]
 pub enum ObExternalAccountSubType1Code {
     CurrentAccount,
-    Loan,
     Savings,
+    CreditCard,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -426,7 +426,7 @@ pub struct GetApplicationResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub org_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scope: Option<Vec<serde_json::Value>>,
+    pub scope: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -680,17 +680,21 @@ pub enum ObChargeBearerType1Code {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ObDomestic2 {
-    #[serde(rename = "InstructionIdentification")]
-    pub instruction_identification: String,
-    #[serde(rename = "EndToEndIdentification")]
-    pub end_to_end_identification: String,
-    #[serde(rename = "InstructedAmount")]
-    pub instructed_amount: serde_json::Value,
-    #[serde(rename = "DebtorAccount", skip_serializing_if = "Option::is_none")]
-    pub debtor_account: Option<ObCashAccountDebtor4>,
-    #[serde(rename = "CreditorAccount")]
-    pub creditor_account: ObCashAccountCreditor3,
+pub struct ObDomesticInitiationBase {
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
+    #[serde(
+        rename = "EndToEndIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub end_to_end_identification: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
     #[serde(
         rename = "CreditorPostalAddress",
         skip_serializing_if = "Option::is_none"
@@ -706,22 +710,86 @@ pub struct ObDomestic2 {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ObDomesticScheduled2 {
-    #[serde(rename = "InstructionIdentification")]
-    pub instruction_identification: String,
+pub struct ObDomestic2 {
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
     #[serde(
         rename = "EndToEndIdentification",
         skip_serializing_if = "Option::is_none"
     )]
     pub end_to_end_identification: Option<String>,
-    #[serde(rename = "RequestedExecutionDateTime")]
-    pub requested_execution_date_time: String,
-    #[serde(rename = "InstructedAmount")]
-    pub instructed_amount: serde_json::Value,
-    #[serde(rename = "DebtorAccount", skip_serializing_if = "Option::is_none")]
-    pub debtor_account: Option<ObCashAccountDebtor4>,
-    #[serde(rename = "CreditorAccount")]
-    pub creditor_account: ObCashAccountCreditor3,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
+    #[serde(
+        rename = "CreditorPostalAddress",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub creditor_postal_address: Option<ObPostalAddress6>,
+    #[serde(
+        rename = "RemittanceInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub remittance_information: Option<ObRemittanceInformation1>,
+    #[serde(rename = "SupplementaryData", skip_serializing_if = "Option::is_none")]
+    pub supplementary_data: Option<ObSupplementaryData1>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObDomesticInitiationResponse {
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
+    #[serde(
+        rename = "EndToEndIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub end_to_end_identification: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
+    #[serde(
+        rename = "CreditorPostalAddress",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub creditor_postal_address: Option<ObPostalAddress6>,
+    #[serde(
+        rename = "RemittanceInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub remittance_information: Option<ObRemittanceInformation1>,
+    #[serde(rename = "SupplementaryData", skip_serializing_if = "Option::is_none")]
+    pub supplementary_data: Option<ObSupplementaryData1>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObDomesticScheduledBase {
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
+    #[serde(
+        rename = "EndToEndIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub end_to_end_identification: Option<String>,
+    #[serde(
+        rename = "RequestedExecutionDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub requested_execution_date_time: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
     #[serde(
         rename = "CreditorPostalAddress",
         skip_serializing_if = "Option::is_none"
@@ -735,22 +803,91 @@ pub struct ObDomesticScheduled2 {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ObDomesticStandingOrder2 {
-    #[serde(rename = "Frequency")]
-    pub frequency: String,
+pub struct ObDomesticScheduled2 {
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
+    #[serde(
+        rename = "EndToEndIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub end_to_end_identification: Option<String>,
+    #[serde(
+        rename = "RequestedExecutionDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub requested_execution_date_time: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
+    #[serde(
+        rename = "CreditorPostalAddress",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub creditor_postal_address: Option<ObPostalAddress6>,
+    #[serde(
+        rename = "RemittanceInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub remittance_information: Option<ObRemittanceInformation1>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObDomesticScheduledInitiationResponse {
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
+    #[serde(
+        rename = "EndToEndIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub end_to_end_identification: Option<String>,
+    #[serde(
+        rename = "RequestedExecutionDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub requested_execution_date_time: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
+    #[serde(
+        rename = "CreditorPostalAddress",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub creditor_postal_address: Option<ObPostalAddress6>,
+    #[serde(
+        rename = "RemittanceInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub remittance_information: Option<ObRemittanceInformation1>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObDomesticStandingOrderBase {
+    #[serde(rename = "Frequency", skip_serializing_if = "Option::is_none")]
+    pub frequency: Option<String>,
     #[serde(rename = "Reference", skip_serializing_if = "Option::is_none")]
     pub reference: Option<String>,
     #[serde(rename = "NumberOfPayments", skip_serializing_if = "Option::is_none")]
     pub number_of_payments: Option<String>,
-    #[serde(rename = "FirstPaymentDateTime")]
-    pub first_payment_date_time: String,
+    #[serde(
+        rename = "FirstPaymentDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub first_payment_date_time: Option<String>,
     #[serde(
         rename = "FinalPaymentDateTime",
         skip_serializing_if = "Option::is_none"
     )]
     pub final_payment_date_time: Option<String>,
-    #[serde(rename = "FirstPaymentAmount")]
-    pub first_payment_amount: serde_json::Value,
+    #[serde(rename = "FirstPaymentAmount", skip_serializing_if = "Option::is_none")]
+    pub first_payment_amount: Option<serde_json::Value>,
     #[serde(
         rename = "RecurringPaymentAmount",
         skip_serializing_if = "Option::is_none"
@@ -758,10 +895,70 @@ pub struct ObDomesticStandingOrder2 {
     pub recurring_payment_amount: Option<serde_json::Value>,
     #[serde(rename = "FinalPaymentAmount", skip_serializing_if = "Option::is_none")]
     pub final_payment_amount: Option<serde_json::Value>,
-    #[serde(rename = "DebtorAccount", skip_serializing_if = "Option::is_none")]
-    pub debtor_account: Option<ObCashAccountDebtor4>,
-    #[serde(rename = "CreditorAccount")]
-    pub creditor_account: ObCashAccountCreditor3,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObDomesticStandingOrder2 {
+    #[serde(rename = "Frequency", skip_serializing_if = "Option::is_none")]
+    pub frequency: Option<String>,
+    #[serde(rename = "Reference", skip_serializing_if = "Option::is_none")]
+    pub reference: Option<String>,
+    #[serde(rename = "NumberOfPayments", skip_serializing_if = "Option::is_none")]
+    pub number_of_payments: Option<String>,
+    #[serde(
+        rename = "FirstPaymentDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub first_payment_date_time: Option<String>,
+    #[serde(
+        rename = "FinalPaymentDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub final_payment_date_time: Option<String>,
+    #[serde(rename = "FirstPaymentAmount", skip_serializing_if = "Option::is_none")]
+    pub first_payment_amount: Option<serde_json::Value>,
+    #[serde(
+        rename = "RecurringPaymentAmount",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub recurring_payment_amount: Option<serde_json::Value>,
+    #[serde(rename = "FinalPaymentAmount", skip_serializing_if = "Option::is_none")]
+    pub final_payment_amount: Option<serde_json::Value>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObDomesticStandingOrderInitiationResponse {
+    #[serde(rename = "Frequency", skip_serializing_if = "Option::is_none")]
+    pub frequency: Option<String>,
+    #[serde(rename = "Reference", skip_serializing_if = "Option::is_none")]
+    pub reference: Option<String>,
+    #[serde(rename = "NumberOfPayments", skip_serializing_if = "Option::is_none")]
+    pub number_of_payments: Option<String>,
+    #[serde(
+        rename = "FirstPaymentDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub first_payment_date_time: Option<String>,
+    #[serde(
+        rename = "FinalPaymentDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub final_payment_date_time: Option<String>,
+    #[serde(rename = "FirstPaymentAmount", skip_serializing_if = "Option::is_none")]
+    pub first_payment_amount: Option<serde_json::Value>,
+    #[serde(
+        rename = "RecurringPaymentAmount",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub recurring_payment_amount: Option<serde_json::Value>,
+    #[serde(rename = "FinalPaymentAmount", skip_serializing_if = "Option::is_none")]
+    pub final_payment_amount: Option<serde_json::Value>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -848,11 +1045,11 @@ pub enum ObExternalStatus1Code {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ObFile2 {
-    #[serde(rename = "FileType")]
-    pub file_type: String,
-    #[serde(rename = "FileHash")]
-    pub file_hash: String,
+pub struct ObFileBase {
+    #[serde(rename = "FileType", skip_serializing_if = "Option::is_none")]
+    pub file_type: Option<String>,
+    #[serde(rename = "FileHash", skip_serializing_if = "Option::is_none")]
+    pub file_hash: Option<String>,
     #[serde(rename = "FileReference", skip_serializing_if = "Option::is_none")]
     pub file_reference: Option<String>,
     #[serde(
@@ -862,8 +1059,86 @@ pub struct ObFile2 {
     pub requested_execution_date_time: Option<String>,
     #[serde(rename = "LocalInstrument", skip_serializing_if = "Option::is_none")]
     pub local_instrument: Option<String>,
-    #[serde(rename = "DebtorAccount", skip_serializing_if = "Option::is_none")]
-    pub debtor_account: Option<ObCashAccountDebtor4>,
+    #[serde(
+        rename = "RemittanceInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub remittance_information: Option<ObRemittanceInformation1>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObFile2 {
+    #[serde(rename = "FileType", skip_serializing_if = "Option::is_none")]
+    pub file_type: Option<String>,
+    #[serde(rename = "FileHash", skip_serializing_if = "Option::is_none")]
+    pub file_hash: Option<String>,
+    #[serde(rename = "FileReference", skip_serializing_if = "Option::is_none")]
+    pub file_reference: Option<String>,
+    #[serde(
+        rename = "RequestedExecutionDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub requested_execution_date_time: Option<String>,
+    #[serde(rename = "LocalInstrument", skip_serializing_if = "Option::is_none")]
+    pub local_instrument: Option<String>,
+    #[serde(
+        rename = "RemittanceInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub remittance_information: Option<ObRemittanceInformation1>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObFileInitiationResponse {
+    #[serde(rename = "FileType", skip_serializing_if = "Option::is_none")]
+    pub file_type: Option<String>,
+    #[serde(rename = "FileHash", skip_serializing_if = "Option::is_none")]
+    pub file_hash: Option<String>,
+    #[serde(rename = "FileReference", skip_serializing_if = "Option::is_none")]
+    pub file_reference: Option<String>,
+    #[serde(
+        rename = "RequestedExecutionDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub requested_execution_date_time: Option<String>,
+    #[serde(rename = "LocalInstrument", skip_serializing_if = "Option::is_none")]
+    pub local_instrument: Option<String>,
+    #[serde(
+        rename = "RemittanceInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub remittance_information: Option<ObRemittanceInformation1>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObInternationalBase {
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
+    #[serde(
+        rename = "EndToEndIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub end_to_end_identification: Option<String>,
+    #[serde(rename = "ChargeBearer", skip_serializing_if = "Option::is_none")]
+    pub charge_bearer: Option<ObChargeBearerType1Code>,
+    #[serde(rename = "CurrencyOfTransfer", skip_serializing_if = "Option::is_none")]
+    pub currency_of_transfer: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(
+        rename = "ExchangeRateInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub exchange_rate_information: Option<ObExchangeRate1>,
+    #[serde(rename = "Creditor", skip_serializing_if = "Option::is_none")]
+    pub creditor: Option<ObPartyIdentification43>,
+    #[serde(rename = "CreditorAgent", skip_serializing_if = "Option::is_none")]
+    pub creditor_agent: Option<ObBranchAndFinancialInstitutionIdentification6>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
     #[serde(
         rename = "RemittanceInformation",
         skip_serializing_if = "Option::is_none"
@@ -873,29 +1148,110 @@ pub struct ObFile2 {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ObInternational2 {
-    #[serde(rename = "InstructionIdentification")]
-    pub instruction_identification: String,
-    #[serde(rename = "EndToEndIdentification")]
-    pub end_to_end_identification: String,
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
+    #[serde(
+        rename = "EndToEndIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub end_to_end_identification: Option<String>,
     #[serde(rename = "ChargeBearer", skip_serializing_if = "Option::is_none")]
     pub charge_bearer: Option<ObChargeBearerType1Code>,
-    #[serde(rename = "CurrencyOfTransfer")]
-    pub currency_of_transfer: String,
-    #[serde(rename = "InstructedAmount")]
-    pub instructed_amount: serde_json::Value,
+    #[serde(rename = "CurrencyOfTransfer", skip_serializing_if = "Option::is_none")]
+    pub currency_of_transfer: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
     #[serde(
         rename = "ExchangeRateInformation",
         skip_serializing_if = "Option::is_none"
     )]
     pub exchange_rate_information: Option<ObExchangeRate1>,
-    #[serde(rename = "DebtorAccount", skip_serializing_if = "Option::is_none")]
-    pub debtor_account: Option<ObCashAccountDebtor4>,
     #[serde(rename = "Creditor", skip_serializing_if = "Option::is_none")]
     pub creditor: Option<ObPartyIdentification43>,
     #[serde(rename = "CreditorAgent", skip_serializing_if = "Option::is_none")]
     pub creditor_agent: Option<ObBranchAndFinancialInstitutionIdentification6>,
-    #[serde(rename = "CreditorAccount")]
-    pub creditor_account: ObCashAccountCreditor3,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
+    #[serde(
+        rename = "RemittanceInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub remittance_information: Option<ObRemittanceInformation1>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObInternationalInitiationResponse {
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
+    #[serde(
+        rename = "EndToEndIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub end_to_end_identification: Option<String>,
+    #[serde(rename = "ChargeBearer", skip_serializing_if = "Option::is_none")]
+    pub charge_bearer: Option<ObChargeBearerType1Code>,
+    #[serde(rename = "CurrencyOfTransfer", skip_serializing_if = "Option::is_none")]
+    pub currency_of_transfer: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(
+        rename = "ExchangeRateInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub exchange_rate_information: Option<ObExchangeRate1>,
+    #[serde(rename = "Creditor", skip_serializing_if = "Option::is_none")]
+    pub creditor: Option<ObPartyIdentification43>,
+    #[serde(rename = "CreditorAgent", skip_serializing_if = "Option::is_none")]
+    pub creditor_agent: Option<ObBranchAndFinancialInstitutionIdentification6>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
+    #[serde(
+        rename = "RemittanceInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub remittance_information: Option<ObRemittanceInformation1>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObInternationalScheduledBase {
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
+    #[serde(
+        rename = "EndToEndIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub end_to_end_identification: Option<String>,
+    #[serde(rename = "ChargeBearer", skip_serializing_if = "Option::is_none")]
+    pub charge_bearer: Option<ObChargeBearerType1Code>,
+    #[serde(
+        rename = "RequestedExecutionDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub requested_execution_date_time: Option<String>,
+    #[serde(rename = "CurrencyOfTransfer", skip_serializing_if = "Option::is_none")]
+    pub currency_of_transfer: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(
+        rename = "ExchangeRateInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub exchange_rate_information: Option<ObExchangeRate1>,
+    #[serde(rename = "Creditor", skip_serializing_if = "Option::is_none")]
+    pub creditor: Option<ObPartyIdentification43>,
+    #[serde(rename = "CreditorAgent", skip_serializing_if = "Option::is_none")]
+    pub creditor_agent: Option<ObBranchAndFinancialInstitutionIdentification6>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
     #[serde(
         rename = "RemittanceInformation",
         skip_serializing_if = "Option::is_none"
@@ -905,8 +1261,11 @@ pub struct ObInternational2 {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ObInternationalScheduled2 {
-    #[serde(rename = "InstructionIdentification")]
-    pub instruction_identification: String,
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
     #[serde(
         rename = "EndToEndIdentification",
         skip_serializing_if = "Option::is_none"
@@ -914,25 +1273,26 @@ pub struct ObInternationalScheduled2 {
     pub end_to_end_identification: Option<String>,
     #[serde(rename = "ChargeBearer", skip_serializing_if = "Option::is_none")]
     pub charge_bearer: Option<ObChargeBearerType1Code>,
-    #[serde(rename = "RequestedExecutionDateTime")]
-    pub requested_execution_date_time: String,
-    #[serde(rename = "CurrencyOfTransfer")]
-    pub currency_of_transfer: String,
-    #[serde(rename = "InstructedAmount")]
-    pub instructed_amount: serde_json::Value,
+    #[serde(
+        rename = "RequestedExecutionDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub requested_execution_date_time: Option<String>,
+    #[serde(rename = "CurrencyOfTransfer", skip_serializing_if = "Option::is_none")]
+    pub currency_of_transfer: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
     #[serde(
         rename = "ExchangeRateInformation",
         skip_serializing_if = "Option::is_none"
     )]
     pub exchange_rate_information: Option<ObExchangeRate1>,
-    #[serde(rename = "DebtorAccount", skip_serializing_if = "Option::is_none")]
-    pub debtor_account: Option<ObCashAccountDebtor4>,
     #[serde(rename = "Creditor", skip_serializing_if = "Option::is_none")]
     pub creditor: Option<ObPartyIdentification43>,
     #[serde(rename = "CreditorAgent", skip_serializing_if = "Option::is_none")]
     pub creditor_agent: Option<ObBranchAndFinancialInstitutionIdentification6>,
-    #[serde(rename = "CreditorAccount")]
-    pub creditor_account: ObCashAccountCreditor3,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
     #[serde(
         rename = "RemittanceInformation",
         skip_serializing_if = "Option::is_none"
@@ -941,15 +1301,59 @@ pub struct ObInternationalScheduled2 {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ObInternationalStandingOrder2 {
-    #[serde(rename = "Frequency")]
-    pub frequency: String,
+pub struct ObInternationalScheduledInitiationResponse {
+    #[serde(
+        rename = "InstructionIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub instruction_identification: Option<String>,
+    #[serde(
+        rename = "EndToEndIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub end_to_end_identification: Option<String>,
+    #[serde(rename = "ChargeBearer", skip_serializing_if = "Option::is_none")]
+    pub charge_bearer: Option<ObChargeBearerType1Code>,
+    #[serde(
+        rename = "RequestedExecutionDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub requested_execution_date_time: Option<String>,
+    #[serde(rename = "CurrencyOfTransfer", skip_serializing_if = "Option::is_none")]
+    pub currency_of_transfer: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(
+        rename = "ExchangeRateInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub exchange_rate_information: Option<ObExchangeRate1>,
+    #[serde(rename = "Creditor", skip_serializing_if = "Option::is_none")]
+    pub creditor: Option<ObPartyIdentification43>,
+    #[serde(rename = "CreditorAgent", skip_serializing_if = "Option::is_none")]
+    pub creditor_agent: Option<ObBranchAndFinancialInstitutionIdentification6>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
+    #[serde(
+        rename = "RemittanceInformation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub remittance_information: Option<ObRemittanceInformation1>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObInternationalStandingOrderBase {
+    #[serde(rename = "Frequency", skip_serializing_if = "Option::is_none")]
+    pub frequency: Option<String>,
     #[serde(rename = "Reference", skip_serializing_if = "Option::is_none")]
     pub reference: Option<String>,
     #[serde(rename = "NumberOfPayments", skip_serializing_if = "Option::is_none")]
     pub number_of_payments: Option<String>,
-    #[serde(rename = "FirstPaymentDateTime")]
-    pub first_payment_date_time: String,
+    #[serde(
+        rename = "FirstPaymentDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub first_payment_date_time: Option<String>,
     #[serde(
         rename = "FinalPaymentDateTime",
         skip_serializing_if = "Option::is_none"
@@ -957,18 +1361,80 @@ pub struct ObInternationalStandingOrder2 {
     pub final_payment_date_time: Option<String>,
     #[serde(rename = "ChargeBearer", skip_serializing_if = "Option::is_none")]
     pub charge_bearer: Option<ObChargeBearerType1Code>,
-    #[serde(rename = "CurrencyOfTransfer")]
-    pub currency_of_transfer: String,
-    #[serde(rename = "InstructedAmount")]
-    pub instructed_amount: serde_json::Value,
-    #[serde(rename = "DebtorAccount", skip_serializing_if = "Option::is_none")]
-    pub debtor_account: Option<ObCashAccountDebtor4>,
+    #[serde(rename = "CurrencyOfTransfer", skip_serializing_if = "Option::is_none")]
+    pub currency_of_transfer: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
     #[serde(rename = "Creditor", skip_serializing_if = "Option::is_none")]
     pub creditor: Option<ObPartyIdentification43>,
     #[serde(rename = "CreditorAgent", skip_serializing_if = "Option::is_none")]
     pub creditor_agent: Option<ObBranchAndFinancialInstitutionIdentification6>,
-    #[serde(rename = "CreditorAccount")]
-    pub creditor_account: ObCashAccountCreditor3,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObInternationalStandingOrder2 {
+    #[serde(rename = "Frequency", skip_serializing_if = "Option::is_none")]
+    pub frequency: Option<String>,
+    #[serde(rename = "Reference", skip_serializing_if = "Option::is_none")]
+    pub reference: Option<String>,
+    #[serde(rename = "NumberOfPayments", skip_serializing_if = "Option::is_none")]
+    pub number_of_payments: Option<String>,
+    #[serde(
+        rename = "FirstPaymentDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub first_payment_date_time: Option<String>,
+    #[serde(
+        rename = "FinalPaymentDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub final_payment_date_time: Option<String>,
+    #[serde(rename = "ChargeBearer", skip_serializing_if = "Option::is_none")]
+    pub charge_bearer: Option<ObChargeBearerType1Code>,
+    #[serde(rename = "CurrencyOfTransfer", skip_serializing_if = "Option::is_none")]
+    pub currency_of_transfer: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(rename = "Creditor", skip_serializing_if = "Option::is_none")]
+    pub creditor: Option<ObPartyIdentification43>,
+    #[serde(rename = "CreditorAgent", skip_serializing_if = "Option::is_none")]
+    pub creditor_agent: Option<ObBranchAndFinancialInstitutionIdentification6>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObInternationalStandingOrderInitiationResponse {
+    #[serde(rename = "Frequency", skip_serializing_if = "Option::is_none")]
+    pub frequency: Option<String>,
+    #[serde(rename = "Reference", skip_serializing_if = "Option::is_none")]
+    pub reference: Option<String>,
+    #[serde(rename = "NumberOfPayments", skip_serializing_if = "Option::is_none")]
+    pub number_of_payments: Option<String>,
+    #[serde(
+        rename = "FirstPaymentDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub first_payment_date_time: Option<String>,
+    #[serde(
+        rename = "FinalPaymentDateTime",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub final_payment_date_time: Option<String>,
+    #[serde(rename = "ChargeBearer", skip_serializing_if = "Option::is_none")]
+    pub charge_bearer: Option<ObChargeBearerType1Code>,
+    #[serde(rename = "CurrencyOfTransfer", skip_serializing_if = "Option::is_none")]
+    pub currency_of_transfer: Option<String>,
+    #[serde(rename = "InstructedAmount", skip_serializing_if = "Option::is_none")]
+    pub instructed_amount: Option<serde_json::Value>,
+    #[serde(rename = "Creditor", skip_serializing_if = "Option::is_none")]
+    pub creditor: Option<ObPartyIdentification43>,
+    #[serde(rename = "CreditorAgent", skip_serializing_if = "Option::is_none")]
+    pub creditor_agent: Option<ObBranchAndFinancialInstitutionIdentification6>,
+    #[serde(rename = "CreditorAccount", skip_serializing_if = "Option::is_none")]
+    pub creditor_account: Option<ObCashAccountCreditor3>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1077,7 +1543,7 @@ pub struct ObWriteDataDomesticResponse2 {
     #[serde(rename = "StatusUpdateDateTime")]
     pub status_update_date_time: String,
     #[serde(rename = "Initiation")]
-    pub initiation: ObDomestic2,
+    pub initiation: ObDomesticInitiationResponse,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1125,7 +1591,7 @@ pub struct ObWriteDataDomesticScheduledResponse2 {
     #[serde(rename = "StatusUpdateDateTime")]
     pub status_update_date_time: String,
     #[serde(rename = "Initiation")]
-    pub initiation: ObDomesticScheduled2,
+    pub initiation: ObDomesticScheduledInitiationResponse,
     #[serde(rename = "Permission", skip_serializing_if = "Option::is_none")]
     pub permission: Option<ObExternalPermissions2Code>,
 }
@@ -1175,7 +1641,7 @@ pub struct ObWriteDataDomesticStandingOrderResponse2 {
     #[serde(rename = "StatusUpdateDateTime")]
     pub status_update_date_time: String,
     #[serde(rename = "Initiation")]
-    pub initiation: ObDomesticStandingOrder2,
+    pub initiation: ObDomesticStandingOrderInitiationResponse,
     #[serde(rename = "Permission", skip_serializing_if = "Option::is_none")]
     pub permission: Option<ObExternalPermissions2Code>,
 }
@@ -1213,7 +1679,7 @@ pub struct ObWriteDataFileResponse2 {
     #[serde(rename = "StatusUpdateDateTime")]
     pub status_update_date_time: String,
     #[serde(rename = "Initiation")]
-    pub initiation: ObFile2,
+    pub initiation: ObFileInitiationResponse,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1267,7 +1733,7 @@ pub struct ObWriteDataInternationalResponse2 {
     )]
     pub exchange_rate_information: Option<ObExchangeRate2>,
     #[serde(rename = "Initiation")]
-    pub initiation: ObInternational2,
+    pub initiation: ObInternationalInitiationResponse,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1325,7 +1791,7 @@ pub struct ObWriteDataInternationalScheduledResponse2 {
     )]
     pub exchange_rate_information: Option<ObExchangeRate2>,
     #[serde(rename = "Initiation")]
-    pub initiation: ObInternationalScheduled2,
+    pub initiation: ObInternationalScheduledInitiationResponse,
     #[serde(rename = "Permission", skip_serializing_if = "Option::is_none")]
     pub permission: Option<ObExternalPermissions2Code>,
 }
@@ -1375,7 +1841,7 @@ pub struct ObWriteDataInternationalStandingOrderResponse2 {
     #[serde(rename = "StatusUpdateDateTime")]
     pub status_update_date_time: String,
     #[serde(rename = "Initiation")]
-    pub initiation: ObInternationalStandingOrder2,
+    pub initiation: ObInternationalStandingOrderInitiationResponse,
     #[serde(rename = "Permission", skip_serializing_if = "Option::is_none")]
     pub permission: Option<ObExternalPermissions2Code>,
 }
@@ -1652,6 +2118,21 @@ pub type ObSupplementaryData1 = std::collections::HashMap<String, String>;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ObCashAccountDebtor4 {
+    #[serde(rename = "SchemeName")]
+    pub scheme_name: ObExternalAccountIdentification4Code,
+    #[serde(rename = "Identification")]
+    pub identification: String,
+    #[serde(rename = "Name", skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(
+        rename = "SecondaryIdentification",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub secondary_identification: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ObCashAccountDebtorResponse {
     #[serde(rename = "SchemeName")]
     pub scheme_name: ObExternalAccountIdentification4Code,
     #[serde(rename = "Identification")]

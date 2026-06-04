@@ -212,6 +212,7 @@ mod tests {
     impl Default for Category {
         fn default() -> Self {
             Self {
+                id: "some-category-id".to_string(),
                 name: "some-category-name".to_string(),
                 code: None,
             }

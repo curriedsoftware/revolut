@@ -608,6 +608,7 @@ mod tests {
                     cycle_count: None,
                     amount: 4242,
                     currency: "EUR".to_string(),
+                    subscription_items: None,
                 }],
             }],
         };

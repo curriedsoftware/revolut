@@ -6,6 +6,25 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AccountingCategoryResponse {
+    pub id: String,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_tax_rate_id: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AccountingTaxRate {
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub percentage: Option<f64>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Account {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -352,6 +371,7 @@ pub enum CardState {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Category {
+    pub id: String,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
@@ -440,21 +460,29 @@ pub struct CounterpartyErrorParams {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CreateAccountingCategoryRequest {
+    pub name: String,
+    pub code: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_tax_rate_id: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateCounterpartyRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub company_name: Option<String>,
+    pub profile_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub profile_type: Option<ProfileType>,
+    pub revtag: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub company_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub individual_name: Option<IndividualName>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bank_country: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub currency: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub revtag: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub account_no: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -476,6 +504,17 @@ pub struct CreateCounterpartyRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CreateLabelGroupRequest {
+    pub name: String,
+    pub labels: Vec<CreateLabelRequest>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CreateLabelRequest {
+    pub name: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreatePaymentDraftRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
@@ -494,7 +533,7 @@ pub struct CreatePayoutLinkRequest {
     pub counterparty_name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub save_counterparty: Option<bool>,
-    pub request_id: serde_json::Value,
+    pub request_id: String,
     pub account_id: String,
     pub amount: f64,
     pub currency: String,
@@ -508,14 +547,28 @@ pub struct CreatePayoutLinkRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CreateTaxRateRequest {
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub percentage: Option<f64>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateWebhookRequest {
-    pub url: Url,
+    pub url: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub events: Option<Vec<WebhookEventType>>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Error {
+    pub code: i64,
+    pub message: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ErrorWithId {
+    pub error_id: String,
     pub code: i64,
     pub message: String,
 }
@@ -690,6 +743,22 @@ pub struct MerchantControlsSchema {
 pub type LabelGroup = Vec<String>;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct LabelGroupResponse {
+    pub id: String,
+    pub name: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct LabelResponse {
+    pub id: String,
+    pub name: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PaymentDraftResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scheduled_for: Option<String>,
@@ -747,6 +816,8 @@ pub struct PaymentRequest {
     pub amount: f64,
     pub currency: String,
     pub reference: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub charge_bearer: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -807,7 +878,7 @@ pub struct PayoutLinkAdditionalProps {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub transaction_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cancellation_reason: Option<serde_json::Value>,
+    pub cancellation_reason: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -835,7 +906,7 @@ pub struct PayoutLink {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub transaction_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cancellation_reason: Option<serde_json::Value>,
+    pub cancellation_reason: Option<String>,
 }
 
 pub type PayoutLinks = Vec<PayoutLink>;
@@ -870,6 +941,12 @@ pub enum PayoutMethod {
 pub enum ProfileType {
     Personal,
     Business,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ResourceCreatedResponse {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -929,7 +1006,18 @@ pub struct SpendingPeriodSchema {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TaxRate {
+    pub id: String,
     pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub percentage: Option<f64>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct TaxRateResponse {
+    pub id: String,
+    pub name: String,
+    pub created_at: String,
+    pub updated_at: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub percentage: Option<f64>,
 }
@@ -1092,6 +1180,8 @@ pub enum TransactionType {
     CardRefund,
     CardChargeback,
     CardCredit,
+    Charge,
+    ChargeRefund,
     Exchange,
     Transfer,
     Loan,
@@ -1134,16 +1224,37 @@ pub struct TransferResponse {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct UpdateWebhookRequest {
+pub struct UpdateAccountingCategoryRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub url: Option<serde_json::Value>,
+    pub name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub events: Option<Vec<WebhookEventType>>,
+    pub code: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_tax_rate_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Url {
-    pub url: String,
+pub struct UpdateLabelGroupRequest {
+    pub name: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct UpdateLabelRequest {
+    pub name: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct UpdateTaxRateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct UpdateWebhookRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub events: Option<Vec<WebhookEventType>>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

@@ -99,27 +99,27 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
 impl<E: Environment> Client<E, client::MerchantAuthentication> {
     pub async fn create_customer(
         &self,
-        customer: &customers::v10::CustomerRequest,
-    ) -> ApiResult<customers::v10::Customer> {
+        customer: &customers::v10::CustomerCreationV2,
+    ) -> ApiResult<customers::v10::CustomerCreated> {
         customers::create(self, customer).await
     }
 
     pub async fn customers(
         &self,
         list_params: &customers::v10::ListParams,
-    ) -> ApiResult<Vec<customers::v10::Customer>> {
+    ) -> ApiResult<customers::v10::Customers> {
         customers::list(self, list_params).await
     }
 
-    pub async fn customer(&self, customer_id: &str) -> ApiResult<customers::v10::Customer> {
+    pub async fn customer(&self, customer_id: &str) -> ApiResult<customers::v10::CustomerV3> {
         customers::retrieve(self, customer_id).await
     }
 
     pub async fn update_customer(
         &self,
         customer_id: &str,
-        customer: &customers::v10::CustomerRequest,
-    ) -> ApiResult<customers::v10::Customer> {
+        customer: &customers::v10::CustomerUpdateV2,
+    ) -> ApiResult<customers::v10::CustomerV3> {
         customers::update(self, customer_id, customer).await
     }
 
@@ -131,7 +131,7 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
         &self,
         customer_id: &str,
         list_params: &customers::v10::PaymentMethodListParams,
-    ) -> ApiResult<Vec<customers::v10::PaymentMethod>> {
+    ) -> ApiResult<customers::v10::CustomerPaymentMethodsV2> {
         customers::payment_methods(self, customer_id, list_params).await
     }
 
@@ -139,7 +139,7 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
         &self,
         customer_id: &str,
         payment_method_id: &str,
-    ) -> ApiResult<customers::v10::PaymentMethod> {
+    ) -> ApiResult<customers::v10::PaymentMethodV4> {
         customers::payment_method(self, customer_id, payment_method_id).await
     }
 
@@ -148,7 +148,7 @@ impl<E: Environment> Client<E, client::MerchantAuthentication> {
         customer_id: &str,
         payment_method_id: &str,
         payment_method: &customers::v10::PaymentMethodRequest,
-    ) -> ApiResult<customers::v10::PaymentMethod> {
+    ) -> ApiResult<customers::v10::PaymentMethodV4> {
         customers::update_payment_method(self, customer_id, payment_method_id, payment_method).await
     }
 
