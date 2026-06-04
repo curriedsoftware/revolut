@@ -370,7 +370,31 @@ pub mod v10 {
         r#type: SavedPaymentMethodType,
         id: String,
         initiator: SavedPaymentMethodInitiator,
-        environment: String,
+        // Revolut rejects this for merchant-initiated (off-session) payments —
+        // "Value for field 'environment' is not in correct format" — it must be
+        // omitted there, and is only expected for customer-initiated payments.
+        // Optional so callers can leave it out.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        environment: Option<String>,
+    }
+
+    impl SavedPaymentMethodReq {
+        /// Build a reference to a payment method already saved for a customer, so
+        /// an order can be charged against it. Pass `environment = None` for
+        /// merchant-initiated charges (the only kind that omits it).
+        pub fn new(
+            r#type: SavedPaymentMethodType,
+            id: String,
+            initiator: SavedPaymentMethodInitiator,
+            environment: Option<String>,
+        ) -> Self {
+            Self {
+                r#type,
+                id,
+                initiator,
+                environment,
+            }
+        }
     }
 
     // snake_case

@@ -488,7 +488,7 @@ pub struct UpcomingPayment {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct OrderCreationV6 {
+pub struct OrderCreationV7 {
     pub amount: i64,
     pub currency: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -807,18 +807,17 @@ pub struct ThreeDs {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ThreeDsFingerprint {
+pub struct ThreeDsFingerprintV2 {
     #[serde(rename = "type")]
     pub r#type: AuthenticationChallengeType,
-    pub fingerprint_url: String,
-    pub fingerprint_data: String,
+    pub fingerprint_html: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
-pub enum AuthenticationChallenge {
+pub enum AuthenticationChallengeV2 {
     ThreeDs(ThreeDs),
-    ThreeDsFingerprint(ThreeDsFingerprint),
+    ThreeDsFingerprintV2(ThreeDsFingerprintV2),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -849,7 +848,7 @@ pub struct Payer {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct PaymentV2 {
+pub struct PaymentV3 {
     pub id: String,
     pub state: PaymentStateV2,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -872,7 +871,7 @@ pub struct PaymentV2 {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub payment_method: Option<PaymentMethodV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub authentication_challenge: Option<AuthenticationChallenge>,
+    pub authentication_challenge: Option<AuthenticationChallengeV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub billing_address: Option<AddressV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -902,7 +901,7 @@ pub struct IncrementalAuthorisation {
 pub type IncrementalAuthorisations = Vec<IncrementalAuthorisation>;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct OrderV6 {
+pub struct OrderV7 {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -936,7 +935,7 @@ pub struct OrderV6 {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub customer: Option<CustomerV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub payments: Option<Vec<PaymentV2>>,
+    pub payments: Option<Vec<PaymentV3>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub incremental_authorisations: Option<Vec<IncrementalAuthorisation>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -966,7 +965,7 @@ pub struct OrderV6 {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct OrderUpdateV6 {
+pub struct OrderUpdateV7 {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub amount: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1077,6 +1076,21 @@ pub struct CardForPaymentDetails {
     pub last_four: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ThreeDsFingerprint {
+    #[serde(rename = "type")]
+    pub r#type: AuthenticationChallengeType,
+    pub fingerprint_url: String,
+    pub fingerprint_data: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum AuthenticationChallenge {
+    ThreeDs(ThreeDs),
+    ThreeDsFingerprint(ThreeDsFingerprint),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1482,7 +1496,7 @@ pub struct DisputeChallenge {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct PaymentRetrievalV2 {
+pub struct PaymentRetrievalV3 {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub order_id: Option<String>,
     pub id: String,
@@ -1507,7 +1521,7 @@ pub struct PaymentRetrievalV2 {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub payment_method: Option<PaymentMethodV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub authentication_challenge: Option<AuthenticationChallenge>,
+    pub authentication_challenge: Option<AuthenticationChallengeV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub billing_address: Option<AddressV2>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1762,6 +1776,8 @@ pub struct SubscriptionCreation {
     pub setup_order_redirect_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub trial_duration: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payment_method_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

@@ -626,6 +626,7 @@ mod tests {
             external_reference: None,
             setup_order_redirect_url: None,
             trial_duration: Some("two weeks".to_string()),
+            payment_method_id: None,
         };
         assert!(matches!(
             create(&test_client(), &subscription).await,
