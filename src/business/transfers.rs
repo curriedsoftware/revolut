@@ -162,9 +162,9 @@ mod tests {
     impl Default for TransferReason {
         fn default() -> Self {
             Self {
-                country: "ES".to_string(),
-                currency: "EUR".to_string(),
-                code: "some-transfer-code".to_string(),
+                country: "ES".parse().unwrap(),
+                currency: "EUR".parse().unwrap(),
+                code: "advertising".parse().unwrap(),
                 description: "some-transfer-description".to_string(),
             }
         }
@@ -173,7 +173,7 @@ mod tests {
     impl Default for ExchangeReason {
         fn default() -> Self {
             Self {
-                code: "some-exchange-reason-code".to_string(),
+                code: "business_expense_and_claims".parse().unwrap(),
                 name: "some-exchange-reason-name".to_string(),
             }
         }

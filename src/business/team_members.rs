@@ -193,8 +193,8 @@ mod tests {
             Self {
                 id: "some-team-role-id".to_string(),
                 name: "some-team-role-name".to_string(),
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
+                created_at: "2025-06-11T15:28:36Z".parse().unwrap(),
+                updated_at: "2025-07-11T15:28:36Z".parse().unwrap(),
             }
         }
     }

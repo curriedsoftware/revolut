@@ -38,6 +38,6 @@ pub mod report_runs;
 pub mod subscriptions;
 pub mod webhooks;
 
-pub mod v2024_09_01;
+pub mod v2026_04_20;
 
-pub use v2024_09_01 as latest;
+pub use v2026_04_20 as latest;

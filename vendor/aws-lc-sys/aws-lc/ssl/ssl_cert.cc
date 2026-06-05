@@ -253,6 +253,14 @@ static int cert_set_chain_and_key(
     cert_pkey->chain.reset();
   }
   cert_pkey->chain = std::move(certs);
+
+  // Invalidate the parsed X509 leaf and chain caches since the backing
+  // CRYPTO_BUFFER chain was just replaced. Dispatch through |x509_method| to
+  // respect the abstraction boundary and to correctly handle the noop case
+  // (e.g. TLS_with_buffers_method) where these are no-ops.
+  cert->x509_method->cert_flush_cached_chain(cert);
+  cert->x509_method->cert_flush_leaf(cert);
+
   cert->cert_private_key_idx = slot_idx;
 
   return 1;
@@ -295,6 +303,10 @@ bool ssl_set_cert(CERT *cert, UniquePtr<CRYPTO_BUFFER> buffer) {
   if (cert_pkey.chain != nullptr) {
     CRYPTO_BUFFER_free(sk_CRYPTO_BUFFER_value(cert_pkey.chain.get(), 0));
     sk_CRYPTO_BUFFER_set(cert_pkey.chain.get(), 0, buffer.release());
+
+    // The backing CRYPTO_BUFFER leaf was just replaced; invalidate the cached
+    // X509 leaf to prevent stale data from being returned to callers.
+    cert->x509_method->cert_flush_leaf(cert);
 
     // Update certificate slot index if all checks have passed.
     cert->cert_private_key_idx = slot_index;
@@ -925,16 +937,14 @@ int SSL_CTX_set_chain_and_key(SSL_CTX *ctx, CRYPTO_BUFFER *const *certs,
                                 privkey_method);
 }
 
-int SSL_CTX_use_cert_and_key(SSL_CTX *ctx, X509 *x509, EVP_PKEY *privatekey,
-                             STACK_OF(X509) *chain, int override) {
-
+static int cert_use_cert_and_key(CERT *cert, X509 *x509, EVP_PKEY *privatekey,
+                                 STACK_OF(X509) *chain, int override) {
   if (privatekey == nullptr || x509 == nullptr) {
     OPENSSL_PUT_ERROR(SSL, ERR_R_PASSED_NULL_PARAMETER);
     return 0;
   }
 
   // Check override value
-  CERT *cert = ctx->cert.get();
   int idx = ssl_get_certificate_slot_index(privatekey);
   if (idx < 0) {
     OPENSSL_PUT_ERROR(SSL, SSL_R_UNKNOWN_CERTIFICATE_TYPE);
@@ -985,7 +995,7 @@ int SSL_CTX_use_cert_and_key(SSL_CTX *ctx, X509 *x509, EVP_PKEY *privatekey,
     }
   }
 
-  // Call SSL_CTX_set_chain_and_key to set the chain and key
+  // Set the chain and key
   if (!cert_set_chain_and_key(cert, leaf_and_chain,
                               sk_CRYPTO_BUFFER_num(leaf_and_chain.get()),
                               privatekey, nullptr)) {
@@ -999,6 +1009,21 @@ int SSL_CTX_use_cert_and_key(SSL_CTX *ctx, X509 *x509, EVP_PKEY *privatekey,
   X509_up_ref(x509);
   cert_pkey->x509_leaf = x509;
   return 1;
+}
+
+int SSL_CTX_use_cert_and_key(SSL_CTX *ctx, X509 *x509, EVP_PKEY *privatekey,
+                             STACK_OF(X509) *chain, int override) {
+  return cert_use_cert_and_key(ctx->cert.get(), x509, privatekey, chain,
+                               override);
+}
+
+int SSL_use_cert_and_key(SSL *ssl, X509 *x509, EVP_PKEY *privatekey,
+                         STACK_OF(X509) *chain, int override) {
+  if (!ssl->config) {
+    return 0;
+  }
+  return cert_use_cert_and_key(ssl->config->cert.get(), x509, privatekey,
+                               chain, override);
 }
 
 void SSL_certs_clear(SSL *ssl) {

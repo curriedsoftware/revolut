@@ -200,19 +200,10 @@ mod tests {
     use super::v10::*;
     use std::collections::HashMap;
 
-    impl Default for Amount {
-        fn default() -> Self {
-            Self {
-                amount: None,
-                currency: None,
-            }
-        }
-    }
-
     impl Default for Category {
         fn default() -> Self {
             Self {
-                id: "some-category-id".to_string(),
+                id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
                 name: "some-category-name".to_string(),
                 code: None,
             }

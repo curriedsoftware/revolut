@@ -138,7 +138,7 @@ mod tests {
     impl Default for AccountEstimatedTime {
         fn default() -> Self {
             Self {
-                unit: "some-account-estimated-time-unit".to_string(),
+                unit: "days".parse().unwrap(),
                 min: None,
                 max: None,
             }
@@ -152,7 +152,7 @@ mod tests {
                 street_line2: None,
                 region: None,
                 city: None,
-                country: "ES".to_string(),
+                country: "ES".parse().unwrap(),
                 postcode: "28810".to_string(),
             }
         }

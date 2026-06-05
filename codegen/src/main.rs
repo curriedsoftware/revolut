@@ -1,9 +1,16 @@
-mod codegen;
-mod naming;
-mod parser;
-mod types;
+//! Revolut type generator.
+//!
+//! Rather than maintaining a bespoke emitter, we delegate type generation to
+//! [`progenitor`]/`typify`. progenitor is a *client* generator, but we only
+//! want the model types: we feed it a minimal OpenAPI document containing just
+//! `components.schemas` (with empty `paths`), run it, and emit only its
+//! `TypeSpace`. The components-only reconstruction also sidesteps the
+//! `paths`/`callbacks` constructs in the Revolut specs that a full-document
+//! parse chokes on.
 
 use clap::Parser;
+use openapiv3::OpenAPI;
+use progenitor::{GenerationSettings, Generator};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -17,7 +24,8 @@ struct Args {
     #[arg(long)]
     output: PathBuf,
 
-    /// API name (business, merchant, open_banking, crypto_ramp)
+    /// API name (business, merchant, open_banking, crypto_ramp). Kept for CLI
+    /// compatibility / logging; type generation is spec-driven.
     #[arg(long)]
     api: String,
 }
@@ -31,21 +39,371 @@ fn main() {
         args.spec.display()
     );
 
-    let schemas = parser::parse_spec(
-        args.spec
-            .to_str()
-            .expect("Invalid spec path"),
-    );
+    let contents = std::fs::read_to_string(&args.spec).expect("Failed to read spec file");
+    let code = generate(&contents);
 
-    eprintln!("Parsed {} schemas", schemas.len());
-
-    let code = codegen::generate(&schemas);
-
-    // Ensure output directory exists
     std::fs::create_dir_all(&args.output).expect("Failed to create output directory");
-
     let output_file = args.output.join("mod.rs");
     std::fs::write(&output_file, code).expect("Failed to write output file");
 
     eprintln!("Generated {}", output_file.display());
+}
+
+/// Turn the contents of an OpenAPI spec into a formatted Rust module of types.
+fn generate(contents: &str) -> String {
+    // Lift out `components.schemas` only. progenitor consumes nothing else, and
+    // `components.{parameters,responses,requestBodies}` carry constructs (invalid
+    // `default`s like `"now + 7 days"`, content/schema unions) that break a strict
+    // parse. Then:
+    //   - strip `default`/`example`/`examples` (often hold invalid values), while
+    //   - keeping constraint keywords (`maxLength`/`pattern`/`format`) so typify
+    //     emits validated newtypes, and
+    //   - de-duplicating `enum` value lists (some specs repeat variants, which
+    //     typify rejects).
+    let raw: serde_yaml::Value = serde_yaml::from_str(contents).expect("Failed to parse YAML");
+    let mut schemas = raw
+        .get("components")
+        .and_then(|c| c.get("schemas"))
+        .cloned()
+        .expect("Spec has no components.schemas section");
+    strip_keys(&mut schemas, &["default", "example", "examples"]);
+    // Some specs put prose in numeric constraints (e.g. `maximum: now + 7 days`).
+    // Drop numeric-constraint keys whose value isn't actually a number.
+    strip_non_numeric(
+        &mut schemas,
+        &[
+            "minimum",
+            "maximum",
+            "exclusiveMinimum",
+            "exclusiveMaximum",
+            "multipleOf",
+        ],
+    );
+    // Drop `discriminator` objects lacking the required `propertyName` (some
+    // specs supply only `mapping`); without it the oneOf is emitted untagged.
+    strip_invalid_discriminators(&mut schemas);
+    dedup_enums(&mut schemas);
+    // typify de-duplicates names between two inline subschemas, but not between
+    // an inline subschema and a top-level schema. When an inline enum's derived
+    // name (e.g. `ExchangeReason.code` -> `ExchangeReasonCode`) clashes with a
+    // top-level schema of the same name, both definitions are emitted and the
+    // module won't compile. Hoist such enums to uniquely-named top-level schemas.
+    if let serde_yaml::Value::Mapping(map) = &mut schemas {
+        hoist_colliding_enums(map);
+    }
+
+    let minimal = serde_json::json!({
+        "openapi": "3.0.0",
+        "info": { "title": "types-only", "version": "0" },
+        "paths": {},
+        "components": {
+            "schemas": serde_yaml::from_value::<serde_json::Value>(schemas)
+                .expect("schemas are not representable as JSON"),
+        },
+    });
+    let spec: OpenAPI =
+        serde_json::from_value(minimal).expect("Reconstructed minimal spec failed to parse");
+
+    // Run the generator purely to populate its `TypeSpace`; the client tokens
+    // it returns are discarded — we only take the types.
+    let mut generator = Generator::new(&GenerationSettings::default());
+    generator
+        .generate_tokens(&spec)
+        .expect("Type generation failed");
+    let types = generator.get_type_space().to_stream();
+
+    let file: syn::File = syn::parse2(types).expect("Generated tokens are not valid Rust");
+    // Convert `/** */` blocks to `///` lines first (so rustfmt can't re-indent
+    // them into rustdoc code blocks), then tag bare ``` fences as `text`.
+    let body = neutralize_doc_fences(&block_docs_to_line_docs(&prettyplease::unparse(&file)));
+
+    format!(
+        "// This file is auto-generated by the revolut-codegen tool.\n\
+         // Do not edit manually.\n\n\
+         #![allow(clippy::all, dead_code)]\n\n\
+         {body}"
+    )
+}
+
+/// Convert `/** ... */` block doc comments to `///` line comments. prettyplease
+/// renders multi-line doc strings as `/** */`; rustfmt then re-indents their
+/// continuation lines, which rustdoc reads as indented code blocks and tries to
+/// compile. `///` lines sidestep both problems and survive rustfmt unchanged.
+fn block_docs_to_line_docs(body: &str) -> String {
+    let lines: Vec<&str> = body.lines().collect();
+    let mut out: Vec<String> = Vec::new();
+    let mut i = 0;
+    while i < lines.len() {
+        let line = lines[i];
+        // prettyplease only emits `/**` for doc comments, always at the start of
+        // the (trimmed) line.
+        let trimmed_start = line.trim_start();
+        if let Some(after_marker) = trimmed_start.strip_prefix("/**") {
+            let indent = &line[..line.len() - trimmed_start.len()];
+            let mut content = String::new();
+            if let Some(end) = after_marker.find("*/") {
+                content.push_str(&after_marker[..end]);
+                i += 1;
+            } else {
+                content.push_str(after_marker);
+                content.push('\n');
+                i += 1;
+                while i < lines.len() {
+                    if let Some(end) = lines[i].find("*/") {
+                        content.push_str(&lines[i][..end]);
+                        i += 1;
+                        break;
+                    }
+                    content.push_str(lines[i]);
+                    content.push('\n');
+                    i += 1;
+                }
+            }
+            for cl in content.split('\n') {
+                let cl = cl.trim_end();
+                if cl.is_empty() {
+                    out.push(format!("{indent}///"));
+                } else {
+                    out.push(format!("{indent}/// {cl}"));
+                }
+            }
+            continue;
+        }
+        out.push(line.to_string());
+        i += 1;
+    }
+    out.push(String::new());
+    out.join("\n")
+}
+
+/// typify embeds each schema's description (and a JSON-schema dump) in doc
+/// comments, which often contain bare ``` ``` ``` code fences. rustdoc treats an
+/// untagged fence as a Rust doctest and tries to compile its prose contents,
+/// failing the build. Tag every bare fence as `text` so rustdoc skips it; the
+/// crate's genuine (hand-written) doctests are unaffected.
+fn neutralize_doc_fences(body: &str) -> String {
+    let mut out: Vec<String> = Vec::new();
+    for line in body.lines() {
+        // Strip leading whitespace, an optional doc-comment marker, then more
+        // whitespace. A bare fence is exactly ``` after that.
+        let rest = line.trim_start();
+        let rest = rest
+            .strip_prefix("///")
+            .or_else(|| rest.strip_prefix("//!"))
+            .unwrap_or(rest);
+        if rest.trim() == "```" {
+            out.push(format!("{}text", line.trim_end()));
+        } else {
+            out.push(line.to_string());
+        }
+    }
+    out.push(String::new());
+    out.join("\n")
+}
+
+/// Hoist inline enums whose typify-derived name would collide with an existing
+/// top-level schema. The colliding inline enum is moved to a new, uniquely-named
+/// top-level schema and replaced in place with a `$ref` to it. Inline enums that
+/// don't collide with a top-level name are left untouched (typify already
+/// de-duplicates those against each other).
+fn hoist_colliding_enums(schemas: &mut serde_yaml::Mapping) {
+    use heck::ToPascalCase;
+
+    let mut reserved: std::collections::BTreeSet<String> = schemas
+        .keys()
+        .filter_map(|k| k.as_str().map(str::to_string))
+        .collect();
+    let mut additions: Vec<(String, serde_yaml::Value)> = Vec::new();
+
+    let names: Vec<serde_yaml::Value> = schemas.keys().cloned().collect();
+    for name in names {
+        let hint = name.as_str().unwrap_or_default().to_string();
+        if let Some(schema) = schemas.get_mut(&name) {
+            hoist_walk(schema, &hint, &mut reserved, &mut additions);
+        }
+    }
+
+    for (n, v) in additions {
+        schemas.insert(serde_yaml::Value::String(n), v);
+    }
+
+    /// Recurse through a schema, hoisting colliding inline enums under `hint`.
+    fn hoist_walk(
+        node: &mut serde_yaml::Value,
+        hint: &str,
+        reserved: &mut std::collections::BTreeSet<String>,
+        additions: &mut Vec<(String, serde_yaml::Value)>,
+    ) {
+        let serde_yaml::Value::Mapping(map) = node else {
+            return;
+        };
+
+        // Object properties: `<parent><Property>`.
+        if let Some(serde_yaml::Value::Mapping(props)) =
+            map.get_mut(serde_yaml::Value::String("properties".into()))
+        {
+            for (k, v) in props.iter_mut() {
+                let child = format!("{hint}{}", k.as_str().unwrap_or_default().to_pascal_case());
+                maybe_hoist(v, &child, reserved, additions);
+                hoist_walk(v, &child, reserved, additions);
+            }
+        }
+        // Array items: `<parent>Item`.
+        if let Some(items) = map.get_mut(serde_yaml::Value::String("items".into())) {
+            let child = format!("{hint}Item");
+            maybe_hoist(items, &child, reserved, additions);
+            hoist_walk(items, &child, reserved, additions);
+        }
+        // Composition keywords: recurse, preserving the parent hint.
+        for key in ["allOf", "oneOf", "anyOf"] {
+            if let Some(serde_yaml::Value::Sequence(seq)) =
+                map.get_mut(serde_yaml::Value::String(key.into()))
+            {
+                for v in seq.iter_mut() {
+                    hoist_walk(v, hint, reserved, additions);
+                }
+            }
+        }
+    }
+
+    /// If `node` is an inline enum whose name collides with a reserved name,
+    /// move it to a fresh top-level schema and leave a `$ref` behind.
+    fn maybe_hoist(
+        node: &mut serde_yaml::Value,
+        hint: &str,
+        reserved: &mut std::collections::BTreeSet<String>,
+        additions: &mut Vec<(String, serde_yaml::Value)>,
+    ) {
+        let is_inline_enum = matches!(
+            node,
+            serde_yaml::Value::Mapping(m)
+                if m.contains_key(serde_yaml::Value::String("enum".into()))
+                    && !m.contains_key(serde_yaml::Value::String("$ref".into()))
+        );
+        if !is_inline_enum || !reserved.contains(hint) {
+            return;
+        }
+
+        // Reserve a unique name: prefer `<hint>Enum`, then numeric suffixes.
+        let mut unique = format!("{hint}Enum");
+        let mut n = 2;
+        while reserved.contains(&unique) {
+            unique = format!("{hint}Enum{n}");
+            n += 1;
+        }
+        reserved.insert(unique.clone());
+
+        additions.push((unique.clone(), node.clone()));
+        let mut reference = serde_yaml::Mapping::new();
+        reference.insert(
+            serde_yaml::Value::String("$ref".into()),
+            serde_yaml::Value::String(format!("#/components/schemas/{unique}")),
+        );
+        *node = serde_yaml::Value::Mapping(reference);
+    }
+}
+
+/// Recursively remove `discriminator` objects that lack `propertyName`, which
+/// OpenAPI requires. A `oneOf` without a usable discriminator is emitted as an
+/// untagged union instead.
+fn strip_invalid_discriminators(value: &mut serde_yaml::Value) {
+    match value {
+        serde_yaml::Value::Mapping(map) => {
+            let disc_key = serde_yaml::Value::String("discriminator".to_string());
+            let drop = match map.get(&disc_key) {
+                Some(serde_yaml::Value::Mapping(d)) => {
+                    !d.contains_key(serde_yaml::Value::String("propertyName".to_string()))
+                }
+                Some(_) => true,
+                None => false,
+            };
+            if drop {
+                map.remove(&disc_key);
+            }
+            for (_, v) in map.iter_mut() {
+                strip_invalid_discriminators(v);
+            }
+        }
+        serde_yaml::Value::Sequence(seq) => {
+            for v in seq.iter_mut() {
+                strip_invalid_discriminators(v);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Recursively remove the given keys when their value is not a number.
+fn strip_non_numeric(value: &mut serde_yaml::Value, keys: &[&str]) {
+    match value {
+        serde_yaml::Value::Mapping(map) => {
+            for k in keys {
+                let key = serde_yaml::Value::String((*k).to_string());
+                let is_number = map.get(&key).map(|v| v.is_number()).unwrap_or(false);
+                if map.contains_key(&key) && !is_number {
+                    map.remove(&key);
+                }
+            }
+            for (_, v) in map.iter_mut() {
+                strip_non_numeric(v, keys);
+            }
+        }
+        serde_yaml::Value::Sequence(seq) => {
+            for v in seq.iter_mut() {
+                strip_non_numeric(v, keys);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Recursively de-duplicate the value list of every `enum` key, preserving
+/// order. typify errors out when a schema declares the same variant twice.
+fn dedup_enums(value: &mut serde_yaml::Value) {
+    match value {
+        serde_yaml::Value::Mapping(map) => {
+            if let Some(serde_yaml::Value::Sequence(variants)) =
+                map.get_mut(serde_yaml::Value::String("enum".to_string()))
+            {
+                let mut seen = Vec::new();
+                variants.retain(|v| {
+                    if seen.contains(v) {
+                        false
+                    } else {
+                        seen.push(v.clone());
+                        true
+                    }
+                });
+            }
+            for (_, v) in map.iter_mut() {
+                dedup_enums(v);
+            }
+        }
+        serde_yaml::Value::Sequence(seq) => {
+            for v in seq.iter_mut() {
+                dedup_enums(v);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Recursively remove the given keys from a YAML mapping tree.
+fn strip_keys(value: &mut serde_yaml::Value, keys: &[&str]) {
+    match value {
+        serde_yaml::Value::Mapping(map) => {
+            for k in keys {
+                map.remove(serde_yaml::Value::String((*k).to_string()));
+            }
+            for (_, v) in map.iter_mut() {
+                strip_keys(v, keys);
+            }
+        }
+        serde_yaml::Value::Sequence(seq) => {
+            for v in seq.iter_mut() {
+                strip_keys(v, keys);
+            }
+        }
+        _ => {}
+    }
 }

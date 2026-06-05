@@ -454,12 +454,12 @@ mod tests {
     impl Default for SubscriptionPlan {
         fn default() -> Self {
             Self {
-                id: "some-plan-id".to_string(),
-                name: "some-plan".to_string(),
+                id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
+                name: "some-plan".parse().unwrap(),
                 trial_duration: None,
                 state: Default::default(),
-                created_at: "2025-06-11T15:28:36.339668Z".to_string(),
-                updated_at: "2025-07-11T15:28:36.956369Z".to_string(),
+                created_at: "2025-06-11T15:28:36.339668Z".parse().unwrap(),
+                updated_at: "2025-07-11T15:28:36.956369Z".parse().unwrap(),
                 variations: Vec::new(),
             }
         }
@@ -489,18 +489,18 @@ mod tests {
     impl Default for Subscription {
         fn default() -> Self {
             Self {
-                id: "some-subscription-id".to_string(),
+                id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
                 external_reference: None,
                 state: Default::default(),
-                customer_id: "some-customer-id".to_string(),
-                plan_id: "some-plan-id".to_string(),
-                plan_variation_id: "some-plan-variation-id".to_string(),
+                customer_id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
+                plan_id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
+                plan_variation_id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
                 payment_method_type: Default::default(),
                 payment_method_id: None,
-                created_at: "2025-06-11T15:28:36.339668Z".to_string(),
-                updated_at: "2025-07-11T15:28:36.956369Z".to_string(),
+                created_at: "2025-06-11T15:28:36.339668Z".parse().unwrap(),
+                updated_at: "2025-07-11T15:28:36.956369Z".parse().unwrap(),
                 start_date: None,
-                current_cycle_id: "some-cycle-id".to_string(),
+                current_cycle_id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
                 trial_duration: None,
                 trial_end_date: None,
                 setup_order_id: None,
@@ -599,15 +599,15 @@ mod tests {
     #[tokio::test]
     async fn create_plan_rejects_non_iso8601_cycle_duration() {
         let plan = SubscriptionPlanCreation {
-            name: "some-plan".to_string(),
+            name: "some-plan".parse().unwrap(),
             trial_duration: None,
             variations: vec![SubscriptionPlanVariationCreation {
                 phases: vec![SubscriptionPlanPhaseCreation {
-                    ordinal: 1,
-                    cycle_duration: "1 month".to_string(),
+                    ordinal: "1".parse().unwrap(),
+                    cycle_duration: "1 month".parse().unwrap(),
                     cycle_count: None,
-                    amount: 4242,
-                    currency: "EUR".to_string(),
+                    amount: "4242".parse().unwrap(),
+                    currency: "EUR".parse().unwrap(),
                     subscription_items: None,
                 }],
             }],
@@ -621,11 +621,11 @@ mod tests {
     #[tokio::test]
     async fn create_rejects_non_iso8601_trial_duration() {
         let subscription = SubscriptionCreation {
-            plan_variation_id: "some-plan-variation-id".to_string(),
-            customer_id: "some-customer-id".to_string(),
+            plan_variation_id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
+            customer_id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
             external_reference: None,
             setup_order_redirect_url: None,
-            trial_duration: Some("two weeks".to_string()),
+            trial_duration: Some("two weeks".parse().unwrap()),
             payment_method_id: None,
         };
         assert!(matches!(
@@ -670,13 +670,13 @@ mod tests {
                 {
                     "id": "6849a0a4-ef38-a9ba-9ac2-d6ef5d1997af",
                     "state": "active",
-                    "customer_id": "some-customer-id",
-                    "plan_id": "some-plan-id",
-                    "plan_variation_id": "some-plan-variation-id",
+                    "customer_id": "11111111-1111-1111-1111-111111111111",
+                    "plan_id": "22222222-2222-2222-2222-222222222222",
+                    "plan_variation_id": "33333333-3333-3333-3333-333333333333",
                     "payment_method_type": "automatic",
                     "created_at": "2025-06-11T15:28:36.339668Z",
                     "updated_at": "2025-07-11T15:28:36.956369Z",
-                    "current_cycle_id": "some-cycle-id"
+                    "current_cycle_id": "44444444-4444-4444-4444-444444444444"
                 }
             ))
             .is_ok()

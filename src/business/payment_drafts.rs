@@ -181,7 +181,7 @@ mod tests {
     impl Default for PaymentOrder {
         fn default() -> Self {
             Self {
-                id: "some-payment-order-id".to_string(),
+                id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
                 scheduled_for: None,
                 title: None,
                 payments_count: 1,
@@ -240,15 +240,6 @@ mod tests {
                 to: Default::default(),
                 rate: None,
                 fee: None,
-            }
-        }
-    }
-
-    impl Default for Fee {
-        fn default() -> Self {
-            Self {
-                amount: None,
-                currency: None,
             }
         }
     }

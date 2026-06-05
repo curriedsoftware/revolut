@@ -264,7 +264,7 @@ mod tests {
     impl Default for CardSpendProgram {
         fn default() -> Self {
             Self {
-                label: "some-card-spend-program-label".to_string(),
+                label: "some-card-spend-program-label".parse().unwrap(),
             }
         }
     }

@@ -296,15 +296,6 @@ pub async fn validate_account_name(
 mod tests {
     use super::v10::*;
 
-    impl Default for IndividualName {
-        fn default() -> Self {
-            Self {
-                first_name: None,
-                last_name: None,
-            }
-        }
-    }
-
     impl Default for Counterparty {
         fn default() -> Self {
             Self {

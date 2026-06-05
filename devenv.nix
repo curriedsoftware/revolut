@@ -111,7 +111,7 @@
       name = "revolut";
       cargoLock.lockFile = ./Cargo.nix.lock;
       postPatch = ''
-        ln -s ${./Cargo.nix.lock} Cargo.lock
+        ln -sf ${./Cargo.nix.lock} Cargo.lock
       '';
       buildPhase = ''
         runHook preBuild

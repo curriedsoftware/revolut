@@ -269,12 +269,12 @@ mod tests {
     impl Default for CustomerV3 {
         fn default() -> Self {
             Self {
-                id: "some-customer-id".to_string(),
+                id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
                 full_name: None,
                 phone: None,
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
-                email: "some-email@example.com".to_string(),
+                created_at: "2025-06-11T15:28:36Z".parse().unwrap(),
+                updated_at: "2025-07-11T15:28:36Z".parse().unwrap(),
+                email: "some-email@example.com".parse().unwrap(),
                 payment_methods: vec![],
             }
         }
@@ -283,12 +283,12 @@ mod tests {
     impl Default for CustomerCreated {
         fn default() -> Self {
             Self {
-                id: "some-customer-id".to_string(),
+                id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
                 full_name: None,
                 phone: None,
-                created_at: "some-created-at".to_string(),
-                updated_at: "some-updated-at".to_string(),
-                email: "some-email@example.com".to_string(),
+                created_at: "2025-06-11T15:28:36Z".parse().unwrap(),
+                updated_at: "2025-07-11T15:28:36Z".parse().unwrap(),
+                email: "some-email@example.com".parse().unwrap(),
             }
         }
     }
@@ -314,10 +314,10 @@ mod tests {
         fn default() -> Self {
             use crate::merchant::generated::{PaymentMethodTypeV2, RevolutPayV2};
             Self::RevolutPayV2(RevolutPayV2 {
-                id: "some-payment-method-id".to_string(),
-                r#type: PaymentMethodTypeV2::RevolutPay,
+                id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
+                type_: PaymentMethodTypeV2::RevolutPay,
                 saved_for: None,
-                created_at: "some-created-at".to_string(),
+                created_at: "2025-06-11T15:28:36Z".parse().unwrap(),
             })
         }
     }
