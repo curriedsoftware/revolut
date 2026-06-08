@@ -25,9 +25,12 @@
 //! [Business accounts API](https://developer.revolut.com/docs/business/accounts).
 
 use crate::{
-    business::client::{BusinessAuthentication, Environment, HttpMethod},
+    business::{
+        ApiResult, Error,
+        client::{BusinessAuthentication, Environment, HttpMethod},
+    },
     client::Client,
-    errors::{self, ApiResult},
+    errors::ClientError,
 };
 
 pub mod v10 {
@@ -102,9 +105,9 @@ pub async fn bank_details<E: Environment>(
         )
         .await?
         .first()
-        .ok_or(errors::Error::ClientError(Box::new(
-            errors::ClientError::RequestError("No such account present".to_string()),
-        )))?
+        .ok_or(Error::ClientError(Box::new(ClientError::RequestError(
+            "No such account present".to_string(),
+        ))))?
         .clone())
 }
 

@@ -24,6 +24,14 @@
 
 use crate::client::Client;
 
+/// The error type returned by every Merchant API call. The Merchant API reports
+/// its error `code` as a string identifier (per the `Error-v2` schema), so it
+/// is pinned to `errors::Error<String>` — callers read `code: Option<String>`
+/// directly and never see a numeric Business-style code.
+pub type Error = crate::errors::Error<String>;
+/// The result type returned by every Merchant API call. See [`Error`].
+pub type ApiResult<T> = crate::errors::ApiResult<T, String>;
+
 pub mod apple_pay;
 pub mod client;
 pub mod customers;

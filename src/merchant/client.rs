@@ -33,7 +33,8 @@ pub use crate::{
         MissingClientAuthentication, MissingEnvironment, ProductionEnvironment, RevolutEndpoint,
         SandboxEnvironment,
     },
-    errors::{self, ApiResult, ClientBuilderError, Error},
+    errors::{self, ClientBuilderError},
+    merchant::{ApiResult, Error},
 };
 
 pub fn merchant_client()
@@ -207,7 +208,7 @@ impl<E: Environment> Client<E, MerchantAuthentication> {
             .send()
             .await
             .map_err(|err| {
-                errors::Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
+                Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
                     "{err:?}"
                 ))))
             })?;
@@ -218,7 +219,7 @@ impl<E: Environment> Client<E, MerchantAuthentication> {
             }
             let response_ = format!("{response:?}");
             Ok(response.json().await.map_err(|err| {
-                errors::Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
+                Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
                     "{err:?}: {response_}",
                 ))))
             })?)

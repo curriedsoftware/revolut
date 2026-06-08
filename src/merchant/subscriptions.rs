@@ -24,8 +24,8 @@
 
 use crate::{
     client::{Body, Client, Environment, HttpMethod},
-    errors::{ApiResult, ClientError, Error},
-    merchant::client::MerchantAuthentication,
+    errors::ClientError,
+    merchant::{ApiResult, Error, client::MerchantAuthentication},
 };
 
 pub mod v10 {

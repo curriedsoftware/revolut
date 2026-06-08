@@ -23,8 +23,8 @@
  ***/
 
 use revolut::{
+    business::ApiResult,
     business::client::{BusinessAuthenticationBuilder, business_client},
-    errors::ApiResult,
 };
 
 #[tokio::main]

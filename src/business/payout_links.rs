@@ -25,9 +25,9 @@
 //! [Business payout links API](https://developer.revolut.com/docs/business/payout-links).
 
 use crate::{
+    business::ApiResult,
     business::client::{BusinessAuthentication, Environment, HttpMethod},
     client::{Body, Client},
-    errors::ApiResult,
 };
 
 pub mod v10 {

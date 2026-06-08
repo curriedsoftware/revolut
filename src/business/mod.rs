@@ -24,7 +24,15 @@
 
 use client::{Environment, ProductionEnvironment, SandboxEnvironment};
 
-use crate::{client::Client, errors::ApiResult};
+use crate::client::Client;
+
+/// The error type returned by every Business API call. The Business API reports
+/// its error `code` as a numeric identifier (e.g. `2101`), so it is pinned to
+/// `errors::Error<u32>` — callers read `code: Option<u32>` directly and never
+/// see a string Merchant-style code.
+pub type Error = crate::errors::Error<u32>;
+/// The result type returned by every Business API call. See [`Error`].
+pub type ApiResult<T> = crate::errors::ApiResult<T, u32>;
 
 pub mod accounts;
 pub mod cards;

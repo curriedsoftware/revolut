@@ -24,7 +24,7 @@
 
 use crate::{
     client::{Client, Environment, HttpMethod},
-    errors::ApiResult,
+    merchant::ApiResult,
     merchant::client::MerchantAuthentication,
 };
 

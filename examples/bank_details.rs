@@ -25,8 +25,8 @@
 use clap::Parser;
 
 use revolut::{
+    business::ApiResult,
     business::client::{BusinessAuthenticationBuilder, business_client},
-    errors::ApiResult,
 };
 
 #[derive(Parser, Debug)]

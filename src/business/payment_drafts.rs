@@ -25,9 +25,9 @@
 //! [Business payment drafts API](https://developer.revolut.com/docs/business/payment-drafts).
 
 use crate::{
+    business::ApiResult,
     business::client::BusinessAuthentication,
     client::{Body, Client, Environment, HttpMethod},
-    errors::ApiResult,
 };
 
 pub mod v10 {

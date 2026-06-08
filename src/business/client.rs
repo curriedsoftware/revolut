@@ -31,11 +31,12 @@ use std::{clone::Clone, string::ToString};
 
 pub use crate::{
     BusinessClient, MerchantClient, OpenBankingClient,
+    business::Error,
     client::{
         self, Body, Client, ClientBuilder, Environment, HttpMethod, MissingClientAuthentication,
         MissingEnvironment, ProductionEnvironment, RevolutEndpoint, SandboxEnvironment,
     },
-    errors::{self, ClientBuilderError, ClientError, Error},
+    errors::{self, ClientBuilderError, ClientError},
 };
 
 use std::{collections::HashMap, fmt::Debug, marker::PhantomData};
@@ -346,7 +347,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .send()
             .await
             .map_err(|err| {
-                errors::Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
+                Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
                     "{err:?}"
                 ))))
             })?;
@@ -358,7 +359,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         }
 
         res.json().await.map_err(|err| {
-            errors::Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
+            Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
                 "{err:?}"
             ))))
         })
@@ -370,7 +371,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .access_token_expires_at
             .read()
             .map_err(|err| {
-                errors::Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
+                Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
                     "{err:?}"
                 ))))
             })?
@@ -389,12 +390,12 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         self.ensure_logged_in().await?;
 
         let Some(access_token) = (*self.authentication.access_token.read().map_err(|err| {
-            errors::Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
+            Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
                 "{err:?}"
             ))))
         })?)
         .clone() else {
-            return Err(errors::Error::ClientError(Box::new(
+            return Err(Error::ClientError(Box::new(
                 errors::ClientError::CannotLogIn("could not retrieve access token".to_string()),
             )));
         };
@@ -433,7 +434,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .send()
             .await
             .map_err(|err| {
-                errors::Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
+                Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
                     "{err:?}"
                 ))))
             })?;
@@ -448,7 +449,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .bytes()
             .await
             .map_err(|err| {
-                errors::Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
+                Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
                     "{err:?}"
                 ))))
             })?
@@ -485,12 +486,12 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         self.ensure_logged_in().await?;
 
         let Some(access_token) = (*self.authentication.access_token.read().map_err(|err| {
-            errors::Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
+            Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
                 "{err:?}"
             ))))
         })?)
         .clone() else {
-            return Err(errors::Error::ClientError(Box::new(
+            return Err(Error::ClientError(Box::new(
                 errors::ClientError::CannotLogIn("could not retrieve access token".to_string()),
             )));
         };
@@ -529,7 +530,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .send()
             .await
             .map_err(|err| {
-                errors::Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
+                Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
                     "{err:?}"
                 ))))
             })?;
@@ -540,7 +541,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             }
             let response_ = format!("{response:?}");
             Ok(response.json().await.map_err(|err| {
-                errors::Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
+                Error::ClientError(Box::new(errors::ClientError::RequestError(format!(
                     "{err:?}: {response_}",
                 ))))
             })?)
@@ -583,7 +584,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             ..
         } = self.authentication
         else {
-            return Err(errors::Error::ClientError(Box::new(
+            return Err(Error::ClientError(Box::new(
                 errors::ClientError::CannotLogIn(String::from("missing authorization code")),
             )));
         };
@@ -609,7 +610,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             ..
         } = self.authentication
         else {
-            return Err(errors::Error::ClientError(Box::new(
+            return Err(Error::ClientError(Box::new(
                 errors::ClientError::CannotLogIn(String::from("missing refresh token")),
             )));
         };
@@ -630,7 +631,7 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
         let authentication = self.login_with_refresh_token().await?;
 
         *self.authentication.access_token.write().map_err(|err| {
-            errors::Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
+            Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
                 "{err:?}"
             ))))
         })? = Some(authentication.access_token);
@@ -639,13 +640,13 @@ impl<E: Environment> Client<E, BusinessAuthentication> {
             .access_token_expires_at
             .write()
             .map_err(|err| {
-                errors::Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
+                Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
                     "{err:?}"
                 ))))
             })? = Some(
             Utc::now()
                 + Duration::seconds(authentication.expires_in.try_into().map_err(|err| {
-                    errors::Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
+                    Error::ClientError(Box::new(errors::ClientError::CannotLogIn(format!(
                         "{err:?}"
                     ))))
                 })?),

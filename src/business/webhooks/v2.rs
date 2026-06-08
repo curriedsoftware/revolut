@@ -25,9 +25,9 @@
 //! [Business webhooks API v2](https://developer.revolut.com/docs/business/webhooks-v-2).
 
 use crate::{
+    business::ApiResult,
     business::client::{BusinessAuthentication, Environment, HttpMethod},
     client::{Body, Client},
-    errors::ApiResult,
 };
 
 use serde::{Deserialize, Serialize};

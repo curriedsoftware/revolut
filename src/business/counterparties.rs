@@ -28,9 +28,9 @@
 //! environment. Read more about it in the Revolut documentation.
 
 use crate::{
+    business::ApiResult,
     business::client::{self, BusinessAuthentication, Environment, HttpMethod},
     client::{Body, Client, ProductionEnvironment},
-    errors::ApiResult,
 };
 
 pub mod v10 {

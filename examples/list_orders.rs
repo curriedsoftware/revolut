@@ -26,7 +26,7 @@ use clap::Parser;
 use std::str::FromStr;
 
 use revolut::{
-    errors::ApiResult,
+    merchant::ApiResult,
     merchant::{
         self,
         client::{MerchantAuthenticationBuilder, merchant_client},

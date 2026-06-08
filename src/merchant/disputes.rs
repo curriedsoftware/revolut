@@ -30,7 +30,7 @@
 
 use crate::{
     client::{Body, Client, Environment, HttpMethod, Part, ProductionEnvironment},
-    errors::ApiResult,
+    merchant::ApiResult,
     merchant::client::{self, MerchantAuthentication},
 };
 

@@ -25,9 +25,9 @@
 //! [Business foreign exchange API](https://developer.revolut.com/docs/business/foreign-exchange).
 
 use crate::{
+    business::ApiResult,
     business::client::BusinessAuthentication,
     client::{Body, Client, Environment, HttpMethod},
-    errors::ApiResult,
 };
 
 pub mod v10 {

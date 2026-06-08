@@ -25,7 +25,7 @@
 use clap::Parser;
 
 use revolut::{
-    errors::ApiResult,
+    merchant::ApiResult,
     merchant::client::{MerchantAuthenticationBuilder, merchant_client},
 };
 

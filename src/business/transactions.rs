@@ -25,9 +25,9 @@
 //! [Business transactions API](https://developer.revolut.com/docs/business/transactions).
 
 use crate::{
+    business::ApiResult,
     business::client::{BusinessAuthentication, Environment, HttpMethod},
     client::Client,
-    errors::ApiResult,
 };
 
 pub mod v10 {

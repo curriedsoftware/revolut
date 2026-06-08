@@ -29,11 +29,11 @@
 //! will result in an error at compile time.
 
 use crate::{
+    business::ApiResult,
     business::client::{
         self, BusinessAuthentication, Environment, HttpMethod, ProductionEnvironment,
     },
     client::Client,
-    errors::ApiResult,
 };
 
 use std::vec::Vec;

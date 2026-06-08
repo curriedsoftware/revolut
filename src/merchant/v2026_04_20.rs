@@ -24,7 +24,7 @@
 
 use crate::{
     client::{Environment, ProductionEnvironment},
-    errors::ApiResult,
+    merchant::ApiResult,
     merchant::{
         Client, apple_pay, client, customers, disputes, locations, orders, other, payments,
         payouts, report_runs, subscriptions, webhooks,

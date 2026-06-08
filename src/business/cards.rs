@@ -29,9 +29,9 @@
 //! will result in an error at compile time.
 
 use crate::{
+    business::ApiResult,
     business::client::{self, BusinessAuthentication, Environment, HttpMethod},
     client::{Body, Client, ProductionEnvironment},
-    errors::ApiResult,
 };
 
 pub mod v10 {
