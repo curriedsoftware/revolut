@@ -22436,6 +22436,9 @@ impl<'de> ::serde::Deserialize<'de> for StatementDescriptorSuffix {
 ///    "plan_variation_id": {
 ///      "$ref": "#/components/schemas/Subscription-Plan-Variation-Id"
 ///    },
+///    "scheduled_action": {
+///      "$ref": "#/components/schemas/Subscription-Scheduled-Action"
+///    },
 ///    "setup_order_id": {
 ///      "$ref": "#/components/schemas/Setup-Order-Id"
 ///    },
@@ -22471,6 +22474,8 @@ pub struct Subscription {
     pub payment_method_type: SubscriptionPaymentMethodType,
     pub plan_id: SubscriptionPlanId,
     pub plan_variation_id: SubscriptionPlanVariationId,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub scheduled_action: ::std::option::Option<SubscriptionScheduledAction>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub setup_order_id: ::std::option::Option<SetupOrderId>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
@@ -22540,6 +22545,202 @@ impl ::std::convert::TryFrom<String> for SubscriptionAmount {
 impl ::std::fmt::Display for SubscriptionAmount {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         self.0.fmt(f)
+    }
+}
+///`SubscriptionChangePlan`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "plan_variation_id",
+///    "scheduled"
+///  ],
+///  "properties": {
+///    "plan_variation_id": {
+///      "$ref": "#/components/schemas/Subscription-Plan-Variation-Id"
+///    },
+///    "plan_variation_phase_id": {
+///      "$ref": "#/components/schemas/Subscription-Plan-Phase-Id"
+///    },
+///    "reason": {
+///      "$ref": "#/components/schemas/Subscription-Change-Plan-Reason"
+///    },
+///    "scheduled": {
+///      "description": "When the plan change should take effect.\n\n| Value | Description |\n| ----- | ----------- |\n| `at_cycle_end` | The change is applied at the end of the current billing cycle. |",
+///      "type": "string",
+///      "enum": [
+///        "at_cycle_end"
+///      ]
+///    }
+///  }
+///}
+/// ```text
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+pub struct SubscriptionChangePlan {
+    pub plan_variation_id: SubscriptionPlanVariationId,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub plan_variation_phase_id: ::std::option::Option<SubscriptionPlanPhaseId>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub reason: ::std::option::Option<SubscriptionChangePlanReason>,
+    /// When the plan change should take effect.
+    ///
+    /// | Value | Description |
+    /// | ----- | ----------- |
+    /// | `at_cycle_end` | The change is applied at the end of the current billing cycle. |
+    pub scheduled: SubscriptionChangePlanScheduled,
+}
+/// The reason for the scheduled action. This field is informational and does not affect how the action is processed.
+///
+/// | Value | Description |
+/// | ----- | ----------- |
+/// | `customer_request` | The action was requested by the customer. |
+/// | `merchant_request` | The action was initiated by the merchant. |
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "The reason for the scheduled action. This field is informational and does not affect how the action is processed.\n\n| Value | Description |\n| ----- | ----------- |\n| `customer_request` | The action was requested by the customer. |\n| `merchant_request` | The action was initiated by the merchant. |",
+///  "type": "string",
+///  "enum": [
+///    "customer_request",
+///    "merchant_request"
+///  ]
+///}
+/// ```text
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd,
+)]
+pub enum SubscriptionChangePlanReason {
+    #[serde(rename = "customer_request")]
+    CustomerRequest,
+    #[serde(rename = "merchant_request")]
+    MerchantRequest,
+}
+impl ::std::fmt::Display for SubscriptionChangePlanReason {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::CustomerRequest => f.write_str("customer_request"),
+            Self::MerchantRequest => f.write_str("merchant_request"),
+        }
+    }
+}
+impl ::std::str::FromStr for SubscriptionChangePlanReason {
+    type Err = self::error::ConversionError;
+    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "customer_request" => Ok(Self::CustomerRequest),
+            "merchant_request" => Ok(Self::MerchantRequest),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for SubscriptionChangePlanReason {
+    type Error = self::error::ConversionError;
+    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for SubscriptionChangePlanReason {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for SubscriptionChangePlanReason {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+/// When the plan change should take effect.
+///
+/// | Value | Description |
+/// | ----- | ----------- |
+/// | `at_cycle_end` | The change is applied at the end of the current billing cycle. |
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "When the plan change should take effect.\n\n| Value | Description |\n| ----- | ----------- |\n| `at_cycle_end` | The change is applied at the end of the current billing cycle. |",
+///  "type": "string",
+///  "enum": [
+///    "at_cycle_end"
+///  ]
+///}
+/// ```text
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd,
+)]
+pub enum SubscriptionChangePlanScheduled {
+    #[serde(rename = "at_cycle_end")]
+    AtCycleEnd,
+}
+impl ::std::fmt::Display for SubscriptionChangePlanScheduled {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::AtCycleEnd => f.write_str("at_cycle_end"),
+        }
+    }
+}
+impl ::std::str::FromStr for SubscriptionChangePlanScheduled {
+    type Err = self::error::ConversionError;
+    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "at_cycle_end" => Ok(Self::AtCycleEnd),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for SubscriptionChangePlanScheduled {
+    type Error = self::error::ConversionError;
+    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for SubscriptionChangePlanScheduled {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for SubscriptionChangePlanScheduled {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
     }
 }
 ///The date and time the subscription was created in [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format.
@@ -25113,6 +25314,189 @@ pub struct SubscriptionPlans {
     pub next_page_token: ::std::option::Option<::std::string::String>,
     ///List of subscription plans.
     pub subscription_plans: ::std::vec::Vec<SubscriptionPlan>,
+}
+///A pending scheduled action on the subscription, applied at the end of the current billing cycle.
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "A pending scheduled action on the subscription, applied at the end of the current billing cycle.",
+///  "type": "object",
+///  "oneOf": [
+///    {
+///      "$ref": "#/components/schemas/Subscription-Scheduled-Action-Cancel"
+///    },
+///    {
+///      "$ref": "#/components/schemas/Subscription-Scheduled-Action-Change-Plan"
+///    }
+///  ]
+///}
+/// ```text
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum SubscriptionScheduledAction {
+    Cancel(SubscriptionScheduledActionCancel),
+    ChangePlan(SubscriptionScheduledActionChangePlan),
+}
+impl ::std::convert::From<SubscriptionScheduledActionCancel> for SubscriptionScheduledAction {
+    fn from(value: SubscriptionScheduledActionCancel) -> Self {
+        Self::Cancel(value)
+    }
+}
+impl ::std::convert::From<SubscriptionScheduledActionChangePlan> for SubscriptionScheduledAction {
+    fn from(value: SubscriptionScheduledActionChangePlan) -> Self {
+        Self::ChangePlan(value)
+    }
+}
+///A cancellation scheduled to take effect at the end of the current billing cycle.
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "Subscription-Scheduled-Action-Cancel",
+///  "description": "A cancellation scheduled to take effect at the end of the current billing cycle.",
+///  "type": "object",
+///  "required": [
+///    "reason",
+///    "type"
+///  ],
+///  "properties": {
+///    "reason": {
+///      "$ref": "#/components/schemas/Subscription-Change-Plan-Reason"
+///    },
+///    "type": {
+///      "$ref": "#/components/schemas/Subscription-Scheduled-Action-Type"
+///    }
+///  }
+///}
+/// ```text
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+pub struct SubscriptionScheduledActionCancel {
+    pub reason: SubscriptionChangePlanReason,
+    #[serde(rename = "type")]
+    pub type_: SubscriptionScheduledActionType,
+}
+///A plan variation change scheduled to take effect at the end of the current billing cycle.
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "Subscription-Scheduled-Action-Change-Plan",
+///  "description": "A plan variation change scheduled to take effect at the end of the current billing cycle.",
+///  "type": "object",
+///  "required": [
+///    "plan_variation_id",
+///    "reason",
+///    "type"
+///  ],
+///  "properties": {
+///    "plan_variation_id": {
+///      "$ref": "#/components/schemas/Subscription-Plan-Variation-Id"
+///    },
+///    "plan_variation_phase_id": {
+///      "$ref": "#/components/schemas/Subscription-Plan-Phase-Id"
+///    },
+///    "reason": {
+///      "$ref": "#/components/schemas/Subscription-Change-Plan-Reason"
+///    },
+///    "type": {
+///      "$ref": "#/components/schemas/Subscription-Scheduled-Action-Type"
+///    }
+///  }
+///}
+/// ```text
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+pub struct SubscriptionScheduledActionChangePlan {
+    pub plan_variation_id: SubscriptionPlanVariationId,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub plan_variation_phase_id: ::std::option::Option<SubscriptionPlanPhaseId>,
+    pub reason: SubscriptionChangePlanReason,
+    #[serde(rename = "type")]
+    pub type_: SubscriptionScheduledActionType,
+}
+/// The type of the scheduled action.
+///
+/// | Value | Description |
+/// | ----- | ----------- |
+/// | `cancel` | A cancellation scheduled to take effect at the end of the current billing cycle. |
+/// | `change_plan_variation` | A plan variation change scheduled to take effect at the end of the current billing cycle. |
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "description": "The type of the scheduled action.\n\n| Value | Description |\n| ----- | ----------- |\n| `cancel` | A cancellation scheduled to take effect at the end of the current billing cycle. |\n| `change_plan_variation` | A plan variation change scheduled to take effect at the end of the current billing cycle. |",
+///  "type": "string",
+///  "enum": [
+///    "cancel",
+///    "change_plan_variation"
+///  ]
+///}
+/// ```text
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd,
+)]
+pub enum SubscriptionScheduledActionType {
+    #[serde(rename = "cancel")]
+    Cancel,
+    #[serde(rename = "change_plan_variation")]
+    ChangePlanVariation,
+}
+impl ::std::fmt::Display for SubscriptionScheduledActionType {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Cancel => f.write_str("cancel"),
+            Self::ChangePlanVariation => f.write_str("change_plan_variation"),
+        }
+    }
+}
+impl ::std::str::FromStr for SubscriptionScheduledActionType {
+    type Err = self::error::ConversionError;
+    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "cancel" => Ok(Self::Cancel),
+            "change_plan_variation" => Ok(Self::ChangePlanVariation),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for SubscriptionScheduledActionType {
+    type Error = self::error::ConversionError;
+    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for SubscriptionScheduledActionType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for SubscriptionScheduledActionType {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
 }
 /// The date and time the subscription started in [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format.
 ///

@@ -38,11 +38,14 @@ pub mod v10 {
     // automatically when the specs are bumped via `just generate`; we only
     // alias them back to this crate's public names.
     pub use crate::merchant::generated::{
-        Subscription, SubscriptionCreation, SubscriptionCycle, SubscriptionCycleState,
-        SubscriptionCycles, SubscriptionPaymentMethodType, SubscriptionPlan,
-        SubscriptionPlanCreation, SubscriptionPlanPhase, SubscriptionPlanPhaseCreation,
-        SubscriptionPlanState, SubscriptionPlanVariation, SubscriptionPlanVariationCreation,
-        SubscriptionPlans, SubscriptionState, SubscriptionUpdate, Subscriptions,
+        Subscription, SubscriptionChangePlan, SubscriptionChangePlanReason,
+        SubscriptionChangePlanScheduled, SubscriptionCreation, SubscriptionCycle,
+        SubscriptionCycleState, SubscriptionCycles, SubscriptionPaymentMethodType,
+        SubscriptionPlan, SubscriptionPlanCreation, SubscriptionPlanPhase,
+        SubscriptionPlanPhaseCreation, SubscriptionPlanState, SubscriptionPlanVariation,
+        SubscriptionPlanVariationCreation, SubscriptionPlans, SubscriptionScheduledAction,
+        SubscriptionScheduledActionCancel, SubscriptionScheduledActionChangePlan,
+        SubscriptionScheduledActionType, SubscriptionState, SubscriptionUpdate, Subscriptions,
     };
 }
 
@@ -152,6 +155,29 @@ pub async fn update<E: Environment>(
             &client
                 .environment
                 .unversioned_uri(&format!("/subscriptions/{subscription_id}")),
+        )
+        .await
+}
+
+/// Schedules a plan change for a subscription. The change is applied at the end
+/// of the current billing cycle (the API does not support immediate changes).
+///
+/// On success the API responds with `204 No Content`; the pending change is then
+/// reflected in [`Subscription::scheduled_action`](v10::Subscription) on
+/// subsequent reads.
+pub async fn change_plan<E: Environment>(
+    client: &Client<E, MerchantAuthentication>,
+    subscription_id: &str,
+    change: &v10::SubscriptionChangePlan,
+) -> ApiResult<()> {
+    client
+        .request(
+            HttpMethod::Post {
+                body: Some(Body::Json(&change)),
+            },
+            &client
+                .environment
+                .unversioned_uri(&format!("/subscriptions/{subscription_id}/change-plan")),
         )
         .await
 }
@@ -495,6 +521,7 @@ mod tests {
                 customer_id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
                 plan_id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
                 plan_variation_id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
+                scheduled_action: None,
                 payment_method_type: Default::default(),
                 payment_method_id: None,
                 created_at: "2025-06-11T15:28:36.339668Z".parse().unwrap(),
@@ -652,6 +679,19 @@ mod tests {
     #[tokio::test]
     async fn check_retrieve_type() {
         let _: Subscription = retrieve(&test_client(), "some-subscription-id")
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn check_change_plan_type() {
+        let change = SubscriptionChangePlan {
+            plan_variation_id: "00000000-0000-0000-0000-000000000000".parse().unwrap(),
+            plan_variation_phase_id: None,
+            reason: Some(SubscriptionChangePlanReason::MerchantRequest),
+            scheduled: SubscriptionChangePlanScheduled::AtCycleEnd,
+        };
+        let _: () = change_plan(&test_client(), "some-subscription-id", &change)
             .await
             .unwrap();
     }
