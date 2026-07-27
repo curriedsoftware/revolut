@@ -326,6 +326,71 @@ if((((ARCH STREQUAL "x86_64") AND NOT MY_ASSEMBLER_IS_TOO_OLD_FOR_512AVX) OR
     endif()
   endif()
 
+  # Under OPENSSL_SMALL on aarch64, drop the s2n-bignum code that becomes
+  # unreachable:
+  #
+  # - All EC (P-256/P-384/P-521) files, both non-_alt and _alt variants and
+  #   their helpers: the EC implementations that call them (p256-nistz.c,
+  #   p384.c, p521.c) are compiled out entirely under OPENSSL_SMALL. ec.c
+  #   dispatches P-256 to the fiat-crypto implementation (p256.c) and
+  #   P-384/P-521 to the generic Montgomery method instead.
+  # - The curve25519 _alt (wide-multiplier) variants: curve25519 is the only
+  #   remaining s2n-bignum selector user under OPENSSL_SMALL, and it is pinned
+  #   to the non-_alt variant at compile time (see
+  #   third_party/s2n-bignum/s2n-bignum_aws-lc.h).
+  #
+  # The fastmul/generic files (used by RSA/BN Montgomery arithmetic) and the
+  # sha3 files (used by keccak1600.c) remain reachable and are kept.
+  #
+  # On x86_64, OPENSSL_SMALL implies MY_ASSEMBLER_IS_TOO_OLD_FOR_512AVX (see
+  # #3319), which makes the enclosing condition false -- s2n-bignum is not
+  # compiled at all, so no removal is needed.
+  if(OPENSSL_SMALL)
+    if(ARCH STREQUAL "aarch64")
+      list(REMOVE_ITEM BCM_ASM_SOURCES
+        ${S2N_BIGNUM_DIR}/p256/p256_montjscalarmul.S
+        ${S2N_BIGNUM_DIR}/p256/p256_montjscalarmul_alt.S
+        ${S2N_BIGNUM_DIR}/p256/bignum_montinv_p256.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_add_p384.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_sub_p384.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_neg_p384.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_tomont_p384.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_deamont_p384.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_montmul_p384.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_montmul_p384_alt.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_montsqr_p384.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_montsqr_p384_alt.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_nonzero_6.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_littleendian_6.S
+        ${S2N_BIGNUM_DIR}/p384/p384_montjdouble.S
+        ${S2N_BIGNUM_DIR}/p384/p384_montjdouble_alt.S
+        ${S2N_BIGNUM_DIR}/p384/p384_montjscalarmul.S
+        ${S2N_BIGNUM_DIR}/p384/p384_montjscalarmul_alt.S
+        ${S2N_BIGNUM_DIR}/p384/bignum_montinv_p384.S
+        ${S2N_BIGNUM_DIR}/p521/bignum_add_p521.S
+        ${S2N_BIGNUM_DIR}/p521/bignum_sub_p521.S
+        ${S2N_BIGNUM_DIR}/p521/bignum_neg_p521.S
+        ${S2N_BIGNUM_DIR}/p521/bignum_mul_p521.S
+        ${S2N_BIGNUM_DIR}/p521/bignum_mul_p521_alt.S
+        ${S2N_BIGNUM_DIR}/p521/bignum_sqr_p521.S
+        ${S2N_BIGNUM_DIR}/p521/bignum_sqr_p521_alt.S
+        ${S2N_BIGNUM_DIR}/p521/bignum_tolebytes_p521.S
+        ${S2N_BIGNUM_DIR}/p521/bignum_fromlebytes_p521.S
+        ${S2N_BIGNUM_DIR}/p521/p521_jdouble.S
+        ${S2N_BIGNUM_DIR}/p521/p521_jdouble_alt.S
+        ${S2N_BIGNUM_DIR}/p521/p521_jscalarmul.S
+        ${S2N_BIGNUM_DIR}/p521/p521_jscalarmul_alt.S
+        ${S2N_BIGNUM_DIR}/p521/bignum_inv_p521.S
+        ${S2N_BIGNUM_DIR}/curve25519/bignum_madd_n25519_alt.S
+        ${S2N_BIGNUM_DIR}/curve25519/edwards25519_decode_alt.S
+        ${S2N_BIGNUM_DIR}/curve25519/edwards25519_scalarmulbase_alt.S
+        ${S2N_BIGNUM_DIR}/curve25519/edwards25519_scalarmuldouble_alt.S
+        ${S2N_BIGNUM_DIR}/curve25519/curve25519_x25519_byte_alt.S
+        ${S2N_BIGNUM_DIR}/curve25519/curve25519_x25519base_byte_alt.S
+      )
+    endif()
+  endif()
+
 endif()
 
 # Include s2n-bignum files in Windows AArch64 which replace similar implementation that was available on Windows
@@ -392,6 +457,30 @@ if((ARCH STREQUAL "x86_64") AND UNIX AND NOT MY_ASSEMBLER_IS_TOO_OLD_FOR_AVX)
   )
 
   list(APPEND BCM_ASM_SOURCES ${MLKEM_NATIVE_X86_64_ASM_SOURCES})
+
+  set(S2N_BIGNUM_INCLUDE_DIR "${AWSLC_SOURCE_DIR}/third_party/s2n-bignum/s2n-bignum-imported/include")
+
+endif()
+
+# mldsa-native assembly files can be compiled on Unix platforms for x86_64
+# and aarch64.
+if(UNIX AND ((ARCH STREQUAL "x86_64" AND NOT MY_ASSEMBLER_IS_TOO_OLD_FOR_AVX) OR (ARCH STREQUAL "aarch64")))
+
+  set(MLDSA_NATIVE_DIR "${AWSLC_SOURCE_DIR}/crypto/fipsmodule/ml_dsa")
+
+  # Every .S file in this directory is imported by importer.sh and must be
+  # compiled; glob so that refreshes which add/remove files don't need a
+  # matching edit here. CONFIGURE_DEPENDS makes CMake re-run when the set of
+  # matching files changes.
+  if(ARCH STREQUAL "x86_64")
+    file(GLOB MLDSA_NATIVE_ASM_SOURCES CONFIGURE_DEPENDS
+      "${MLDSA_NATIVE_DIR}/mldsa/native/x86_64/src/*.S")
+  else()
+    file(GLOB MLDSA_NATIVE_ASM_SOURCES CONFIGURE_DEPENDS
+      "${MLDSA_NATIVE_DIR}/mldsa/native/aarch64/src/*.S")
+  endif()
+
+  list(APPEND BCM_ASM_SOURCES ${MLDSA_NATIVE_ASM_SOURCES})
 
   set(S2N_BIGNUM_INCLUDE_DIR "${AWSLC_SOURCE_DIR}/third_party/s2n-bignum/s2n-bignum-imported/include")
 
@@ -619,26 +708,30 @@ elseif(FIPS_SHARED)
     separate_arguments(FIPS_MARKER_C_FLAGS NATIVE_COMMAND "${CMAKE_C_FLAGS}")
     add_custom_command(
       OUTPUT fips_msvc_start.obj
-      COMMAND ${CMAKE_C_COMPILER} ${FIPS_MARKER_C_FLAGS} -w /nologo /c /DAWSLC_FIPS_SHARED_START /Fo:fips_msvc_start.obj ${CMAKE_CURRENT_SOURCE_DIR}/fips_shared_library_marker.c
+      COMMAND ${CMAKE_C_COMPILER} ${FIPS_MARKER_C_FLAGS} -w /nologo /c /DAWSLC_FIPS_SHARED_START /Fofips_msvc_start.obj ${CMAKE_CURRENT_SOURCE_DIR}/fips_shared_library_marker.c
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/fips_shared_library_marker.c
     )
     add_custom_command(
       OUTPUT fips_msvc_end.obj
-      COMMAND ${CMAKE_C_COMPILER} ${FIPS_MARKER_C_FLAGS} -w /nologo /c /DAWSLC_FIPS_SHARED_END /Fo:fips_msvc_end.obj ${CMAKE_CURRENT_SOURCE_DIR}/fips_shared_library_marker.c
+      COMMAND ${CMAKE_C_COMPILER} ${FIPS_MARKER_C_FLAGS} -w /nologo /c /DAWSLC_FIPS_SHARED_END /Fofips_msvc_end.obj ${CMAKE_CURRENT_SOURCE_DIR}/fips_shared_library_marker.c
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/fips_shared_library_marker.c
     )
 
-    if(CMAKE_AR)
-      set(MSVC_LIB "${CMAKE_AR}")
-    else()
-      get_filename_component(MSVC_BIN ${CMAKE_LINKER} DIRECTORY)
-      set(MSVC_LIB "${MSVC_BIN}/lib.exe")
+    get_filename_component(MSVC_BIN ${CMAKE_LINKER} DIRECTORY)
+    find_program(MSVC_LIB NAMES lib lib.exe llvm-lib llvm-lib.exe
+                 HINTS ${MSVC_BIN} NO_DEFAULT_PATH)
+    if(NOT MSVC_LIB)
+      find_program(MSVC_LIB NAMES lib lib.exe llvm-lib llvm-lib.exe)
+    endif()
+    if(NOT MSVC_LIB)
+      message(FATAL_ERROR "Could not find lib.exe or llvm-lib for creating bcm.lib")
     endif()
 
+    file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/bcm_objects.rsp"
+         CONTENT "\"$<JOIN:$<TARGET_OBJECTS:bcm_library>,\"\n\">\"")
     add_custom_command(
       OUTPUT ${BCM_NAME}
-      COMMAND ${MSVC_LIB} /nologo fips_msvc_start.obj $<TARGET_OBJECTS:bcm_library> fips_msvc_end.obj /OUT:${BCM_NAME}
-      COMMAND_EXPAND_LISTS
+      COMMAND ${MSVC_LIB} /nologo fips_msvc_start.obj @bcm_objects.rsp fips_msvc_end.obj /OUT:${BCM_NAME}
       DEPENDS fips_msvc_start.obj fips_msvc_end.obj bcm_library
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )

@@ -5,8 +5,9 @@ cmake_policy(SET CMP0091 NEW)
 endif()
 
 set(SOFTWARE_NAME "awslc")
-set(SOFTWARE_VERSION "1.73.0")
-set(ABI_VERSION 0)
+set(SOFTWARE_VERSION "5.2.0")
+set(AWSLC_FIPS_VERSION 5)
+set(ABI_VERSION 1)
 set(CRYPTO_LIB_NAME "crypto")
 set(SSL_LIB_NAME "ssl")
 set(OPENSSL_VERSION_NUMBER "0x1010107f")
@@ -49,6 +50,13 @@ include(sources.cmake)
 include(TestBigEndian)
 include(CheckCCompilerFlag)
 
+message(STATUS "Versioning name:${SOFTWARE_NAME} version:${SOFTWARE_VERSION} abi:${ABI_VERSION}")
+if(BUILD_LIBSSL)
+  message(STATUS "Libraries crypto:${CRYPTO_LIB_NAME} ssl:${SSL_LIB_NAME}")
+else()
+  message(STATUS "Libraries crypto:${CRYPTO_LIB_NAME}")
+endif()
+
 macro(add_flag_if_supported VARIABLE FLAG)
   # Create a safe, unique variable name to cache the result of the check
   string(MAKE_C_IDENTIFIER "HAVE_C_FLAG_${FLAG}" _CHECK_VAR_NAME)
@@ -75,6 +83,7 @@ endif()
 set(RUST_BINDINGS_TARGET_VERSION "1.70" CACHE STRING "Minimum Rust version for generated bindings")
 
 include(cmake/go.cmake)
+include(cmake/GenerateVersionScript.cmake)
 
 if(ENABLE_DIST_PKG_OPENSSL_SHIM AND NOT ENABLE_DIST_PKG)
   message(FATAL_ERROR "ENABLE_DIST_PKG_OPENSSL_SHIM requires ENABLE_DIST_PKG to be enabled and will be ignored.")
@@ -86,6 +95,7 @@ if(ENABLE_DIST_PKG)
   else()
     set(SET_LIB_SONAME 1)
     set(COHABITANT_HEADERS 1)
+    set(COHABITANT_BINARIES 1)
     if(ENABLE_DIST_PKG_OPENSSL_SHIM)
       set(INSTALL_OPENSSL_SHIM 1)
     else()
@@ -95,15 +105,18 @@ if(ENABLE_DIST_PKG)
 elseif(NOT ENABLE_PRE_SONAME_BUILD AND BUILD_SHARED_LIBS AND UNIX AND NOT APPLE)
   set(SET_LIB_SONAME 1)
   set(COHABITANT_HEADERS 0)
+  set(COHABITANT_BINARIES 0)
   set(INSTALL_OPENSSL_SHIM 1)
 else()
   set(SET_LIB_SONAME 0)
   set(COHABITANT_HEADERS 0)
+  set(COHABITANT_BINARIES 0)
   set(INSTALL_OPENSSL_SHIM 1)
 endif()
 
 message(STATUS "SET_LIB_SONAME: ${SET_LIB_SONAME}")
 message(STATUS "COHABITANT_HEADERS: ${COHABITANT_HEADERS}")
+message(STATUS "COHABITANT_BINARIES: ${COHABITANT_BINARIES}")
 message(STATUS "INSTALL_OPENSSL_SHIM: ${INSTALL_OPENSSL_SHIM}")
 
 if(SET_LIB_SONAME)
@@ -112,6 +125,35 @@ if(SET_LIB_SONAME)
 endif()
 
 enable_language(C)
+
+# Enable symbol versioning for shared libraries in distribution packaging mode
+# on UNIX platforms (excluding Apple).
+# Version scripts are derived from the symbol registry files and have stable
+# filenames (crypto/libcrypto.map, ssl/libssl.map). The version node names are
+# recorded in the registry (crypto/libcrypto.txt, ssl/libssl.txt).
+if(ENABLE_DIST_PKG AND BUILD_SHARED_LIBS AND UNIX AND NOT APPLE)
+  set(ENABLE_SYMBOL_VERSIONING TRUE)
+  message(STATUS "Symbol versioning enabled")
+
+  # lld treats undefined symbols in version scripts as errors by default.
+  # The --undefined-version flag downgrades them to warnings, matching GNU ld.
+  # Probe once during configure; the result is cached.
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.14")
+    try_compile(
+      LINKER_HAS_UNDEFINED_VERSION
+      ${CMAKE_BINARY_DIR}/_linker_check
+      SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/compiler_features_tests/empty.c"
+      LINK_OPTIONS "-Wl,--undefined-version"
+    )
+  else()
+    try_compile(
+      LINKER_HAS_UNDEFINED_VERSION
+      ${CMAKE_BINARY_DIR}/_linker_check
+      SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/compiler_features_tests/empty.c"
+      CMAKE_FLAGS "-DCMAKE_EXE_LINKER_FLAGS=-Wl,--undefined-version"
+    )
+  endif()
+endif()
 
 if (NOT WIN32 AND NOT APPLE)
   include(GNUInstallDirs)
@@ -132,6 +174,13 @@ if(COHABITANT_HEADERS)
   set(AWSLC_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/aws-lc")
 else()
   set(AWSLC_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+
+# Set the install bin prefix based on whether cohabitation is desired
+if(COHABITANT_BINARIES)
+  set(AWSLC_BIN_PREFIX "aws-lc-")
+else()
+  set(AWSLC_BIN_PREFIX "")
 endif()
 
 function(target_add_awslc_include_paths)
@@ -198,13 +247,14 @@ if(GENERATE_RUST_BINDINGS)
   message(STATUS "Found bindgen-cli: ${BINDGEN_EXECUTABLE} (version ${BINDGEN_VERSION})")
   message(STATUS "Rust bindings target version: ${RUST_BINDINGS_TARGET_VERSION}")
 
-  # Check for rustfmt (required for --formatter rustfmt option)
+  # Check for rustfmt (optional: used to format the generated bindings if available)
   find_program(RUSTFMT_EXECUTABLE NAMES rustfmt)
-  if(NOT RUSTFMT_EXECUTABLE)
-    message(FATAL_ERROR "GENERATE_RUST_BINDINGS requires rustfmt but it was not found. "
-                        "Install it with: rustup component add rustfmt")
+  if(RUSTFMT_EXECUTABLE)
+    message(STATUS "Found rustfmt: ${RUSTFMT_EXECUTABLE}")
+  else()
+    message(STATUS "rustfmt not found; generated Rust bindings will not be formatted. "
+                   "Install it with: rustup component add rustfmt")
   endif()
-  message(STATUS "Found rustfmt: ${RUSTFMT_EXECUTABLE}")
 endif()
 
 if(DISABLE_CPU_JITTER_ENTROPY)
@@ -825,8 +875,19 @@ elseif(MSVC)
                             ${MSVC_DISABLED_WARNINGS_LIST})
   string(REPLACE "C" " -w4" MSVC_LEVEL4_WARNINGS_STR
                             ${MSVC_LEVEL4_WARNINGS_LIST})
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -utf-8 -Wall -WX ${MSVC_DISABLED_WARNINGS_STR} ${MSVC_LEVEL4_WARNINGS_STR}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -utf-8 -Wall -WX ${MSVC_DISABLED_WARNINGS_STR} ${MSVC_LEVEL4_WARNINGS_STR}")
+  # Newer MSVC (VS2026/14.51) emits C4865 from Windows SDK headers; with -WX
+  # that fails the build over warnings we don't own. Mark the toolchain/SDK
+  # include dirs external so -WX only covers our code. /external: is stable
+  # since MSVC 19.29; exclude clang-cl (it never emits C4865 and can error on
+  # an unrecognized /external:env: arg under -WX).
+  if(MSVC_VERSION GREATER_EQUAL 1929 AND CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    set(MSVC_EXTERNAL_WARNINGS_STR
+        "/external:W0 /external:env:INCLUDE /external:env:EXTERNAL_INCLUDE")
+  else()
+    set(MSVC_EXTERNAL_WARNINGS_STR "")
+  endif()
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -utf-8 -Wall -WX ${MSVC_DISABLED_WARNINGS_STR} ${MSVC_LEVEL4_WARNINGS_STR} ${MSVC_EXTERNAL_WARNINGS_STR}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -utf-8 -Wall -WX ${MSVC_DISABLED_WARNINGS_STR} ${MSVC_LEVEL4_WARNINGS_STR} ${MSVC_EXTERNAL_WARNINGS_STR}")
 endif()
 
 # If we're using MSVC on Windows in FIPS mode with RelWithDebInfo then we want to override some of the default RelWithDebInfo flags.
@@ -1013,6 +1074,13 @@ endif()
 
 if(OPENSSL_SMALL)
   add_definitions(-DOPENSSL_SMALL)
+  # OPENSSL_SMALL implies disabling AVX-512 optimizations on x86_64 for size.
+  # This is also enforced in include/openssl/target.h for non-CMake builds.
+  if(NOT MY_ASSEMBLER_IS_TOO_OLD_FOR_512AVX)
+    set(MY_ASSEMBLER_IS_TOO_OLD_FOR_512AVX ON)
+    add_definitions(-DMY_ASSEMBLER_IS_TOO_OLD_FOR_512AVX)
+    message(STATUS "OPENSSL_SMALL implies MY_ASSEMBLER_IS_TOO_OLD_FOR_512AVX, removing ADX, AVX2 and AVX512 optimisations")
+  endif()
 endif()
 
 if(CONSTANT_TIME_VALIDATION)
@@ -1213,6 +1281,15 @@ if(BUILD_TESTING)
     PUBLIC third_party/googletest/include
     PRIVATE third_party/googletest
   )
+
+  # WASI does not support fork() or process exit code detection required by
+  # GTest death tests, nor dup()/dup2()/mkstemp() required for stream
+  # redirection. Define these before gtest headers are included to prevent
+  # gtest-port.h from auto-detecting based on the host OS.
+  if(CMAKE_SYSTEM_NAME STREQUAL "Generic" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "wasm32")
+    add_compile_definitions(GTEST_HAS_DEATH_TEST=0)
+    add_compile_definitions(GTEST_HAS_STREAM_REDIRECTION=0)
+  endif()
 
   # Declare a dummy target to build all unit tests. Test targets should inject
   # themselves as dependencies next to the target definition.
